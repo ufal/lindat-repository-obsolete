@@ -15,8 +15,9 @@ body {
 }
 
 /* Header */
+
 #lindat-header-wrapper {
-    background: #FFF url('../img/top-bg-red.png') repeat-x center bottom;
+    background: #FFF url('../img/top-bg-yelllow.png') repeat-x center bottom;
     height: 45px;
     min-width: 950px;
 }
@@ -42,14 +43,14 @@ body {
     vertical-align: middle;
     padding: 3px 10px 1px 10px;
     margin: 0 0.6em;
-}
-
-#lindat-menu ul a:hover, #lindat-menu ul li.current-menu-item a {
-    background-color: #c66653;
     -moz-border-radius: 15px;
     -webkit-border-radius: 5px;
     -khtml-border-radius: 15px;
     border-radius: 5px;
+}
+
+#lindat-menu ul a:hover, #lindat-menu ul li.current-menu-item a {
+    background-color: #ccab28;
     color: #f2f2f2;
 }
 
@@ -82,10 +83,6 @@ body {
 #lindat-project-title a, #lindat-project-title a:hover span {
     text-decoration: none;
     color: #222;
-}
-
-#lindat-project-title span, #lindat-project-title a:hover {
-    color: #c66653;
 }
 
 /* Footer */
@@ -170,4 +167,51 @@ body {
 #lindat-lower-footer p {
     font-size: 12px;
     margin: 1em 0;
+}
+
+/* Project Specific
+ *
+ * Please keep identificators naming convention #linda-*project or page*
+ */
+
+/* PMLTQ */
+#lindat-pmltq #lindat-header-wrapper {
+    background: #FFF url('../img/top-bg-red.png') repeat-x center bottom;
+}
+
+#lindat-pmltq #lindat-menu ul a:hover,
+#lindat-pmltq #lindat-menu ul li.current-menu-item a,
+#lindat-pmltq #lindat-pmltq-item a
+{
+    background-color: #c66653;
+    color: #f2f2f2;
+}
+
+#lindat-pmltq #lindat-project-title span, #lindat-pmltq #lindat-project-title a:hover {
+    color: #c66653;
+}
+
+/* Repository */
+#lindat-repository #lindat-header-wrapper {
+    background: #FFF url('../img/top-bg-blue.png') repeat-x center bottom;
+}
+
+#lindat-repository #lindat-menu ul a:hover,
+#lindat-repository #lindat-menu ul li.current-menu-item a,
+#lindat-repository #lindat-repository-item a
+{
+    background-color: #708ca9;
+    color: #f2f2f2;
+}
+
+#lindat-repository #lindat-project-title a {
+    color: #1f3f5e;
+}
+
+/* Home, Contact and tools */
+#lindat-home #lindat-home-item a,
+#lindat-tools #lindat-tools-item a,
+#lindat-contact #lindat-contact-item a{
+    background-color: #ccab28;
+    color: #f2f2f2;
 }
