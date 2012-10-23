@@ -6,7 +6,7 @@ body {
 /* Common class with color and font definition */
 .lindat {
     color: #222;
-    font-family: sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 .lindat-container {
