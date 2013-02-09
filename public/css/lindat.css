@@ -90,8 +90,9 @@ body {
 #lindat-footer {
     color: #636363;
     font-size: 12px;
-    margin: 45px 0 0 0;
+    margin: 0 0 0 0;
     clear: both;
+    min-width: 950px;
 }
 
 #lindat-footer h3 {
@@ -196,8 +197,12 @@ body {
 
 /* Repository */
 #lindat-repository #lindat-header-wrapper {
-    background: #FFF url('../img/top-bg-blue.png') repeat-x center bottom;
+    /* background: #FFF url('../img/top-bg-blue.png') repeat-x center bottom;*/
+    background: none;
+    background-color: #F8F8F8;
+    border-bottom: 6px solid rgb(112, 140, 169);
 }
+
 
 #lindat-repository #lindat-menu ul a:hover,
 #lindat-repository #lindat-menu ul li.current-menu-item a,
