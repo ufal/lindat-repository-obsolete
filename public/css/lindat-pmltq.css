@@ -1,0 +1,15 @@
+#lindat-pmltq #lindat-header-wrapper {
+    background: #FFF url('../img/top-bg-red.png') repeat-x center bottom;
+}
+
+#lindat-pmltq #lindat-menu ul a:hover,
+#lindat-pmltq #lindat-menu ul li.current-menu-item a,
+#lindat-pmltq #lindat-pmltq-item a
+{
+    background-color: #c66653;
+    color: #f2f2f2;
+}
+
+#lindat-pmltq #lindat-project-title span, #lindat-pmltq #lindat-project-title a:hover {
+    color: #c66653;
+}

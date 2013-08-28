@@ -1,3 +1,14 @@
+/* Project specific imports must be here */
+
+/* PMLTQ */
+@import url("lindat-pmltq.css");
+/* Repository */
+@import url("lindat-repository.css");
+/* Services */
+@import url("lindat-services.css");
+
+
+
 /* The only global thing we have to set */
 body {
     margin: 0; padding: 0;
@@ -173,49 +184,6 @@ body {
     margin: 1em 0;
 }
 
-/* Project Specific
- *
- * Please keep identificators naming convention #linda-*project or page*
- */
-
-/* PMLTQ */
-#lindat-pmltq #lindat-header-wrapper {
-    background: #FFF url('../img/top-bg-red.png') repeat-x center bottom;
-}
-
-#lindat-pmltq #lindat-menu ul a:hover,
-#lindat-pmltq #lindat-menu ul li.current-menu-item a,
-#lindat-pmltq #lindat-pmltq-item a
-{
-    background-color: #c66653;
-    color: #f2f2f2;
-}
-
-#lindat-pmltq #lindat-project-title span, #lindat-pmltq #lindat-project-title a:hover {
-    color: #c66653;
-}
-
-/* Repository */
-#lindat-repository #lindat-header-wrapper {
-    /* background: #FFF url('../img/top-bg-blue.png') repeat-x center bottom;*/
-    background: none;
-    background-color: #f0f0f0;
-    border-bottom: 6px solid #7479b8;
-}
-
-
-#lindat-repository #lindat-menu ul a:hover,
-#lindat-repository #lindat-menu ul li.current-menu-item a,
-#lindat-repository #lindat-repository-item a
-{
-    background-color: #7479b8;
-    color: #f2f2f2;
-}
-
-#lindat-repository #lindat-project-title a {
-    color: #1f3f5e;
-}
-
 /* Home, Contact and tools */
 #lindat-home #lindat-home-item a,
 #lindat-tools #lindat-tools-item a,
@@ -223,3 +191,8 @@ body {
     background-color: #ccab28;
     color: #f2f2f2;
 }
+
+/* Project Specific
+ *
+ * Please keep identificators naming convention #lindat-*project or page*
+ */
