@@ -1,0 +1,8 @@
+/* select highlighted button */
+#lindat-services #lindat-menu ul a:hover,
+#lindat-services #lindat-menu ul li.current-menu-item a,
+#lindat-services #lindat-tools-item a
+{
+    background-color: #7479b8;
+    color: #f2f2f2;
+}
