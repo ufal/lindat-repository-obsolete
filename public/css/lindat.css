@@ -29,7 +29,8 @@ body {
 /* Header */
 
 #lindat-header-wrapper {
-    background: #FFF url('../img/top-bg-yelllow.png') repeat-x center bottom;
+    /* background: #FFF url('../img/top-bg-yelllow.png') repeat-x center bottom; */
+    border-bottom: 6px solid #ccab28;
     height: 45px;
     min-width: 950px;
 }

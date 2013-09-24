@@ -12,5 +12,6 @@
 }
 
 #lindat-pmltq #lindat-header-wrapper {
-    background: #FFF url('../img/top-bg-red.png') repeat-x center bottom;
+    /* background: #FFF url('../img/top-bg-red.png') repeat-x center bottom; */
+    border-bottom: 6px solid #c66653;
 }
