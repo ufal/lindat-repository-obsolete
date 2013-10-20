@@ -28,9 +28,9 @@
           </td>
           <td style="vertical-align: top">
             <ul style="width: 130px">
-               <h3><a href="http://ufal.mff.cuni.cz/lindat/contact">Contact</a></h3>
-               <h3><a id="footer-faq-link" href="">FAQ</a></h3>
-               <h3><a id="footer-about-link" href="">About</a></h3>
+              <h3><a href="http://ufal.mff.cuni.cz/lindat/contact">Contact</a></h3>
+              <h3><a id="footer-faq-link" href="https://ufal-point.mff.cuni.cz/repository/xmlui/page/faq">FAQ</a></h3>
+              <h3><a id="footer-about-link" href="https://ufal-point.mff.cuni.cz/repository/xmlui/page/about">About</a></h3>
             </ul>
           </td>
           <td style="vertical-align: top;">
@@ -50,15 +50,25 @@
         INFRASTRUCTURES".
       </strong>
     </p>
-    <p>Copyright (c) 2012 UFAL MFF UK. All rights reserved.</p>
+    <p>Copyright (c) 2013 UFAL MFF UK. All rights reserved.</p>
   </div>
-  
-<script language="javascript">
-        var pathname = window.location.pathname;
-        jQuery('#footer-faq-link').attr('href', pathname.substr(0, pathname.indexOf('xmlui')) + 'xmlui/page/faq');
-        jQuery('#footer-about-link').attr('href', pathname.substr(0, pathname.indexOf('xmlui')) + 'xmlui/page/about');
+
+<script type="text/javascript">
+ // Fix links for repository pages in footer
+ //
+ // TODO: Move this to the repository javascript files and keep the
+ //       common files as clean as possible.
+ (function(){
+   var pathname = window.location.pathname,
+       base = pathname.substr(0, pathname.indexOf('xmlui')),
+       gid = document.getElementById;
+   if (base) {
+     gid('footer-faq-link').setAttribute('href', base + 'xmlui/page/faq');
+     gid('footer-about-link').setAttribute('href', base + 'xmlui/page/about');
+   }
+ }());
 </script>
-  
+
 </div>
 
 <!-- FOOTER END -->
