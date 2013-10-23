@@ -21,8 +21,8 @@
         <ul>
           <li><a href="https://ufal-point.mff.cuni.cz/repository/xmlui/">Main page</a></li>
           <li><a href="http://ufal.mff.cuni.cz/lindat/contact">Contact</a></li>
-          <li><a id="footer-faq-link" href="https://ufal-point.mff.cuni.cz/repository/xmlui/page/faq">FAQ</a></li>
-          <li><a id="footer-about-link" href="https://ufal-point.mff.cuni.cz/repository/xmlui/page/about">About</a></li>
+          <li><a id="footer-faq-link" href="https://ufal-point.mff.cuni.cz/repository/xmlui/page/faq" style="display:none">FAQ</a></li>
+          <li><a id="footer-about-link" href="https://ufal-point.mff.cuni.cz/repository/xmlui/page/about" style="display:none">About</a></li>
         </ul>
       </div>
       <div class="lindat-footer-col lindat-footer-links">
@@ -47,23 +47,6 @@
     </p>
     <p>Copyright (c) 2013 UFAL MFF UK. All rights reserved.</p>
   </div>
-
-  <script type="text/javascript">
-   // Fix links for repository pages in footer
-   //
-   // TODO: Move this to the repository javascript files and keep the
-   //       common files as clean as possible.
-   (function(){
-     var pathname = window.location.pathname,
-     base = pathname.substr(0, pathname.indexOf('xmlui')),
-     gid = document.getElementById;
-     if (base) {
-       gid('footer-faq-link').setAttribute('href', base + 'xmlui/page/faq');
-       gid('footer-about-link').setAttribute('href', base + 'xmlui/page/about');
-     }
-   }());
-  </script>
-
 
   <script type="text/javascript">
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

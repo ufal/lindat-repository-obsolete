@@ -16,3 +16,7 @@
     background-color: #f0f0f0;
     border-bottom: 6px solid #7479b8;
 }
+
+#footer-faq-link, #footer-about-link {
+  display: inline !important;
+}
