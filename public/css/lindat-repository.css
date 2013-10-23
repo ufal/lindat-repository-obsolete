@@ -17,6 +17,6 @@
     border-bottom: 6px solid #7479b8;
 }
 
-#footer-faq-link, #footer-about-link {
+#lindat-repository #footer-faq-link, #lindat-repository #footer-about-link {
   display: inline !important;
 }
