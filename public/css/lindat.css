@@ -134,22 +134,29 @@ body {
     background-color: #F8F8F8;
 }
 
-#lindat-footer-logo {
-    background: url('../img/lindat-logo-mono.png') no-repeat center center;
-    width: 110px;
-    height: 59px;
+.lindat-footer-logo {
     display: block;
     overflow: hidden;
     text-indent: -4000px;
+}
+
+#lindat-footer-lindat {
+    background: url('../img/lindat-logo-mono.png') no-repeat center center;
+    margin-bottom: 10px;
+    width: 110px;
+    height: 59px;
 }
 
 #lindat-footer-msmt {
     background: url('../img/msmt-mono.png') no-repeat center center;
     width: 150px;
     height: 71px;
-    display: block;
-    overflow: hidden;
-    text-indent: -4000px;
+}
+
+#lindat-footer-clarin {
+    background: url('../img/clarin-eric-logo.png') no-repeat center center;
+    width: 130px;
+    height: 144px;
 }
 
 .lindat-footer-col {
@@ -163,7 +170,7 @@ body {
 }
 
 .lindat-footer-parners {
-    width: 320px;
+    width: 290px;
 }
 .lindat-footer-parners ul {
     font-size: 12px;
