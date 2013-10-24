@@ -24,6 +24,10 @@ body {
 .lindat-container {
     width: 950px;
     margin: 0 auto;
+
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: border-box;
 }
 
 /* Header */
@@ -122,6 +126,7 @@ body {
 }
 
 .lindat-footer a:hover {
+    color: #636363;
     text-decoration: underline;
 }
 
