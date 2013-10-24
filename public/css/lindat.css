@@ -24,7 +24,9 @@ body {
 .lindat-container {
     width: 950px;
     margin: 0 auto;
+}
 
+#lindat-header-wrapper, .lindat-container * {
     -webkit-box-sizing: content-box;
     -moz-box-sizing: content-box;
     box-sizing: content-box;
