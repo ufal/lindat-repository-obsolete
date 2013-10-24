@@ -27,7 +27,7 @@ body {
 
     -webkit-box-sizing: content-box;
     -moz-box-sizing: content-box;
-    box-sizing: border-box;
+    box-sizing: content-box;
 }
 
 /* Header */
