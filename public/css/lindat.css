@@ -75,7 +75,8 @@ body {
     position: relative;
 }
 
-#lindat-menu ul {
+#lindat-menu ul,
+#lindat-menu span {
     margin: 0; padding:0;
     list-style: none;
     text-align: center;
