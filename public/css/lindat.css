@@ -1,5 +1,11 @@
 /* Project specific imports must be here */
 
+/* bootstrap */
+@import url("../bootstrap/css/bootstrap.min.css");
+@import url("../bootstrap/css/bootstrap-responsive.min.css");
+@import url("../bootstrap/css/font-awesome.min.css");
+@import url("../bootstrap/css/ufal-theme.css");
+
 /* PMLTQ */
 @import url("lindat-pmltq.css");
 /* Repository */
