@@ -7,242 +7,134 @@
 /* Services */
 @import url("lindat-services.css");
 
-@font-face {
-    font-family: 'lindat-menu-icons';
-    src: url('../fonts/lindat-menu-icons.eot');
-}
-
-@font-face {
-    font-family: 'lindat-menu-icons';
-    src: url(data:application/x-font-ttf;charset=utf-8;base64,AAEAAAALAIAAAwAwT1MvMg6v7UsAAAC8AAAAYGNtYXDAMyB8AAABHAAAADxnYXNwAAAAEAAAAVgAAAAIZ2x5ZgqsKH0AAAFgAAAARGhlYWQAIFFSAAABpAAAADZoaGVhB6UD4QAAAdwAAAAkaG10eAYAABIAAAIAAAAADGxvY2EACgAiAAACDAAAAAhtYXhwAAUADQAAAhQAAAAgbmFtZYkkuhsAAAI0AAABk3Bvc3QAAwAAAAADyAAAACAAAwQAAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAACDgIQPA/8D/wAPAAEAAAAAAAAAAAAAAAAAAAAAgAAAAAAACAAAAAwAAABQAAwABAAAAFAAEACgAAAAGAAQAAQACACDgIf//AAAAIOAh////4R/hAAEAAAAAAAAAAQAB//8ADwABAAAAAAAAAAAAAgAANzkBAAAAAAEAEv/7A+MDogAKAAABIxEjESMRIxEjAQPjluHh4ZYB7QG+/j0BLf7TAcMB5AAAAAEAAAABAABdH5aQXw889QALBAAAAAAAzo8GXAAAAADOjwZcAAD/+wPjA6IAAAAIAAIAAAAAAAAAAQAAA8D/wAAABAAAAAAdA+MAAQAAAAAAAAAAAAAAAAAAAAMAAAAAAgAAAAQAABIAAAAAAAoAIgABAAAAAwALAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEAIgAAAAEAAAAAAAIADgCNAAEAAAAAAAMAIgA4AAEAAAAAAAQAIgCbAAEAAAAAAAUAFgAiAAEAAAAAAAYAEQBaAAEAAAAAAAoAKAC9AAMAAQQJAAEAIgAAAAMAAQQJAAIADgCNAAMAAQQJAAMAIgA4AAMAAQQJAAQAIgCbAAMAAQQJAAUAFgAiAAMAAQQJAAYAIgBrAAMAAQQJAAoAKAC9AGwAaQBuAGQAYQB0AC0AbQBlAG4AdQAtAGkAYwBvAG4AcwBWAGUAcgBzAGkAbwBuACAAMAAuADAAbABpAG4AZABhAHQALQBtAGUAbgB1AC0AaQBjAG8AbgBzbGluZGF0LW1lbnUtaWNvbnMAbABpAG4AZABhAHQALQBtAGUAbgB1AC0AaQBjAG8AbgBzAFIAZQBnAHUAbABhAHIAbABpAG4AZABhAHQALQBtAGUAbgB1AC0AaQBjAG8AbgBzAEcAZQBuAGUAcgBhAHQAZQBkACAAYgB5ACAASQBjAG8ATQBvAG8AbgAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==) format('truetype'),
-         url(data:application/font-woff;charset=utf-8;base64,d09GRgABAAAAAAQ0AAsAAAAAA+gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABPUy8yAAABCAAAAGAAAABgDq/tS2NtYXAAAAFoAAAAPAAAADzAMyB8Z2FzcAAAAaQAAAAIAAAACAAAABBnbHlmAAABrAAAAEQAAABECqwofWhlYWQAAAHwAAAANgAAADYAIFFSaGhlYQAAAigAAAAkAAAAJAelA+FobXR4AAACTAAAAAwAAAAMBgAAEmxvY2EAAAJYAAAACAAAAAgACgAibWF4cAAAAmAAAAAgAAAAIAAFAA1uYW1lAAACgAAAAZMAAAGTiSS6G3Bvc3QAAAQUAAAAIAAAACAAAwAAAAMEAAGQAAUAAAKZAswAAACPApkCzAAAAesAMwEJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAg4CEDwP/A/8ADwABAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAMAAAAUAAMAAQAAABQABAAoAAAABgAEAAEAAgAg4CH//wAAACDgIf///+Ef4QABAAAAAAAAAAEAAf//AA8AAQAAAAAAAAAAAAIAADc5AQAAAAABABL/+wPjA6IACgAAASMRIxEjESMRIwED45bh4eGWAe0Bvv49AS3+0wHDAeQAAAABAAAAAQAAXR+WkF8PPPUACwQAAAAAAM6PBlwAAAAAzo8GXAAA//sD4wOiAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAHQPjAAEAAAAAAAAAAAAAAAAAAAADAAAAAAIAAAAEAAASAAAAAAAKACIAAQAAAAMACwABAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAA4ArgABAAAAAAABACIAAAABAAAAAAACAA4AjQABAAAAAAADACIAOAABAAAAAAAEACIAmwABAAAAAAAFABYAIgABAAAAAAAGABEAWgABAAAAAAAKACgAvQADAAEECQABACIAAAADAAEECQACAA4AjQADAAEECQADACIAOAADAAEECQAEACIAmwADAAEECQAFABYAIgADAAEECQAGACIAawADAAEECQAKACgAvQBsAGkAbgBkAGEAdAAtAG0AZQBuAHUALQBpAGMAbwBuAHMAVgBlAHIAcwBpAG8AbgAgADAALgAwAGwAaQBuAGQAYQB0AC0AbQBlAG4AdQAtAGkAYwBvAG4Ac2xpbmRhdC1tZW51LWljb25zAGwAaQBuAGQAYQB0AC0AbQBlAG4AdQAtAGkAYwBvAG4AcwBSAGUAZwB1AGwAYQByAGwAaQBuAGQAYQB0AC0AbQBlAG4AdQAtAGkAYwBvAG4AcwBHAGUAbgBlAHIAYQB0AGUAZAAgAGIAeQAgAEkAYwBvAE0AbwBvAG4AAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=) format('woff');
-    font-weight: normal;
-    font-style: normal;
-}
-
-.lindat-icon {
-    font-family: 'lindat-menu-icons';
-    speak: none;
-    font-style: normal;
-    font-weight: normal;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1;
-
-    /* Better Font Rendering =========== */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-.lindat-icon-home:before {
-    content: "\e021";
-}
 
 /* The only global thing we have to set */
 body {
     margin: 0; padding: 0;
 }
 
-/* Common class with color and font definition */
-.lindat {
-    color: #222;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 14px;
-    line-height: 1.428571429;
-}
-
-.lindat-container {
-    width: 950px;
-    margin: 0 auto;
-}
-
-#lindat-header-wrapper, .lindat-container * {
-    -webkit-box-sizing: content-box;
-    -moz-box-sizing: content-box;
-    box-sizing: content-box;
-}
-
 /* Header */
 
-#lindat-header-wrapper {
-    /* background: #FFF url('../img/top-bg-yelllow.png') repeat-x center bottom; */
+.lindat-header {
+    margin: 0px;
     border-bottom: 6px solid #ccab28;
-    height: 45px;
-    min-width: 950px;
-}
-
-#lindat-header {
-    position: relative;
-}
-
-#lindat-menu ul,
-#lindat-menu span {
-    margin: 0; padding:0;
-    list-style: none;
     text-align: center;
-    font-size: 16px;
-    font-weight: bold;
-    white-space: nowrap;
-    padding: 10px 0;
-}
-
-#lindat-menu ul a {
-    text-decoration: none;
-    color: #222;
-    display: inline-block;
-    vertical-align: middle;
-    padding: 3px 10px 1px 10px;
-    margin: 0 0.6em;
-    -moz-border-radius: 15px;
-    -webkit-border-radius: 5px;
-    -khtml-border-radius: 15px;
-    border-radius: 5px;
-}
-
-#lindat-menu ul a:hover, #lindat-menu ul li.current-menu-item a {
-    background-color: #ccab28;
-    color: #f2f2f2;
-}
-
-#lindat-menu li {
-    list-style-image: none;
-    list-style-type: none;
-    display: inline;
-}
-
-#lindat-home-icon {
-    background: url('../img/home-icon.png') no-repeat left center;
-    display: inline-block;
-    width: 16px; height: 16px;
-    margin-right: 6px;
-}
-
-#lindat-project-title {
-    position: absolute;
-    top: 0px;
-    right: 100%;
-    font-size: 22px;
-    font-weight: bold;
-    text-align: right;
-    margin: 0; padding: 0;
-    display: inline-block;
-    white-space: nowrap;
-    line-height: 40px;
-}
-
-#lindat-project-title a, #lindat-project-title a:hover span {
-    text-decoration: none;
-    color: #222;
 }
 
 /* Footer */
 .lindat-footer {
     color: #333;
-    margin: 0;
-    clear: both;
-    min-width: 950px;
+    margin: 0px;
+    display: table;
 }
 
-.lindat-footer h3 {
-    font-size: 16px;
-    line-height: 1.1;
-    font-weight: 500;
-}
-
-.lindat-footer ul {
-    margin: 0; padding: 0;
+.lindat-footer h1 {
+	border-bottom: thin solid #E1E1E1;
+	font-size: 16px;
+	font-weight: 500;
+	line-height: 25px;
+	margin-bottom: 5px;
 }
 
 .lindat-footer a {
-    color: #636363;
-    text-decoration: none;
+	color: #636363;
+	text-decoration: none;
+	font-size: 14px;
 }
 
 .lindat-footer a:hover {
-    color: #636363;
-    text-decoration: underline;
+	text-decoration: underline;
 }
 
-.lindat-footer-bar {
-    min-height: 160px;
-    overflow: hidden;
-    border-top: 1px solid #E0E0E0;
-    border-bottom: 1px solid #E0E0E0;
-    box-shadow: inset 0 -1px 0 white;
-    background-color: #F8F8F8;
+.lindat-footer-main {
+	display: block;
+	text-align: center;
+	border-top: 1px solid #E0E0E0;
+	border-bottom: 1px solid #E0E0E0;
+	box-shadow: inset 0 -1px 0 white;
+	background-color: #F8F8F8;
 }
 
-.lindat-footer-logo {
-    display: block;
-    overflow: hidden;
-    text-indent: -4000px;
+.lindat-footer-main>* {
+        text-align: left;
+        display: inline-block;
+        vertical-align: top;
+        margin: 0px 5px;
+        min-width: 100px;
 }
 
-#lindat-footer-lindat {
-    background: url('../img/lindat-logo-mono.png') no-repeat center center;
-    margin-bottom: 10px;
-    width: 110px;
-    height: 59px;
+.lindat-copyright {
+	text-align: center;
+	background-color: #FFF;
+	padding: 5px;
+	font-size: 90%;
 }
 
-#lindat-footer-msmt {
-    background: url('../img/msmt-mono.png') no-repeat center center;
-    width: 150px;
-    height: 71px;
+.dsa-logo {
+	background: url('../img/dsa.png') no-repeat center center;
+	width: 90px;
+	height: 90px;
+	display: block;
+	margin-top: 25px;
 }
 
-#lindat-footer-clarin {
-    background: url('../img/clarin-eric-logo.png') no-repeat center center;
-    width: 130px;
-    height: 144px;
+.clarinb-logo {
+	background: url('../img/clarinb.png') no-repeat center center;
+	width: 176px;
+	height: 41px;
+	display: block;
+	margin-top: 45px;	
 }
 
-.lindat-footer-col {
-    margin-top: 10px;
-    padding: 0 0 15px 25px;
-    float: left;
+.lindat-logo-mono {
+	background: url('../img/lindat-logo-mono.png') no-repeat center center;
+	width: 110px;
+	height: 59px;	
+	display: block;
+	margin: 10px 0px;
 }
 
-.lindat-footer-col-first {
-    padding: 0;
+.msmt-logo-mono {
+	background: url('../img/msmt-mono.png') no-repeat center center;
+	width: 150px;
+	height: 71px;	
+	display: block;
+	margin: 10px 0px;	
 }
 
-.lindat-footer-partners {
-    width: 290px;
-}
-.lindat-footer-partners ul {
-    font-size: 12px;
+
+.lindat-header .nav {
+	margin: 5px 0px 0px 0px;
+	display: inline-block;
 }
 
-.lindat-footer-links, .lindat-footer-repository {
-    width: 135px
+.lindat-header .nav a {
+	font-size: 115%;
+	font-weight: bolder;
+	color: #000;
 }
 
-.lindat-footer-bar ul {
-    list-style: none;
+.lindat-header .nav a:hover,
+.lindat-header .nav li.active a {
+	color: #FFF;
+	background-color: #ccab28;
 }
 
-.lindat-footer-col > h3 {
-    padding-bottom: 3px;
-    margin: 0 0 5px 0;
-    border-bottom: thin solid #E1E1E1;
+.lindat-header .nav li {
+	margin: 0 5px;
 }
 
-#lindat-lower-footer {
-    text-align: center;
+.repository-only {
+	display: none;
 }
 
-#lindat-lower-footer p {
-    font-size: 12px;
-    margin: 1em 0;
-}
 
 /* Home, Contact and tools */
 #lindat-home #lindat-home-item a,
 #lindat-tools #lindat-tools-item a,
-#lindat-contact #lindat-contact-item a{
+#lindat-contact #lindat-contact-item a {
     background-color: #ccab28;
-    color: #f2f2f2;
+    color: #f0f0f0;
 }
 
 /* Project Specific

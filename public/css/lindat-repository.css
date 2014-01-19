@@ -1,25 +1,15 @@
-/* select highlighted button */
-#lindat-repository #lindat-menu ul a:hover,
-#lindat-repository #lindat-menu ul li.current-menu-item a,
-#lindat-repository #lindat-repository-item a
+#lindat-repository .lindat-header .nav a:hover,
+#lindat-repository #lindat-repository-item a {
+        color: #FFF;
+        background-color: #7479b8;
+}
+
+#lindat-repository .lindat-header
 {
-    background-color: #7479b8;
-    color: #f2f2f2;
-}
-
-#lindat-repository #lindat-project-title a {
-    color: #1f3f5e;
-}
-
-#lindat-repository #lindat-header-wrapper {
-    /* background: #FFF url('../img/top-bg-blue.png') repeat-x center bottom;*/
     background-color: #f0f0f0;
-    border-bottom: 6px solid #7479b8;
+    border-bottom-color: #7479b8;
 }
 
-#lindat-repository #footer-faq-link, 
-#lindat-repository #footer-about-link, 
-#lindat-repository #footer-item-lifecycle-link
-{
-  display: inline !important;
+#lindat-repository .repository-only {
+	display: block;
 }

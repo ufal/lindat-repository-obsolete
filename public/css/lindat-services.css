@@ -1,15 +1,13 @@
 /* select highlighted button */
-#lindat-services #lindat-menu ul a:hover,
-#lindat-services #lindat-menu ul li.current-menu-item a,
+#lindat-services .lindat-header .nav a:hover,
 #lindat-services #lindat-tools-item a
 {
     background-color: #cdac28;
     color: #f2f2f2;
 }
 
-#lindat-services #lindat-header-wrapper {
-    background-color: #f0f0f0;
-    border-bottom: 6px solid #cdac28;
+#lindat-services .lindat-header {
+    border-bottom-color: #cdac28;
 }
 
 
