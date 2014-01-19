@@ -672,11 +672,6 @@ li [class^="fa-"],li [class*=" fa-"],.nav-list li [class^="fa-"],.nav-list li [c
 	text-overflow: ellipsis;
 }
 
-.hr-lindat {
-	background: url('../../../images/lindat_color_line.png');
-	height: 8px;
-}
-
 .sidebar .open>a>.arrow {
 	display: none;
 }
