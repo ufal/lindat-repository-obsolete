@@ -1,5 +1,11 @@
 /* Project specific imports must be here */
 
+/* bootstrap */
+@import url("../bootstrap/css/bootstrap.min.css");
+@import url("../bootstrap/css/bootstrap-responsive.min.css");
+@import url("../bootstrap/css/font-awesome.min.css");
+@import url("../bootstrap/css/ufal-theme.css");
+
 /* PMLTQ */
 @import url("lindat-pmltq.css");
 /* Repository */
@@ -17,6 +23,7 @@ body {
 
 .lindat-header {
     margin: 0px;
+	background-color: #f0f0f0;    
     border-bottom: 6px solid #ccab28;
     text-align: center;
 }
@@ -141,3 +148,11 @@ body {
  *
  * Please keep identificators naming convention #lindat-*project or page*
  */
+ 
+ 
+/* temporary for lindat home */
+
+#site-container {
+	width: 970px;
+	margin: auto;
+}
