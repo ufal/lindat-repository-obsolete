@@ -147,3 +147,18 @@ body {
  *
  * Please keep identificators naming convention #lindat-*project or page*
  */
+ 
+ 
+/* temporary for lindat home */
+
+#lindat-home {
+	text-align: center;
+}
+
+#site-container {
+	width: 970px;
+}
+
+#page-content {
+	text-align: left;
+}
