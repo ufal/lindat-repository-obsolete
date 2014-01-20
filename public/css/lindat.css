@@ -23,6 +23,7 @@ body {
 
 .lindat-header {
     margin: 0px;
+	background-color: #f0f0f0;    
     border-bottom: 6px solid #ccab28;
     text-align: center;
 }
