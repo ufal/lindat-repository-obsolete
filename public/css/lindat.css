@@ -151,14 +151,7 @@ body {
  
 /* temporary for lindat home */
 
-#lindat-home {
-	text-align: center;
-}
-
 #site-container {
 	width: 970px;
-}
-
-#page-content {
-	text-align: left;
+	margin: auto;
 }
