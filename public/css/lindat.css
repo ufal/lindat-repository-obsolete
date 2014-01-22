@@ -80,37 +80,40 @@ body {
 .dsa-logo {
 	background: url('../img/dsa.png') no-repeat center center;
 	background-size: 75px;
-	width: 75px;
-	height: 75px;
+	width: 170px;
+	height: 60px;
 	display: block;
-	margin-top: 26px;
+	margin-top: 5px;
+	background-size: 60px;
+	background-position: 30px;
 }
 
 .clarinb-logo {
 	background: url('../img/clarinb.png') no-repeat center center;
- 	background-size: 150px;
-	width: 150px;
-	height: 41px;
+		background-size: 160px;
+	width: 160px;
+	height: 35px;
 	display: block;
-	margin-top: 46px;	
+	margin-top: 28px;	
 }
 
 .lindat-logo-mono {
 	background: url('../img/lindat-logo-mono.png') no-repeat center center;
-	width: 110px;
+	width: 120px;
 	height: 59px;	
 	display: block;
 	margin: 10px 0px;
+	background-size: 95px; 
 }
 
 .msmt-logo-mono {
 	background: url('../img/msmt-mono.png') no-repeat center center;
-	width: 150px;
-	height: 71px;	
+	width: 130px;
+	height: 60px;	
 	display: block;
-	margin: 10px 0px;	
+	margin: 10px 0px;
+	background-size: 120px; 
 }
-
 
 .lindat-header .nav {
 	margin: 5px 0px 0px 0px;
