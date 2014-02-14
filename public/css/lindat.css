@@ -143,7 +143,7 @@ body {
 
 /* Home, Contact and tools */
 #lindat-home #lindat-home-item a,
-#lindat-tools #lindat-tools-item a,
+#lindat-services #lindat-tools-item a,
 #lindat-contact #lindat-contact-item a {
     background-color: #ccab28;
     color: #f0f0f0;
