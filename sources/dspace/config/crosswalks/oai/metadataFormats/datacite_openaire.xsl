@@ -39,10 +39,10 @@
 	</xsl:template>
 
 	<xsl:template name="Identifier_M">
-		<odc3:Identifier identifierType="Handle">
+		<odc3:identifier identifierType="Handle">
 			<xsl:value-of
 				select="doc:metadata/doc:element[@name='dc']/doc:element[@name='identifier']/doc:element/doc:element/doc:field[@name='value']" />
-		</odc3:Identifier>
+		</odc3:identifier>
 	</xsl:template>
 
 	<xsl:template name="Creator_M">
@@ -96,10 +96,10 @@
 
 	<xsl:template name="PublicationYear_M">
 		<!-- TODO bit unclear what goes here if embargo see also Date_M -->
-		<odc3:PublicationYear>
+		<odc3:publicationYear>
 			<xsl:value-of
 				select="substring(doc:metadata/doc:element[@name='dc']/doc:element[@name='date']/doc:element[@name='issued']/doc:element/doc:field[@name='value'],1,4)" />
-		</odc3:PublicationYear>
+		</odc3:publicationYear>
 	</xsl:template>
 
 	<xsl:template name="Subject_R" />
@@ -111,11 +111,11 @@
 			start of an embargo period, use “Accepted”. DataCite v3.0 further recommends 
 			use of “Created” and “Submitted”. -->
 		<!-- TODO implement embargoes and possibly other dates -->
-		<odc3:Dates>
-			<odc3:Date dateType="issued"></odc3:Date>
+		<odc3:dates>
+			<odc3:date dateType="issued"></odc3:date>
 			<xsl:value-of
 				select="doc:metadata/doc:element[@name='dc']/doc:element[@name='date']/doc:element[@name='issued']/doc:element/doc:field[@name='value']" />
-		</odc3:Dates>
+		</odc3:dates>
 	</xsl:template>
 
 	<xsl:template name="Language_R" />
