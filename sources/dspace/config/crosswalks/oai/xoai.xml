@@ -76,6 +76,16 @@
                 This contexts complies with OpenAIRE rules.
             </Description>
 		</Context>
+		
+		<Context baseurl="openaire_data" name="OpenAIRE data Context">
+		  <!-- <Transformer ref="openaireDataTransformer"/> -->
+		  <!-- <Filter ref="openAireDataFilter"/> -->
+		  <Set ref="openaireDataSet"/>
+		  <Format ref="oai_datacite"/>
+		  <Description>
+		      This context test openaire data archive rules.
+		  </Description>
+		</Context>
 	</Contexts>
 	
 	
@@ -177,6 +187,13 @@
                <XSLT>metadataFormats/olac.xsl</XSLT>
                <Namespace>http://www.language-archives.org/OLAC/1.1/olac.xsd</Namespace>
                <SchemaLocation>http://www.language-archives.org/OLAC/1.1/</SchemaLocation>
+		</Format>
+		<!-- openaire data must use oai_datacite prefix & schema -->
+		<Format id="oai_datacite">
+		       <Prefix>oai_datacite</Prefix>
+		       <XSLT>metadataFormats/datacite_openaire.xsl</XSLT>
+		       <Namespace>http://schema.datacite.org/oai/oai-1.0/</Namespace>
+		       <SchemaLocation>http://schema.datacite.org/oai/oai-1.0/oai.xsd</SchemaLocation>
 		</Format>
 	</Formats>
 	
@@ -350,5 +367,9 @@
 			<Name>EC_fundedresources set</Name>
 			<!-- Just an alias -->
 		</Set>
+        <Set id="openaireDataSet">
+            <Spec>openaire_data</Spec>
+            <Name>OpenAIRE_data</Name>
+        </Set>
 	</Sets>
 </Configuration>
