@@ -1,0 +1,26 @@
+#ignore
+target/
+nbactions.xml
+logs/*
+.DS_Store
+.#*
+.classpath
+.project
+.settings/
+*.swp
+*.interpolated
+push.bat
+sources/dspace/config/ga.api.key.p12.orig
+sources/dspace/config/crosswalks/oai/description*
+tests/bin
+tests/test-output
+tests/*.local
+*.bak
+handle-server
+.idea
+local.conf
+sources/dspace/config/modules/lr.cfg
+
+#don't ignore
+!config/local.conf.dist
+!logs/README
