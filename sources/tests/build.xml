@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Filename: build.xml
+-->
+<project basedir="." default="runTestNG" name="Sample of Ant file for TestNG">
+
+    <echo message="Java version: ${ant.java.version}"/>
+	<property name="src" value="src" />
+	<property name="output" value="bin" />
+
+	<path id="lib-classpath">
+		<fileset dir="lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	
+	<!-- Define <testng> task -->
+	<taskdef name="testng" classname="org.testng.TestNGAntTask">
+		<classpath refid="lib-classpath" />
+	</taskdef>
+
+	<!-- Directory name where the TestNG report will be saved. -->
+	<property name="testng.output.dir" value="test-output" />
+
+	<!-- Directory path of compiled classes(i.e *.class) -->
+	<path id="classes">
+		<pathelement location="${output}" />
+	</path>
+
+	<!--
+  Target to run TestNG. It will run according to what are defined in testng.xml.
+  The report will be saved at .../testng_output/index.html.
+  -->
+	<target name="runTestNG" depends="compile">
+
+		<mkdir dir="${testng.output.dir}" />
+		<!-- Create the output directory. -->
+
+		<testng outputdir="${testng.output.dir}" classpathref="classes"
+    >
+			<xmlfileset dir="." includes="testng.xml" />
+      <sysproperty key="org.uncommons.reportng.escape-output" value="false"/>
+		</testng>
+
+	</target>
+
+	<target name="compile" depends="create">
+		<javac destdir="${output}" debug="true">
+			<src path="${src}" />
+			<classpath refid="lib-classpath" />
+		</javac>
+	</target>
+
+	<target name="create" depends="clean">
+		<mkdir dir="${output}" />
+	</target>
+
+	<target name="clean">
+		<delete dir="${output}" />
+	</target>
+	
+</project>
