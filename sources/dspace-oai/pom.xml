@@ -1,0 +1,30 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>org.dspace</groupId>
+   <artifactId>dspace-oai</artifactId>
+   <packaging>pom</packaging>
+   <name>DSpace OAI</name>
+   <description>Parent for DSpace OAI Service Provider Webapplication</description>
+   <url>http://projects.dspace.org/dspace-oai</url>
+
+   <!-- 
+      A Parent POM that Maven inherits DSpace Default 
+      POM atrributes from. 
+   -->
+   <parent>
+      <groupId>org.dspace</groupId>
+      <artifactId>dspace-parent</artifactId>
+      <version>1.8.4-SNAPSHOT</version>
+      <relativePath>..</relativePath>
+   </parent>
+
+   <properties>
+        <!-- This is the path to the root [dspace-src] directory. -->
+        <root.basedir>${basedir}/..</root.basedir>
+   </properties>
+   
+   <modules>
+      <module>dspace-oai-api</module>
+      <module>dspace-oai-webapp</module>
+   </modules>
+</project>

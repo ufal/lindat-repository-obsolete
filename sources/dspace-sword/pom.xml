@@ -1,0 +1,34 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>org.dspace</groupId>
+   <artifactId>dspace-sword</artifactId>
+   <packaging>pom</packaging>
+   <name>DSpace SWORD</name>
+   <description>
+      DSpace SWORD Deposit Service Provider Web Application
+   </description>
+   <url>http://projects.dspace.org/dspace-sword</url>
+
+   <!--
+      A Parent POM that Maven inherits DSpace Default
+      POM atrributes from.
+   -->
+   <parent>
+      <groupId>org.dspace</groupId>
+      <artifactId>dspace-parent</artifactId>
+      <version>1.8.4-SNAPSHOT</version>
+      <relativePath>..</relativePath>
+   </parent>
+
+   <properties>
+        <!-- This is the path to the root [dspace-src] directory. -->
+        <root.basedir>${basedir}/..</root.basedir>
+   </properties>
+
+
+   <modules>
+      <module>dspace-sword-api</module>
+      <module>dspace-sword-webapp</module>
+   </modules>
+
+</project>
