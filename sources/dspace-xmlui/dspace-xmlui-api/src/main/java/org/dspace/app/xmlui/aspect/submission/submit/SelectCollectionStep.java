@@ -17,10 +17,12 @@ import org.dspace.app.xmlui.wing.WingException;
 import org.dspace.app.xmlui.wing.element.Body;
 import org.dspace.app.xmlui.wing.element.Button;
 import org.dspace.app.xmlui.wing.element.Division;
+import org.dspace.app.xmlui.wing.element.Hidden;
 import org.dspace.app.xmlui.wing.element.List;
 import org.dspace.app.xmlui.wing.element.PageMeta;
 import org.dspace.app.xmlui.wing.element.Select;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.authorize.AuthorizeManager;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.DSpaceObject;
@@ -35,8 +37,8 @@ import org.xml.sax.SAXException;
  * too by going to the collection's page, but if that was invalid or the 
  * user came directly from the mydspace page then this step is given.
  * 
- * @author Scott Phillips
- * @author Tim Donohue (updated for Configurable Submission)
+ * based on class by Scott Phillips and Tim Donohue (updated for Configurable Submission)
+ * modified for LINDAT/CLARIN
  */
 public class SelectCollectionStep extends AbstractSubmissionStep
 {
@@ -52,6 +54,7 @@ public class SelectCollectionStep extends AbstractSubmissionStep
         message("xmlui.Submission.submit.SelectCollection.collection_default");
     protected static final Message T_submit_next = 
         message("xmlui.general.next");
+    protected static final Message T_submit_default_message = message("xmlui.Submission.submit.SelectCollection.default_message"); 
 	
     public SelectCollectionStep() 
     {
@@ -89,24 +92,40 @@ public class SelectCollectionStep extends AbstractSubmissionStep
 		div.setHead(T_submission_head);
         
         List list = div.addList("select-collection", List.TYPE_FORM);
-        list.setHead(T_head);       
-        Select select = list.addItem().addSelect("handle");
-        select.setLabel(T_collection);
-        select.setHelp(T_collection_help);
         
-        select.addOption("",T_collection_default);
-        for (Collection collection : collections) 
-        {
-        	String name = collection.getMetadata("name");
-   		   	if (name.length() > 50)
-                  {
-                      name = name.substring(0, 47) + "...";
-                  }
-        	select.addOption(collection.getHandle(),name);
+        if(AuthorizeManager.isAdmin(context)) {
+        
+        	list.setHead(T_head);
+        	Select select = list.addItem().addSelect("handle");
+	        select.setLabel(T_collection);
+	        select.setHelp(T_collection_help);
+	        
+	        select.addOption("",T_collection_default);
+	        for (Collection collection : collections) 
+	        {
+	        	String name = collection.getMetadata("name");
+	   		   	if (name.length() > 50)
+	                  {
+	                      name = name.substring(0, 47) + "...";
+	                  }
+	        	select.addOption(collection.getHandle(),name);
+	        }
+	        
+	        Button submit = list.addItem().addButton("submit");
+	        submit.setValue(T_submit_next);
+	        
+        } else {
+        	if(collections==null || collections.length==0) {
+        		div.addDivision("notice", "").addDivision("failure", "alert alert-error").addPara("No Collections found. Please contact the administrator!");
+        	} else {
+        	
+	        	Hidden collection = list.addItem().addHidden("handle");
+	        	collection.setValue(collections[0].getHandle());
+	        	list.addItem(T_submit_default_message);
+		        Button submit = list.addItem().addButton("submit");
+		        submit.setValue(T_submit_next);
+        	}
         }
-        
-        Button submit = list.addItem().addButton("submit");
-        submit.setValue(T_submit_next);
     }
     
     /** 
@@ -146,3 +165,4 @@ public class SelectCollectionStep extends AbstractSubmissionStep
          super.recycle();
      }
 }
+

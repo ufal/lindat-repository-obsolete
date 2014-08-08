@@ -26,7 +26,8 @@ import org.dspace.eperson.Group;
  * Present the user with a list of soon-to-be-deleted Groups. 
  * If the user clicks confirm deletition then they will be 
  * deleted otherwise they will be spared the wrath of deletion.
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class DeleteGroupsConfirm extends AbstractDSpaceTransformer   
 {
@@ -77,7 +78,7 @@ public class DeleteGroupsConfirm extends AbstractDSpaceTransformer
 		}
      
     	Division deleted = body.addInteractiveDivision("group-confirm-delete",
-    			contextPath+"/admin/epeople",Division.METHOD_POST,"primary administrative groups");
+    			contextPath+"/admin/epeople",Division.METHOD_POST,"alert alert-danger");
     	deleted.setHead(T_head);
     	deleted.addPara(T_para);
     	

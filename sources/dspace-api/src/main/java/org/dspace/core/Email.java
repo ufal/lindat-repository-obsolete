@@ -89,8 +89,8 @@ import javax.mail.internet.MimeMultipart;
  * of the e-mail; they won't get filled out.
  * 
  * 
- * @author Robert Tansley
- * @author Jim Downing - added attachment handling code
+ * based on class by Robert Tansley and  Jim Downing - added attachment handling code
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class Email
@@ -130,7 +130,7 @@ public class Email
     /**
      * Create a new email message.
      */
-    Email()
+    public Email()
     {
         arguments = new ArrayList<Object>(50);
         recipients = new ArrayList<String>(50);
@@ -160,7 +160,7 @@ public class Email
      * @param cnt
      *            the content of the message
      */
-    void setContent(String cnt)
+    public void setContent(String cnt)
     {
         content = cnt;
         arguments = new ArrayList<Object>();
@@ -172,7 +172,7 @@ public class Email
      * @param s
      *            the subject of the message
      */
-    void setSubject(String s)
+    public void setSubject(String s)
     {
         subject = s;
     }
@@ -239,7 +239,7 @@ public class Email
             log.info("message not sent due to mail.server.disabled: " + subject);
             return;
         }
-
+        
         // Set up properties for mail session
         Properties props = System.getProperties();
         props.put("mail.smtp.host", server);
@@ -257,6 +257,7 @@ public class Email
         {
             charset = ConfigurationManager.getProperty("mail.charset");    
         }
+
 
         // Get session
         Session session;
@@ -363,7 +364,17 @@ public class Email
             message.setReplyTo(replyToAddr);
         }
 
-        Transport.send(message);
+        try{
+        	Transport.send(message);
+        	StringBuffer mailTo = new StringBuffer();
+        	for(Address address : message.getAllRecipients()){
+        		mailTo.append(address).append(";");
+        	}
+        	log.info(String.format("Email with subject %s successfully sent to the following people: %s", message.getSubject(),mailTo.toString()));
+        }catch(MessagingException e){
+        	log.error("Error while sending an email" + e.toString());
+        	throw e;
+        }
     }
 
     /**

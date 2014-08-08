@@ -13,14 +13,16 @@
     <parent>
         <groupId>org.dspace</groupId>
         <artifactId>dspace-xmlui</artifactId>
-        <version>1.8.4-SNAPSHOT</version>
-      <relativePath>..</relativePath>
+        <version>1.8.2</version>
+      <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <!-- This is the path to the root [dspace-src] directory. -->
-        <root.basedir>${basedir}/../..</root.basedir>
-    </properties>
+    <scm>
+        <connection>scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2</connection>
+        <developerConnection>scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2
+        </developerConnection>
+        <url>http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</url>
+    </scm>
 
     <build>
         <plugins>
@@ -129,7 +131,16 @@
             <artifactId>dspace-xmlui-api</artifactId>
         </dependency>
 
+        <dependency>
+        	<groupId>org.dspace</groupId>
+        	<artifactId>dspace-oai</artifactId>
+        	<type>jar</type>
+        	<classifier>classes</classifier>
+        </dependency>
     </dependencies>
+    <properties>
+        <netbeans.hint.deploy.server>Tomcat</netbeans.hint.deploy.server>
+    </properties>
 </project>
 
 

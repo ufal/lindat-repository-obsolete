@@ -29,9 +29,12 @@ import org.xml.sax.SAXException;
 /**
  * Adds a searchbox on the dspace home page
  *
- * @author Kevin Van de Velde (kevin at atmire dot com)
- * @author Mark Diggory (markd at atmire dot com)
- * @author Ben Bosman (ben at atmire dot com)
+ * based on class by:
+ * Kevin Van de Velde (kevin at atmire dot com)
+ * Mark Diggory (markd at atmire dot com)
+ * Ben Bosman (ben at atmire dot com)
+ *
+ * modified for LINDAT/CLARIN
  */
 public class SiteViewer extends AbstractDSpaceTransformer implements CacheableProcessingComponent
 {
@@ -49,6 +52,8 @@ public class SiteViewer extends AbstractDSpaceTransformer implements CacheablePr
     private static final Message T_go =
         message("xmlui.general.go");
 
+    private static final Message T_search = 
+        	message("xmlui.general.search");
 
     /**
      * Generate the unique caching key.
@@ -102,15 +107,15 @@ public class SiteViewer extends AbstractDSpaceTransformer implements CacheablePr
     public void addBody(Body body) throws SAXException, WingException,
             UIException, SQLException, IOException, AuthorizeException
     {
-        Division search =
-        	body.addInteractiveDivision("front-page-search",contextPath+"/discover",Division.METHOD_GET,"primary");
+        //Division search =
+        	//body.addInteractiveDivision("front-page-search",contextPath+"/discover",Division.METHOD_GET,"primary");
 
-        search.setHead(T_head);
+        //search.setHead(T_head);
 
-        search.addPara(T_para1);
+        //search.addPara(T_para1);
 
-        Para fields = search.addPara();
-        fields.addText("query");
-        fields.addButton("submit").setValue(T_go);
+        //Para fields = search.addPara();
+        //fields.addText("query", "home-search");
+        //fields.addButton("submit", "home-search-button").setValue(T_search);
     }
 }

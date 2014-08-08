@@ -7,15 +7,23 @@
  */
 package org.dspace.app.util;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.dspace.content.MetadataSchema;
+import org.dspace.core.Context;
+
+import cz.cuni.mff.ufal.dspace.app.util.ACL;
 
 /**
  * Class representing a line in an input form.
  * 
- * @author Brian S. Hughes, based on work by Jenny Toves, OCLC
+ * based on class by Brian S. Hughes, based on work by Jenny Toves, OCLC
+ * modified for LINDAT/CLARIN
  * @version
  */
 public class DCInput
@@ -29,8 +37,38 @@ public class DCInput
     /** the DC namespace schema */
     private String dcSchema = null;
 
+    /** UFAL/jmisutka - */
+    private String extraMappedToElement = null;
+
+    /** UFAL/jmisutka - */
+    private String extraRepeatableComponent = null;
+
+    /** UFAL/jmisutka - */
+    private String autocomplete = null;
+
+    /** UFAL/jmisutka - */
+    private String extra = null;
+
+    /** UFAL/jmisutka - */
+    private String collapsible = null;
+
+    /** UFAL/okosarko - */
+    private String regexp = null;
+
+    /** UFAL/okosarko - */
+    private String regexpWarning = null;
+
+    /** UFAL/josifko - */
+    private ACL acl = null;
+    
+    /** UFAL/josifko - */
+    private Set<String> rends = null;
+
     /** a label describing input */
     private String label = null;
+
+    /** a label describing input */
+    private String component_label = null;
 
     /** the input type */
     private String inputType = null;
@@ -44,6 +82,9 @@ public class DCInput
     /** is input repeatable? */
     private boolean repeatable = false;
 
+    /** should repeatable input be parsed? */
+    private boolean repeatable_parse = false;
+
     /** 'hint' text to display */
     private String hint = null;
 
@@ -55,7 +96,7 @@ public class DCInput
 
     /** if non-null, visibility scope restriction */
     private String visibility = null;
-    
+
     /** if non-null, readonly out of the visibility scope */
     private String readOnly = null;
 
@@ -65,18 +106,21 @@ public class DCInput
     /** is the entry closed to vocabulary terms? */
     private boolean closedVocabulary = false;
 
-    /** 
-     * The scope of the input sets, this restricts hidden metadata fields from 
-     * view during workflow processing. 
+    /** allowed document types */
+    private List<String> typeBind = null;
+
+    /**
+     * The scope of the input sets, this restricts hidden metadata fields from
+     * view during workflow processing.
      */
     public static final String WORKFLOW_SCOPE = "workflow";
 
-    /** 
-     * The scope of the input sets, this restricts hidden metadata fields from 
-     * view by the end user during submission. 
+    /**
+     * The scope of the input sets, this restricts hidden metadata fields from
+     * view by the end user during submission.
      */
     public static final String SUBMISSION_SCOPE = "submit";
-    
+
     /**
      * Class constructor for creating a DCInput object based on the contents of
      * a HashMap
@@ -85,10 +129,25 @@ public class DCInput
      *            ???
      * @param listMap
      */
-    public DCInput(Map<String, String> fieldMap, Map<String, List<String>> listMap)
+    public DCInput(Map<String, String> fieldMap,
+            Map<String, List<String>> listMap)
     {
         dcElement = fieldMap.get("dc-element");
         dcQualifier = fieldMap.get("dc-qualifier");
+
+        // UFAL / jmisutka
+        extraMappedToElement = fieldMap.get("mapped-to");
+        extraRepeatableComponent = fieldMap.get("repeatable-component");
+        autocomplete = fieldMap.get("autocomplete");
+        extra = fieldMap.get("extra");
+        collapsible = fieldMap.get("collapsible");
+        component_label = fieldMap.get("component-label");
+        regexp = fieldMap.get("regexp");
+        regexpWarning = fieldMap.get("regexp-warning");
+
+        // UFAL / josifko
+        acl = ACL.fromString(fieldMap.get("acl"));
+        rends = new HashSet<String>();
 
         // Default the schema to dublin core
         dcSchema = fieldMap.get("dc-schema");
@@ -100,6 +159,11 @@ public class DCInput
         String repStr = fieldMap.get("repeatable");
         repeatable = "true".equalsIgnoreCase(repStr)
                 || "yes".equalsIgnoreCase(repStr);
+        //
+        String repParseStr = fieldMap.get("repeatable-parse");
+        repeatable_parse = "true".equalsIgnoreCase(repParseStr)
+                || "yes".equalsIgnoreCase(repParseStr);
+
         label = fieldMap.get("label");
         inputType = fieldMap.get("input-type");
         // these types are list-controlled
@@ -117,7 +181,21 @@ public class DCInput
         vocabulary = fieldMap.get("vocabulary");
         String closedVocabularyStr = fieldMap.get("closedVocabulary");
         closedVocabulary = "true".equalsIgnoreCase(closedVocabularyStr)
-                            || "yes".equalsIgnoreCase(closedVocabularyStr);
+                || "yes".equalsIgnoreCase(closedVocabularyStr);
+
+        // parsing of the <type-bind> element (using the colon as split
+        // separator)
+        typeBind = new ArrayList<String>();
+        String typeBindDef = fieldMap.get("type-bind");
+        if (typeBindDef != null && typeBindDef.trim().length() > 0)
+        {
+            String[] types = typeBindDef.split(",");
+            for (String type : types)
+            {
+                typeBind.add(type.trim());
+            }
+        }
+
     }
 
     /**
@@ -135,18 +213,20 @@ public class DCInput
     {
         return (visibility == null || visibility.equals(scope));
     }
-    
+
     /**
-     * Is this DCInput for display in readonly mode in the given scope? 
-     * If the scope differ from which in visibility field then we use the out attribute
-     * of the visibility element. Possible values are: hidden (default) and readonly.
-     * If the DCInput is visible in the scope then this methods must return false
+     * Is this DCInput for display in readonly mode in the given scope? If the
+     * scope differ from which in visibility field then we use the out attribute
+     * of the visibility element. Possible values are: hidden (default) and
+     * readonly. If the DCInput is visible in the scope then this methods must
+     * return false
      * 
      * @param scope
-     *            String identifying the scope that this input's readonly visibility
-     *            should be tested for
+     *            String identifying the scope that this input's readonly
+     *            visibility should be tested for
      * 
-     * @return whether the input should be displayed in a readonly way or fully hidden
+     * @return whether the input should be displayed in a readonly way or fully
+     *         hidden
      */
     public boolean isReadOnly(String scope)
     {
@@ -160,7 +240,6 @@ public class DCInput
         }
     }
 
-
     /**
      * Get the repeatable flag for this row
      * 
@@ -168,7 +247,26 @@ public class DCInput
      */
     public boolean isRepeatable()
     {
-        return repeatable;
+        return isRepeatable(true);
+    }
+
+    /**
+     * UFAL/jmisutka
+     * 
+     * @param really_repeatable
+     *            - if true than it will simulate the original behaviour if
+     *            false it will include our extra component logic.
+     */
+    public boolean isRepeatable(boolean really_repeatable)
+    {
+        if (really_repeatable)
+        {
+            return repeatable;
+        }
+        else
+        {
+            return repeatable || null != extraRepeatableComponent;
+        }
     }
 
     /**
@@ -179,6 +277,11 @@ public class DCInput
     public boolean getRepeatable()
     {
         return isRepeatable();
+    }
+
+    public boolean getRepeatableParse()
+    {
+        return repeatable_parse;
     }
 
     /**
@@ -283,6 +386,24 @@ public class DCInput
     }
 
     /**
+     * UFAL/jmisutka Return dc element which should be mapped to this Input in
+     * one string. Dots "." should be used for splitting.
+     */
+    public String getExtraMappedToElement()
+    {
+        return extraMappedToElement;
+    }
+
+    /**
+     * UFAL/jmisutka Return component name which should be repeatable - this is
+     * needed for hierarchical repeatable components.
+     */
+    public String getExtraRepeatableComponent()
+    {
+        return extraRepeatableComponent;
+    }
+
+    /**
      * Get the name of the controlled vocabulary that is associated with this
      * field
      * 
@@ -359,21 +480,154 @@ public class DCInput
         return null;
     }
 
-	/**
-	 * The closed attribute of the vocabulary tag for this field as set in 
-	 * input-forms.xml
-	 * 
-	 * <code> 
-	 * <field>
-	 *     .....
-	 *     <vocabulary closed="true">nsrc</vocabulary>
-	 * </field>
-	 * </code>
-	 * @return the closedVocabulary flags: true if the entry should be restricted 
-	 *         only to vocabulary terms, false otherwise
-	 */
-	public boolean isClosedVocabulary() {
-		return closedVocabulary;
-	}
+    /**
+     * The closed attribute of the vocabulary tag for this field as set in
+     * input-forms.xml
+     * 
+     * <code> 
+     * <field>
+     *     .....
+     *     <vocabulary closed="true">nsrc</vocabulary>
+     * </field>
+     * </code>
+     * 
+     * @return the closedVocabulary flags: true if the entry should be
+     *         restricted only to vocabulary terms, false otherwise
+     */
+    public boolean isClosedVocabulary()
+    {
+        return closedVocabulary;
+    }
+
+    /**
+     * Decides if this field is valid for the document type
+     * 
+     * @param typeName
+     *            Document type name
+     * @return true when there is no type restriction or typeName is allowed
+     */
+    public boolean isAllowedFor(String typeName)
+    {
+        if (typeBind.size() == 0)
+            return true;
+
+        return typeBind.contains(typeName);
+    }
+
+    /**
+     * Check whether the supplied values is allowed (matching supplied email)
+     * eg. email validity check
+     * 
+     * @param value
+     * @return
+     */
+    public boolean isAllowedValue(String value)
+    {
+        if (regexp == null || regexp.isEmpty())
+        {
+            return true;
+        }
+        else if (value == null)
+        {
+            return false;
+        }
+        else
+        {
+            return value.matches(regexp);
+        }
+    }
+
+    public String getRegexp()
+    {
+        return regexp;
+    }
+
+    public String getRegexpWarning()
+    {
+        return regexpWarning;
+    }
+
+    public String getAutocomplete()
+    {
+        return autocomplete;
+    }
+
+    public String getExtra()
+    {
+        return extra;
+    }
+
+    public boolean hasExtraAttribute(String extra_string)
+    {
+        return null != extra && extra.contains(extra_string);
+    }
+
+    public String getComponentLabel()
+    {
+        return component_label;
+    }
+
+    public String getCollapsible()
+    {
+        return collapsible;
+    }
+
+    /**
+     * Is user allowed for particular ACL action on this input field in given
+     * Context?
+     * 
+     * @param c
+     *            Contex
+     * @param action
+     *            Action
+     * @return true if allowed, false otherwise
+     */
+    public boolean isAllowedAction(Context c, int action)
+    {        
+        return acl.isAllowedAction(c, action);
+    }
+    
+    /**
+     * Returns true if there is a ACL with at least one ACE bound to this input field
+     *  
+     * @return
+     */
+    public boolean hasACL() 
+    {
+        if(acl != null && !acl.isEmpty()) 
+        {
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Adds another rend to set of rends for further rendering in GUI
+     * 
+     * @param rend
+     */
+    public void addRend(String rend) 
+    {
+        rends.add(rend);
+    }
+    
+    /**
+     * Returns set of rends for further rendering in GUI
+     * 
+     * @return
+     */    
+    public Set<String> getRends() {
+        return rends;        
+    }
+    
+    /**
+     * Returns rends as space separated String
+     * 
+     * @return
+     */    
+    public String getRendsAsString() {
+        return StringUtils.join(rends.toArray()," ");        
+    }
+    
 
 }

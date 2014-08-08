@@ -21,7 +21,8 @@ import org.dspace.eperson.Group;
 
 /**
  * Confirmation step for the deletion of a community's role
- * @author Alexey Maslov
+ * based on class by Alexey Maslov
+ * modified for LINDAT/CLARIN
  */
 public class DeleteCommunityRoleConfirm extends AbstractDSpaceTransformer   
 {
@@ -53,7 +54,7 @@ public class DeleteCommunityRoleConfirm extends AbstractDSpaceTransformer
 		Group toBeDeleted = Group.find(context, groupID);
 		
 		// DIVISION: main
-	    Division main = body.addInteractiveDivision("community-role-delete",contextPath+"/admin/community",Division.METHOD_POST,"primary administrative community");
+	    Division main = body.addInteractiveDivision("community-role-delete",contextPath+"/admin/community",Division.METHOD_POST,"alert alert-danger");
 	    main.setHead(T_main_head.parameterize(role));
 	    main.addPara(T_main_para.parameterize(toBeDeleted.getName()));
 	    

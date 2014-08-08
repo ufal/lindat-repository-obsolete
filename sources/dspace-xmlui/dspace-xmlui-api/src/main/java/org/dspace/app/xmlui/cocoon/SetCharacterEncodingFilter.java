@@ -46,7 +46,7 @@ import javax.servlet.ServletResponse;
  *
  * @author Craig McClanahan - Apache
  * @author Tim Donohue (minor modifications)
- * @version $Revision$ $Date$
+ * @version $Revision$
  */
 
 public class SetCharacterEncodingFilter implements Filter

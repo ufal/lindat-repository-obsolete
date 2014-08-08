@@ -26,7 +26,7 @@ import org.dspace.core.ConfigurationManager;
  * @deprecated Use Servlet Context Listener provided in dspace-api (remove in >
  *             1.5.x)
  * @author Robert Tansley
- * @version $Revision$
+ * @version $Revision: 5845 $
  */
 public class LoadDSpaceLNIConfig extends HttpServlet
 {	

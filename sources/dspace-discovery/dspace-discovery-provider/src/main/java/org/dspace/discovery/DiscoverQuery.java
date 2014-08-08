@@ -7,12 +7,17 @@
  */
 package org.dspace.discovery;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class represents a query which the discovery backend can use
  *
- * @author Kevin Van de Velde (kevin at atmire dot com)
+ * based on class by Kevin Van de Velde (kevin at atmire dot com)
+ * modified for LINDAT/CLARIN
  *
  */
 public class DiscoverQuery {
@@ -61,6 +66,10 @@ public class DiscoverQuery {
 
 
     public void setQuery(String query) {
+    	if(query!=null) {
+            query = query.replaceAll("://", "\\\\://");    	    
+    		if(query.equals("")) query = "*:*";
+    	}
         this.query = query;
     }
 
@@ -246,3 +255,4 @@ public class DiscoverQuery {
         properties.put(property, toAddList);
     }
 }
+

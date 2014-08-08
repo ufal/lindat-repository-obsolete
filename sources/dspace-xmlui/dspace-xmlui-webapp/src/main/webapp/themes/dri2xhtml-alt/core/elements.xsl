@@ -10,10 +10,12 @@
 <!--
     Templates to cover the common dri elements.
 
-    Author: art.lowel at atmire.com
-    Author: lieven.droogmans at atmire.com
-    Author: ben at atmire.com
-    Author: Alexey Maslov
+	based on work by:
+    art.lowel at atmire.com
+    lieven.droogmans at atmire.com
+    ben at atmire.com
+    Alexey Maslov
+    modified for LINDAT/CLARIN
 
 -->
 
@@ -68,11 +70,11 @@
                 <xsl:variable name="xrefTarget">
                         <xsl:value-of select="./dri:p/dri:xref/@target"/>
                 </xsl:variable>
-                <xsl:if test="$itemDivision='item-view'">
+                <!-- xsl:if test="$itemDivision='item-view'">
                     <xsl:call-template name="cc-license">
                         <xsl:with-param name="metadataURL" select="./dri:referenceSet/dri:reference/@url"/>
                     </xsl:call-template>
-                </xsl:if>
+                </xsl:if -->
         <xsl:apply-templates select="@pagination">
             <xsl:with-param name="position">bottom</xsl:with-param>
         </xsl:apply-templates>

@@ -16,8 +16,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import edu.harvard.hul.ois.mets.AmdSec;
 import edu.harvard.hul.ois.mets.BinData;
@@ -69,6 +69,7 @@ import org.dspace.content.crosswalk.AbstractPackagerWrappingCrosswalk;
 import org.dspace.content.crosswalk.CrosswalkException;
 import org.dspace.content.crosswalk.CrosswalkObjectNotSupported;
 import org.dspace.content.crosswalk.DisseminationCrosswalk;
+import org.dspace.content.crosswalk.MODSDisseminationCrosswalk;
 import org.dspace.content.crosswalk.StreamDisseminationCrosswalk;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Constants;
@@ -108,16 +109,14 @@ import org.jdom.output.XMLOutputter;
  *       unreadable Bundles will still cause authorize errors.</li></ul></li>
  * </ul>
  *
- * @author Larry Stone
- * @author Robert Tansley
- * @author Tim Donohue
+ * based on class by Larry Stone, Robert Tansley and Tim Donohue
  * @version $Revision$
  */
 public abstract class AbstractMETSDisseminator
     extends AbstractPackageDisseminator
 {
     /** log4j category */
-    private static Logger log = Logger.getLogger(AbstractMETSDisseminator.class);
+    private static Logger log = cz.cuni.mff.ufal.Logger.getLogger(AbstractMETSDisseminator.class);
 
     // JDOM xml output writer - indented format for readability.
     private static XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
@@ -197,6 +196,18 @@ public abstract class AbstractMETSDisseminator
                 (params.getBooleanProperty("manifestOnly", false))) ?
                 "text/xml" : "application/zip";
     }
+    
+	public void writeManifest(Context context, DSpaceObject dso,
+			PackageParameters params, OutputStream outStream)
+			throws PackageValidationException, CrosswalkException,
+			AuthorizeException, SQLException, IOException, MetsException {
+		Mets manifest = makeManifest(context, dso, params, null);
+		// only validate METS if specified (default = true)
+		if (params.getBooleanProperty("validate", true)) {
+			manifest.validate(new MetsValidator());
+		}
+		manifest.write(new MetsWriter(outStream));
+	}
 
     /**
      * Export the object (Item, Collection, or Community) as a
@@ -244,13 +255,7 @@ public abstract class AbstractMETSDisseminator
             // Generate a true manifest-only "package", no external files/data & no need to zip up
             if (params != null && params.getBooleanProperty("manifestOnly", false))
             {
-                Mets manifest = makeManifest(context, dso, params, null);
-                //only validate METS if specified (default = true)
-                if(params.getBooleanProperty("validate", true))
-                {
-                    manifest.validate(new MetsValidator());
-                }
-                manifest.write(new MetsWriter(outStream));
+            	writeManifest(context, dso, params, outStream);
             }
             else
             {
@@ -306,7 +311,7 @@ public abstract class AbstractMETSDisseminator
 
         // map of extra streams to put in Zip (these are located during makeManifest())
         MdStreamCache extraStreams = new MdStreamCache();
-        ZipOutputStream zip = new ZipOutputStream(pkg);
+        ZipArchiveOutputStream zip = new ZipArchiveOutputStream(pkg);
         zip.setComment("METS archive created by DSpace " + Util.getSourceVersion());
         Mets manifest = makeManifest(context, dso, params, extraStreams);
 
@@ -339,7 +344,7 @@ public abstract class AbstractMETSDisseminator
                         log.debug("Writing EXTRA stream to Zip: " + fname);
                     }
                     //actually add the file to the Zip package
-                    ZipEntry ze = new ZipEntry(fname);
+                    ZipArchiveEntry ze = new ZipArchiveEntry(fname);
                     if (lmTime != 0)
                     {
                         ze.setTime(lmTime);
@@ -348,9 +353,9 @@ public abstract class AbstractMETSDisseminator
                     {
                         ze.setTime(DEFAULT_MODIFIED_DATE);
                     }
-                    zip.putNextEntry(ze);
+                    zip.putArchiveEntry(ze);
                     Utils.copy(is, zip);
-                    zip.closeEntry();
+                    zip.closeArchiveEntry();
 
                     is.close();
                 }
@@ -358,7 +363,7 @@ public abstract class AbstractMETSDisseminator
         }
 
         // write manifest after metadata.
-        ZipEntry me = new ZipEntry(METSManifest.MANIFEST_FILE);
+        ZipArchiveEntry me = new ZipArchiveEntry(METSManifest.MANIFEST_FILE);
         if (lmTime != 0)
         {
             me.setTime(lmTime);
@@ -368,7 +373,7 @@ public abstract class AbstractMETSDisseminator
             me.setTime(DEFAULT_MODIFIED_DATE);
         }
 
-        zip.putNextEntry(me);
+        zip.putArchiveEntry(me);
 
         // can only validate now after fixing up extraStreams
         // note: only validate METS if specified (default = true)
@@ -377,7 +382,7 @@ public abstract class AbstractMETSDisseminator
             manifest.validate(new MetsValidator());
         }
         manifest.write(new MetsWriter(zip));
-        zip.closeEntry();
+        zip.closeArchiveEntry();
 
         //write any bitstreams associated with DSpace object to zip package
         addBitstreamsToZip(context, dso, params, zip);
@@ -387,14 +392,14 @@ public abstract class AbstractMETSDisseminator
     }
     /**
      * Add Bitstreams associated with a given DSpace Object into an
-     * existing ZipOutputStream
+     * existing ZipArchiveOutputStream
      * @param context DSpace Context
      * @param dso The DSpace Object
      * @param params Parameters to the Packager script
      * @param zip Zip output
      */
     protected void addBitstreamsToZip(Context context, DSpaceObject dso,
-            PackageParameters params, ZipOutputStream zip)
+            PackageParameters params, ZipArchiveOutputStream zip)
             throws PackageValidationException, AuthorizeException, SQLException,
             IOException
     {
@@ -438,7 +443,7 @@ public abstract class AbstractMETSDisseminator
                             (unauth != null && unauth.equalsIgnoreCase("zero")))
                         {
                             String zname = makeBitstreamURL(bitstreams[k], params);
-                            ZipEntry ze = new ZipEntry(zname);
+                            ZipArchiveEntry ze = new ZipArchiveEntry(zname);
                             if (log.isDebugEnabled())
                             {
                                 log.debug(new StringBuilder().append("Writing CONTENT stream of bitstream(").append(bitstreams[k].getID()).append(") to Zip: ").append(zname).append(", size=").append(bitstreams[k].getSize()).toString());
@@ -452,7 +457,7 @@ public abstract class AbstractMETSDisseminator
                                 ze.setTime(DEFAULT_MODIFIED_DATE);
                             }
                             ze.setSize(auth ? bitstreams[k].getSize() : 0);
-                            zip.putNextEntry(ze);
+                            zip.putArchiveEntry(ze);
                             if (auth)
                             {
                                 InputStream input = bitstreams[k].retrieve();
@@ -465,7 +470,7 @@ public abstract class AbstractMETSDisseminator
                                         + String.valueOf(bitstreams[k].getSequenceID())
                                         + ", not authorized for READ.");
                             }
-                            zip.closeEntry();
+                            zip.closeArchiveEntry();
                         }
                         else if (unauth != null &&
                                  unauth.equalsIgnoreCase("skip"))
@@ -491,7 +496,7 @@ public abstract class AbstractMETSDisseminator
             if (logoBs != null)
             {
                 String zname = makeBitstreamURL(logoBs, params);
-                ZipEntry ze = new ZipEntry(zname);
+                ZipArchiveEntry ze = new ZipArchiveEntry(zname);
                 if (log.isDebugEnabled())
                 {
                     log.debug("Writing CONTENT stream of bitstream(" + String.valueOf(logoBs.getID()) + ") to Zip: " + zname + ", size=" + String.valueOf(logoBs.getSize()));
@@ -499,9 +504,9 @@ public abstract class AbstractMETSDisseminator
                 ze.setSize(logoBs.getSize());
                 //Set a default modified date so that checksum of Zip doesn't change if Zip contents are unchanged
                 ze.setTime(DEFAULT_MODIFIED_DATE);
-                zip.putNextEntry(ze);
+                zip.putArchiveEntry(ze);
                 Utils.copy(logoBs.retrieve(), zip);
-                zip.closeEntry();
+                zip.closeArchiveEntry();
             }
         }
     }
@@ -1356,7 +1361,12 @@ public abstract class AbstractMETSDisseminator
             }
             else
             {
-                Element res = xwalk.disseminateElement(dso);
+                Element res = null;
+                if ( xwalk instanceof MODSDisseminationCrosswalk ) {
+                    res = ((MODSDisseminationCrosswalk) xwalk).disseminateElement(dso, true);
+                }else {
+                    res = xwalk.disseminateElement(dso);
+                }
                 if (res != null)
                 {
                     pXML = new PreformedXML(outputter.outputString(res));

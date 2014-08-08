@@ -25,7 +25,8 @@ import org.dspace.content.BitstreamFormat;
  * Main management page for bitstream formats, this page lists all known formats
  * enabling the user to add more, updating existing, or delete formats.
  * 
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class FormatRegistryMain
         extends AbstractDSpaceTransformer
@@ -147,6 +148,8 @@ public class FormatRegistryMain
                 CheckBox select = cell.addCheckBox("select_format");
                 select.setLabel(id);
                 select.addOption(id);
+            } else {
+            	cell.addHighlight("fa fa-ban text-error").addContent(" ");
             }
 
             // ID

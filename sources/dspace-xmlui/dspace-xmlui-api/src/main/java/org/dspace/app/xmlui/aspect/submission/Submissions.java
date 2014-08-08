@@ -37,9 +37,12 @@ import org.dspace.content.WorkspaceItem;
 import org.dspace.core.Constants;
 import org.dspace.eperson.EPerson;
 import org.xml.sax.SAXException;
+import org.dspace.core.ConfigurationManager;
+
 
 /**
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class Submissions extends AbstractDSpaceTransformer
 {
@@ -79,9 +82,9 @@ public class Submissions extends AbstractDSpaceTransformer
     protected static final Message T_s_column2 = 
         message("xmlui.Submission.Submissions.submit_column2"); 
     protected static final Message T_s_column3 = 
-        message("xmlui.Submission.Submissions.submit_column3"); 
+        message("xmlui.Submission.Submissions.submit_column3");     
     protected static final Message T_s_column4 = 
-        message("xmlui.Submission.Submissions.submit_column4"); 
+        message("xmlui.Submission.Submissions.submit_column4");
     protected static final Message T_s_head3 = 
         message("xmlui.Submission.Submissions.submit_head3"); 
     protected static final Message T_s_info3 = 
@@ -101,12 +104,14 @@ public class Submissions extends AbstractDSpaceTransformer
     protected static final Message T_c_column2 =
             message("xmlui.Submission.Submissions.completed.column2");
     protected static final Message T_c_column3 =
-            message("xmlui.Submission.Submissions.completed.column3");
+            message("xmlui.Submission.Submissions.completed.column3");    
     protected static final Message T_c_limit =
             message("xmlui.Submission.Submissions.completed.limit");
     protected static final Message T_c_displayall =
             message("xmlui.Submission.Submissions.completed.displayall");
-
+    protected static final Message T_c_submit_add_new_version = 
+            message("xmlui.Submission.Submissions.completed_submit_add_new_version");
+    
     @Override
     public void addPageMeta(PageMeta pageMeta) throws SAXException,
 	WingException, UIException, SQLException, IOException,
@@ -181,7 +186,8 @@ public class Submissions extends AbstractDSpaceTransformer
                 Para p = start.addPara();
                 p.addContent(T_s_info1a);
                 p.addXref(contextPath+"/submit",T_s_info1b);
-                p.addContent(T_s_info1c);
+                Para secondP = start.addPara();
+                secondP.addContent(T_s_info1c);
                 return;
             }
     	}
@@ -233,7 +239,6 @@ public class Submissions extends AbstractDSpaceTransformer
 
                 Row row = table.addRow(Row.ROLE_DATA);
                 CheckBox remove = row.addCell().addCheckBox("workspaceID");
-                remove.setLabel("remove");
                 remove.addOption(workspaceItemID);
 
                 if (titles.length > 0)
@@ -277,7 +282,6 @@ public class Submissions extends AbstractDSpaceTransformer
 
             Row row = table.addRow(Row.ROLE_DATA);
             CheckBox selected = row.addCell().addCheckBox("workspaceID");
-            selected.setLabel("select");
             selected.addOption(workspaceItemID);
 
             if (titles.length > 0)
@@ -363,6 +367,7 @@ public class Submissions extends AbstractDSpaceTransformer
         // Create table, headers
         Table table = completedSubmissions.addTable("completed-submissions",subList.size() + 2,3);
         Row header = table.addRow(Row.ROLE_HEADER);
+        header.addCellContent(""); // CHECKBOX
         header.addCellContent(T_c_column1); // ISSUE DATE
         header.addCellContent(T_c_column2); // ITEM TITLE (LINKED)
         header.addCellContent(T_c_column3); // COLLECTION NAME (LINKED)
@@ -370,7 +375,7 @@ public class Submissions extends AbstractDSpaceTransformer
         //Limit to showing just 50 archived submissions, unless overridden
         //(This is a saftey measure for Admins who may have submitted 
         // thousands of items under their account via bulk ingest tools, etc.)
-        int limit = 50;
+        int limit = ConfigurationManager.getIntProperty("lr", "lr.webui.submit.submitted.limit", 50);
         int count = 0;
 
         // Populate table
@@ -390,12 +395,16 @@ public class Submissions extends AbstractDSpaceTransformer
             DCValue[] ingestDate = published.getMetadata("dc", "date", "accessioned", Item.ANY);
 
             Row row = table.addRow();
+                        
+            CheckBox checkBox = row.addCell().addCheckBox("itemID");
+            checkBox.addOption(published.getID());
 
             // Item accession date
             if (ingestDate != null && ingestDate.length > 0 &&
                 ingestDate[0].value != null)
             {
-                String displayDate = ingestDate[0].value.substring(0,10);
+                String displayDate = ingestDate[0].value.substring(
+                    0, Math.min(10, ingestDate[0].value.length()) );
                 Cell cellDate = row.addCell();
                 cellDate.addContent(displayDate);
             }
@@ -417,6 +426,13 @@ public class Submissions extends AbstractDSpaceTransformer
             // Owning Collection
             row.addCell().addXref(collUrl,collectionName);
         }//end while
+        
+        header = table.addRow();
+        Cell lastCell = header.addCell(0,5);
+        if (count > 0)
+        {
+            lastCell.addButton("submit_submissions_add_new_version").setValue(T_c_submit_add_new_version);
+        }
 
         //Display limit text & link to allow user to override this default limit
         if(!displayAll && count>limit)

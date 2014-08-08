@@ -46,6 +46,7 @@ import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
 import org.dspace.handle.HandleManager;
 import org.dspace.search.DSIndexer;
+import org.dspace.workflow.WorkflowItem;
 import org.dspace.workflow.WorkflowManager;
 import org.dspace.xmlworkflow.XmlWorkflowManager;
 import org.w3c.dom.Document;
@@ -69,6 +70,8 @@ import org.xml.sax.SAXException;
  * <P>
  * Modified by David Little, UCSD Libraries 12/21/04 to
  * allow the registration of files (bitstreams) into DSpace.
+ * 
+ * modified for LINDAT/CLARIN
  */
 public class ItemImport
 {
@@ -708,7 +711,7 @@ public class ItemImport
             }
             else
             {
-                // it's an ID
+                // it's an ID               
                 Item myitem = Item.find(c, Integer.parseInt(itemID));
                 System.out.println("Deleting item " + itemID);
                 deleteItem(c, myitem);
@@ -824,13 +827,21 @@ public class ItemImport
         c.commit();
 
         return myitem;
-    }
+    }      
 
     // remove, given the actual item
     private void deleteItem(Context c, Item myitem) throws Exception
     {
         if (!isTest)
         {
+            // <UFAL>
+            WorkflowItem myWorflowItem = WorkflowItem.findByItem(c, myitem);
+            if (myWorflowItem != null)
+            {
+                myWorflowItem.deleteWrapper();
+            }
+            // </UFAL>
+            
             Collection[] collections = myitem.getCollections();
 
             // Remove item from all the collections it's in
@@ -838,6 +849,11 @@ public class ItemImport
             {
                 collections[i].removeItem(myitem);
             }
+            
+            // <UFAL>
+            myitem.delete();
+            // </UFAL>
+            
         }
     }
 

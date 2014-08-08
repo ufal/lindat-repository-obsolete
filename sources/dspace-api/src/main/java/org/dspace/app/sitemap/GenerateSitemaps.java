@@ -37,8 +37,8 @@ import org.dspace.core.LogManager;
 /**
  * Command-line utility for generating HTML and Sitemaps.org protocol Sitemaps.
  * 
- * @author Robert Tansley
- * @author Stuart Lewis
+ * based on class by Robert Tansley and Stuart Lewis
+ * modified for LINDAT/CLARIN
  */
 public class GenerateSitemaps
 {
@@ -176,8 +176,13 @@ public class GenerateSitemaps
         }
 
         Context c = new Context();
-
+        
+        
+        String comms_l = "not generated";
+        String colls_l = "not generated";
+/*
         Community[] comms = Community.findAll(c);
+        comms_l = String.valueOf(comms.length);
 
         for (int i = 0; i < comms.length; i++)
         {
@@ -194,6 +199,7 @@ public class GenerateSitemaps
         }
 
         Collection[] colls = Collection.findAll(c);
+        colls_l = String.valueOf(colls.length);
 
         for (int i = 0; i < colls.length; i++)
         {
@@ -208,6 +214,7 @@ public class GenerateSitemaps
                 sitemapsOrg.addURL(url, null);
             }
         }
+*/
 
         ItemIterator allItems = Item.findAll(c);
         try
@@ -238,7 +245,7 @@ public class GenerateSitemaps
                 int files = html.finish();
                 log.info(LogManager.getHeader(c, "write_sitemap",
                         "type=html,num_files=" + files + ",communities="
-                                + comms.length + ",collections=" + colls.length
+                                + comms_l + ",collections=" + colls_l
                                 + ",items=" + itemCount));
             }
 
@@ -247,7 +254,7 @@ public class GenerateSitemaps
                 int files = sitemapsOrg.finish();
                 log.info(LogManager.getHeader(c, "write_sitemap",
                         "type=html,num_files=" + files + ",communities="
-                                + comms.length + ",collections=" + colls.length
+                                + comms_l + ",collections=" + colls_l
                                 + ",items=" + itemCount));
             }
         }

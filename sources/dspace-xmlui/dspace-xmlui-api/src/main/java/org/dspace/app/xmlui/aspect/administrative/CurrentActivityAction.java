@@ -8,11 +8,13 @@
 package org.dspace.app.xmlui.aspect.administrative;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 
 import org.apache.avalon.framework.parameters.Parameters;
@@ -25,6 +27,7 @@ import org.dspace.app.xmlui.utils.ContextUtil;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
+import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
 /**
  * 
@@ -32,7 +35,8 @@ import org.dspace.eperson.EPerson;
  * pages they are viewing. Later the control panel's activity viewer can access this data to
  * get a realtime snap shot of current activity of the repository.
  * 
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 
 public class CurrentActivityAction extends AbstractAction
@@ -51,7 +55,7 @@ public class CurrentActivityAction extends AbstractAction
 	private static boolean recordAnonymousEvents = true;
 	
 	/** record events from automatic bots */
-	private static boolean recordBotEvents = false;
+	private static boolean recordBotEvents = true;
 	
 	/**
 	 * Allow the DSpace.cfg to override our activity max and ip header.
@@ -173,6 +177,13 @@ public class CurrentActivityAction extends AbstractAction
     	/** The ip address of the requester */
     	private String ip;
     	
+    	/** The host  address of the requester */
+    	public String host = null;
+    	public Map<String,String> cookieMap = new HashMap<String,String>();
+    	public Map<String,String> headers = new HashMap<String,String>();
+    	public String qs = null;
+    	public String puser = null;
+    	
     	/**
     	 * Construct a new activity event, grabing various bits of data about the request from the context and request.
     	 */
@@ -203,6 +214,25 @@ public class CurrentActivityAction extends AbstractAction
                 {
                     ip = request.getRemoteAddr();
                 }
+
+    			host = request.getRemoteHost();
+    			// values should be copied
+    			if ( request.getCookieMap() != null ) {
+            		for ( Object key : request.getCookieMap().keySet() ) {
+            			Object val = request.getCookieMap().get(key);
+            			String cookstr = ((Cookie)val).getName() + ":" + ((Cookie)val).getValue();
+            			cookieMap.put( (String)key, cookstr );
+            		}
+    			}
+    			// values should be copied
+    			if ( request.getHeaders() != null ) {
+            		for ( Object key : request.getHeaders().keySet() ) {
+            			Object val = request.getHeaders().get(key);
+            			headers.put( (String)key, (String)val );
+            		}
+    			}
+    			qs = request.getQueryString();
+    			puser = request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : "None";
     		}
     		
     		// The current time
@@ -239,6 +269,7 @@ public class CurrentActivityAction extends AbstractAction
     	{
     		return ip;
     	}
+
     	
     	/**
     	 * Is this event anonymous?
@@ -267,6 +298,8 @@ public class CurrentActivityAction extends AbstractAction
     			ua.contains("webcrawler/") ||
     			ua.contains("inktomi") ||
     			ua.contains("teoma") ||
+    			ua.contains("ufal-dev") ||
+    			ua.contains("baiduspider") ||
     			ua.contains("bot"));
     	}
     	
@@ -314,6 +347,12 @@ public class CurrentActivityAction extends AbstractAction
             {
                 return "Teoma (bot)";
             }
+
+    		if (userAgentLower.contains("baiduspider"))
+            {
+                return "Baidu (bot)";
+            }
+
     		
     		if (userAgentLower.contains("bot"))
             {
@@ -454,7 +493,7 @@ public class CurrentActivityAction extends AbstractAction
             }
     		
     		// if you get all the way to the end and still nothing, return unknown.
-    		return "Unknown";
+    		return userAgent.length() == 0 ? "Unknown" : escapeHtml( userAgent.substring( 0, Math.min(20, userAgent.length()) ) );
     	}  
     }
     

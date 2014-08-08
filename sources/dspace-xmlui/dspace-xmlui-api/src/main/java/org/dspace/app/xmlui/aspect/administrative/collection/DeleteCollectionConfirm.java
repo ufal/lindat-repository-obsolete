@@ -23,7 +23,8 @@ import org.dspace.content.Collection;
 
 /**
  * Confirmation step for the deletion of an entire collection
- * @author Alexey Maslov
+ * based on class by Alexey Maslov
+ * modified for LINDAT/CLARIN
  */
 public class DeleteCollectionConfirm extends AbstractDSpaceTransformer   
 {
@@ -57,7 +58,7 @@ public class DeleteCollectionConfirm extends AbstractDSpaceTransformer
 		Collection thisCollection = Collection.find(context, collectionID);
 		
 		// DIVISION: main
-	    Division main = body.addInteractiveDivision("collection-confirm-delete",contextPath+"/admin/collection",Division.METHOD_POST,"primary administrative collection");
+	    Division main = body.addInteractiveDivision("collection-confirm-delete",contextPath+"/admin/collection",Division.METHOD_POST,"alert alert-danger");
 	    main.setHead(T_main_head.parameterize(collectionID));
 	    main.addPara(T_main_para.parameterize(thisCollection.getMetadata("name")));	    
 	    List deleteConfirmHelp = main.addList("consequences",List.TYPE_BULLETED);

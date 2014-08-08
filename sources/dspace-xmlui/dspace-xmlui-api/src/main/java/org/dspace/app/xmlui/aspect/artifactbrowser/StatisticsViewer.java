@@ -39,6 +39,8 @@ import java.text.SimpleDateFormat;
  *
  * Unlike the JSP interface that pre-generates HTML and stores in the reports folder,
  * this class transforms the raw analysis data into a Wing representation
+ *
+ * modified for LINDAT/CLARIN
  */
 public class StatisticsViewer extends AbstractDSpaceTransformer implements CacheableProcessingComponent
 {
@@ -347,6 +349,7 @@ public class StatisticsViewer extends AbstractDSpaceTransformer implements Cache
         public String dateRange()
         {
             StringBuilder content = new StringBuilder();
+            content.append("Statistics generated for the period starting from ");
             DateFormat df = DateFormat.getDateInstance();
             if (start != null)
             {
@@ -415,7 +418,7 @@ public class StatisticsViewer extends AbstractDSpaceTransformer implements Cache
                     rows++;
                 }
 
-                Table block = currDiv.addTable("reportBlock", rows, 2);
+                Table block = currDiv.addTable("reportBlock", rows, 2, "detailtable");
 
                 // prepare the table headers
                 if (content.getStatName() != null || content.getResultName() != null)
@@ -572,6 +575,14 @@ public class StatisticsViewer extends AbstractDSpaceTransformer implements Cache
             mainTitle();
             dateRange();
 
+            List links = null;
+            try {
+                Division menu_dir = rootDiv.addDivision("quickMenu");
+                menu_dir.setHead("Topics");
+                links = menu_dir.addList("quickLinks");
+            } catch (WingException e) {
+            }
+
             // Loop through all the sections
             for (Statistics stats : blocks)
             {
@@ -582,6 +593,11 @@ public class StatisticsViewer extends AbstractDSpaceTransformer implements Cache
                     String aName = title.toLowerCase();
                     Matcher matchSpace = space.matcher(aName);
                     aName = matchSpace.replaceAll("_");
+
+                    if ( null != links ) {
+                        links.addItemXref(
+                            "#aspect_artifactbrowser_StatisticsViewer_div_" + aName, aName);
+                    }
 
                     // Create a new division for each section
                     currDiv = rootDiv.addDivision(aName);

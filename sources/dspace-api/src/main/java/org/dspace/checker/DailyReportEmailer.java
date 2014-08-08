@@ -110,7 +110,7 @@ public class DailyReportEmailer
         msg.setFrom(new InternetAddress(ConfigurationManager
                 .getProperty("mail.from.address")));
         msg.addRecipient(Message.RecipientType.TO, new InternetAddress(
-                ConfigurationManager.getProperty("mail.admin")));
+                ConfigurationManager.getProperty("info.recipient")));
 
         msg.setSentDate(new Date());
         msg.setSubject("Checksum checker Report - " + numberOfBitstreams

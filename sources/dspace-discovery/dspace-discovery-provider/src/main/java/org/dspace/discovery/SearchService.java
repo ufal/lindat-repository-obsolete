@@ -18,9 +18,12 @@ import java.util.List;
 /**
  * Search interface that discovery uses
  *
- * @author Kevin Van de Velde (kevin at atmire dot com)
- * @author Mark Diggory (markd at atmire dot com)
- * @author Ben Bosman (ben at atmire dot com)
+ * based on class by:
+ * Kevin Van de Velde (kevin at atmire dot com)
+ * Mark Diggory (markd at atmire dot com)
+ * Ben Bosman (ben at atmire dot com)
+ *
+ * modified for LINDAT/CLARIN
  */
 public interface SearchService {
 
@@ -55,6 +58,17 @@ public interface SearchService {
      */
     DiscoverFilterQuery toFilterQuery(Context context, String field, String value) throws SQLException;
 
+    /**
+     * Transforms the given string field and value into a filter query
+     * @param context the DSpace context
+     * @param field the field of the filter query
+     * @param operator for query 
+     * @param value the filter query value
+     * @return a filter query
+     * @throws SQLException ...
+     */    
+    DiscoverFilterQuery toFilterQuery(Context context, String field, String operator, String value) throws SQLException;
+    
     /**
      * Transforms the metadata field of the given sort configuration into the indexed field which we can then use in our solr queries
      * @param metadataField the metadata field

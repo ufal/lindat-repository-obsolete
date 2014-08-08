@@ -53,7 +53,8 @@ import org.dspace.content.DSpaceObject;
  * There are four parts to an item's METS document: descriptive metadata,
  * file section, structural map, and extra sections.
  *
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 
 public class ItemAdapter extends AbstractAdapter
@@ -93,6 +94,11 @@ public class ItemAdapter extends AbstractAdapter
         super(contextPath);
         this.item = item;
         this.context = context;
+        
+        // <UFAL>
+        this.setRightsMDTypes("UFAL_LICENSES");
+        // </UFAL>
+        
     }
 
     /** Return the item */

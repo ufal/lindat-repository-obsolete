@@ -10,13 +10,16 @@ package org.dspace.discovery.configuration;
 /**
  * Class contains parameters used for the configuration of discovery
  *
- * @author Kevin Van de Velde (kevin at atmire dot com)
+ * based on class by Kevin Van de Velde (kevin at atmire dot com)
+ * modified for LINDAT/CLARIN
  */
 public class DiscoveryConfigurationParameters {
 
     public static final String TYPE_TEXT = "text";
     public static final String TYPE_DATE = "date";
     public static final String TYPE_AC = "date";
+    
+    public static final String TYPE_RAW = "raw_values";
 
     public static enum SORT {VALUE, COUNT}
 

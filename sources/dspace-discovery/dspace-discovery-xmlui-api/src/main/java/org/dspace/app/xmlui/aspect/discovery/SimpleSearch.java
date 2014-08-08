@@ -37,9 +37,12 @@ import org.xml.sax.SAXException;
  * Preform a simple search of the repository. The user provides a simple one
  * field query (the url parameter is named query) and the results are processed.
  *
- * @author Kevin Van de Velde (kevin at atmire dot com)
- * @author Mark Diggory (markd at atmire dot com)
- * @author Ben Bosman (ben at atmire dot com)
+ * based on class by:
+ * Kevin Van de Velde (kevin at atmire dot com)
+ * Mark Diggory (markd at atmire dot com)
+ * Ben Bosman (ben at atmire dot com)
+ *
+ * modified for LINDAT/CLARIN
  */
 public class SimpleSearch extends AbstractSearch implements CacheableProcessingComponent {
     /**
@@ -107,7 +110,7 @@ public class SimpleSearch extends AbstractSearch implements CacheableProcessingC
 
         // Build the DRI Body
         Division search = body.addDivision("search", "primary");
-        search.setHead(T_head);
+        //search.setHead(T_head);
         String searchUrl = ConfigurationManager.getProperty("dspace.url") + "/JSON/discovery/search";
 
         search.addHidden("discovery-json-search-url").setValue(searchUrl);
@@ -124,19 +127,22 @@ public class SimpleSearch extends AbstractSearch implements CacheableProcessingC
 
         List searchList = mainSearchDiv.addList("primary-search", List.TYPE_FORM);
 
-        searchList.setHead(T_search_label);
+        /*searchList.setHead(T_search_label);
         if (variableScope()) {
             Select scope = searchList.addItem().addSelect("scope");
             scope.setLabel(T_search_scope);
             buildScopeList(scope);
-        }
+        }*/
 
         Item searchBoxItem = searchList.addItem();
-        Text text = searchBoxItem.addText("query");
+        Text text = searchBoxItem.addText("query", "home-search");
         text.setValue(queryString);
         text.setSize(75);
-        searchBoxItem.addButton("submit").setValue(T_go);
-        addHiddenFormFields("search", request, fqs, mainSearchDiv);
+        searchBoxItem.addButton("submit", "home-search-button").setValue(T_search_label);
+        
+        //mainSearchDiv.addPara().addXref("#", "Add filters", null, "show-filters");
+        searchList.addItem().addXref("#", "Add filters", null, "show-filters");	
+        //addHiddenFormFields("search", request, fqs, mainSearchDiv);
 
 
         DSpaceObject dso = HandleUtil.obtainHandle(objectModel);
@@ -147,30 +153,53 @@ public class SimpleSearch extends AbstractSearch implements CacheableProcessingC
                     "discover", Division.METHOD_GET, "discover-search-box search");
 
             List secondarySearchList = searchFiltersDiv.addList("secondary-search", List.TYPE_FORM);
-            secondarySearchList.setHead(T_filter_label);
+            //secondarySearchList.setHead(T_filter_label);
+
+            if(0 < filterFields.size()){
+            	
+                Item item = secondarySearchList.addItem("search-filter-list", "search-filter-list");
+                Composite filterComp = item.addComposite("search-filter-controls");
+                filterComp.setLabel(T_add_filter);
+                filterComp.setHelp(T_filter_help);
+
+    //            filterComp.setLabel("");
+
+                Select select = filterComp.addSelect("filtertype", "widthauto");
+
+                //For each field found (at least one) add options
+                for (DiscoverySearchFilter searchFilter : filterFields) {
+                    select.addOption(searchFilter.getIndexFieldName(), message("xmlui.ArtifactBrowser.SimpleSearch.filter." + searchFilter.getIndexFieldName()));
+                }
+
+                Select operator = filterComp.addSelect("operator", "widthauto");
+                operator.addOption("contains", "contains");
+                operator.addOption("equals", "equals");
+                operator.addOption("notcontains", "not contains");
+                operator.addOption("notequals", "not equals");
+                operator.addOption("notavailable", "not available");
+                
+                //Add a box so we can search for our value
+                filterComp.addText("filter", "widthauto");
+
+                //And last add an add button
+                filterComp.enableAddOperation();
+
+            }
 
 
     //        queryList.addItem().addContent("Filters");
             //If we have any filters, show them
             if(fqs.length > 0){
                 //if(filters != null && filters.size() > 0){
-                Item item = secondarySearchList.addItem("used-filters", "used-filters-list");
+                List item = secondarySearchList.addList("used-filters", List.TYPE_GLOSS, "used-filters-list");
 
-
-//                Composite composite = item.addComposite("facet-controls");
-
-//                composite.setLabel(T_FILTERS_SELECTED);
-
+                item.setHead(T_FILTERS_SELECTED);
 
                 for (int i = 0; i <  fqs.length; i++) {
                     String filterQuery = fqs[i];
                     DiscoverFilterQuery fq = searchService.toFilterQuery(context, filterQuery);
-
-//                    CheckBox box = item.addCheckBox("fq");
-                    CheckBox box = item.addCheckBox("fq");
-                    if(i == 0){
-                        box.setLabel(T_FILTERS_SELECTED);
-                    }
+                    
+                    CheckBox box = item.addItem(null, fq.getOperator()).addCheckBox("fq");
                     Option option = box.addOption(true, fq.getFilterQuery());
                     String field = fq.getField();
                     option.addContent(message("xmlui.ArtifactBrowser.SimpleSearch.filter." + field));
@@ -185,7 +214,6 @@ public class SimpleSearch extends AbstractSearch implements CacheableProcessingC
                         option.addContent(": " + years[0] + " - " + years[1]);
                         continue;
                     }
-
                     option.addContent(": " + fq.getDisplayedValue());
                 }
                 secondarySearchList.addItem().addButton("submit_update_filters", "update-filters").setValue(T_filter_apply);
@@ -193,41 +221,12 @@ public class SimpleSearch extends AbstractSearch implements CacheableProcessingC
 
 
 
-            if(0 < filterFields.size()){
-                //We have at least one filter so add our filter box
-                Item item = secondarySearchList.addItem("search-filter-list", "search-filter-list");
-                Composite filterComp = item.addComposite("search-filter-controls");
-                filterComp.setLabel(T_add_filter);
-                filterComp.setHelp(T_filter_help);
-
-    //            filterComp.setLabel("");
-
-                Select select = filterComp.addSelect("filtertype");
-
-                //For each field found (at least one) add options
-                for (DiscoverySearchFilter searchFilter : filterFields) {
-                    select.addOption(searchFilter.getIndexFieldName(), message("xmlui.ArtifactBrowser.SimpleSearch.filter." + searchFilter.getIndexFieldName()));
-                }
-
-                //Add a box so we can search for our value
-                filterComp.addText("filter").setSize(30);
-
-                //And last add an add button
-                filterComp.enableAddOperation();
-            }
 
             addHiddenFormFields("filter", request, fqs, searchFiltersDiv);
-
         }
-
-
-
-        Division searchControlsDiv = search.addInteractiveDivision("search-controls",
-                "discover", Division.METHOD_GET, "discover-sort-box search");
-
+        
+        Division searchControlsDiv = search.addDivision("search-controls", "discover-sort-box search");
         buildSearchControls(searchControlsDiv);
-        addHiddenFormFields("sort", request, fqs, searchControlsDiv);
-
 
 //        query.addPara(null, "button-list").addButton("submit").setValue(T_go);
 
@@ -253,13 +252,26 @@ public class SimpleSearch extends AbstractSearch implements CacheableProcessingC
         java.util.List<String> fqs = new ArrayList<String>();
         if(request.getParameterValues("fq") != null)
         {
-            fqs.addAll(Arrays.asList(request.getParameterValues("fq")));
+        	for(String fq : request.getParameterValues("fq")) {
+        		try {
+					fqs.add(searchService.toFilterQuery(context, fq).getFilterQuery());
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+        	}
         }
 
+        
+        String operator = request.getParameter("operator");
+        if(operator==null || operator.isEmpty()) {
+        	operator = "contains";
+        }
         //Have we added a filter using the UI
         if(request.getParameter("filter") != null && !"".equals(request.getParameter("filter")))
         {
-            fqs.add((request.getParameter("filtertype")) + ":" + request.getParameter("filter"));
+            fqs.add((request.getParameter("filtertype")) + ":" + operator   + ":" + request.getParameter("filter"));
+        } else if(operator != null && "notavailable".equals(operator)){
+        	fqs.add((request.getParameter("filtertype")) + ":" + operator  + ":[* TO *]");
         }
         return fqs.toArray(new String[fqs.size()]);
     }
@@ -277,14 +289,21 @@ public class SimpleSearch extends AbstractSearch implements CacheableProcessingC
 
             if(request.getParameterValues("fq") != null)
             {
-                fqs.addAll(Arrays.asList(request.getParameterValues("fq")));
+            	for(String fq : request.getParameterValues("fq")) {
+            		fqs.add(searchService.toFilterQuery(context, fq).getFilterQuery());
+            	}
             }
 
             String type = request.getParameter("filtertype");
             String value = request.getParameter("filter");
+            String operator = request.getParameter("operator");
+            
+            if(operator==null || operator.isEmpty()) {
+            	operator = "contains";
+            }
 
             if(value != null && !value.equals("")){
-                allFilterQueries.add(searchService.toFilterQuery(context, (type.equals("*") ? "" : type), value).getFilterQuery());
+                allFilterQueries.add(searchService.toFilterQuery(context, (type.equals("*") ? "" : type), operator, value).getFilterQuery());
             }
 
             //Add all the previous filters also
@@ -405,3 +424,5 @@ public class SimpleSearch extends AbstractSearch implements CacheableProcessingC
         }
     }
 }
+
+

@@ -31,7 +31,8 @@ import java.util.List;
  * unfortunately no way around this until DAOs and an interface are provided 
  * for the Item class.
  * 
- * @author Richard Jones
+ * based on class by Richard Jones
+ * modified for LINDAT/CLARIN
  *
  */
 public class BrowseItem extends DSpaceObject
@@ -392,5 +393,17 @@ public class BrowseItem extends DSpaceObject
     public boolean isWithdrawn()
     {
         return withdrawn;
+    }
+    
+    public boolean isHidden(){
+    	try{
+		DCValue[] dcvs = this.getMetadata("local","hidden",null,null);
+		if(dcvs != null && dcvs.length == 1 && dcvs[0].value.equalsIgnoreCase("hidden")){
+			return true;
+		}
+    	} catch(SQLException sqle){
+    		log.error("caught exception: ", sqle);
+    	}
+		return false;
     }
 }

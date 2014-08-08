@@ -46,7 +46,8 @@ import org.dspace.eperson.EPerson;
  * </map:act>
  * <map:transform type="try-to-login-again-transformer">
  *
- * @author <a href="mailto:bliong@melcoe.mq.edu.au">Bruc Liong, MELCOE</a>
+ * based on class by <a href="mailto:bliong@melcoe.mq.edu.au">Bruc Liong, MELCOE</a>
+ * modified for LINDAT/CLARIN
  */
 
 public class ShibbolethAction extends AbstractAction
@@ -85,17 +86,36 @@ public class ShibbolethAction extends AbstractAction
             	{
             		// Otherwise direct the user to the specified 'loginredirect' page (or homepage by default)
             		String loginRedirect = ConfigurationManager.getProperty("xmlui.user.loginredirect");
+            		if(loginRedirect==null) {
+            			loginRedirect = (String)request.getSession().getAttribute("xmlui.user.loginredirect");
+            		}
+            		if(loginRedirect != null && loginRedirect.endsWith("login")) {
+            			loginRedirect = "/";
+            		}
             		redirectURL += (loginRedirect != null) ? loginRedirect.trim() : "/";	
             	}
             	
-                // Authentication successfull send a redirect.
+                // Authentication successful send a redirect.
                 final HttpServletResponse httpResponse = (HttpServletResponse) objectModel.get(HttpEnvironment.HTTP_RESPONSE_OBJECT);
+                
+            	String email = eperson.getEmail();
+            	if (email == null) {
+            		redirectURL = request.getContextPath() + "/set-email";
+
+            	}else if ( null == eperson.getWelcome() && 
+            	        ConfigurationManager.getBooleanProperty("lr", "lr.login.welcome.message", false) ) 
+            	{
+                    // tocheck: users without emails should not be authenticated unless
+                    // emails are provided
+                    redirectURL = request.getContextPath() + "/welcome-message";
+                    request.getSession().setAttribute("shib.welcome", request.getSession().getAttribute("shib.welcome"));
+            	}
                 
                 httpResponse.sendRedirect(redirectURL);
                 
                 // log the user out for the rest of this current request, however they will be reauthenticated
                 // fully when they come back from the redirect. This prevents caching problems where part of the
-                // request is preformed for the user was authenticated and the other half after it succedded. This
+                // request is performed for the user was authenticated and the other half after it succeeded. This
                 // way the user is fully authenticated from the start of the request.
                 //
                 // TODO: have no idea what this is, but leave it as it is, could be broken
@@ -114,3 +134,4 @@ public class ShibbolethAction extends AbstractAction
     }
 
 }
+

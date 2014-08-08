@@ -11,6 +11,8 @@ import org.apache.log4j.Logger;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.statistics.SolrLogger;
 
+import cz.cuni.mff.ufal.statistics.IPTable;
+
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,9 +26,12 @@ import java.util.Set;
  * In future someone may add UserAgents and Host Domains
  * to the detection criteria here.
  *
- * @author kevinvandevelde at atmire.com
- * @author ben at atmire.com
- * @author Mark Diggory (mdiggory at atmire.com)
+ * based on class by:
+ * Kevin Van de Velde (kevin at atmire dot com)
+ * Mark Diggory (markd at atmire dot com)
+ * Ben Bosman (ben at atmire dot com)
+ *
+ * modified for LINDAT/CLARIN
  */
 public class SpiderDetector {
 

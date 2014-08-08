@@ -13,27 +13,78 @@
     <parent>
         <groupId>org.dspace</groupId>
         <artifactId>dspace-parent</artifactId>
-        <version>1.8.4-SNAPSHOT</version>
+        <version>1.8.2</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <properties>
-        <!-- This is the path to the root [dspace-src] directory. -->
-        <root.basedir>${basedir}/..</root.basedir>
-    </properties>
+    <!--
+       The Subversion repository location is used by Continuum to update against
+       when changes have occurred, this spawns a new build cycle and releases snapshots
+       into the snapshot repository below.
+    -->
+    <scm>
+        <connection>scm:svn:http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</connection>
+        <developerConnection>scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2</developerConnection>
+        <url>http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</url>
+    </scm>
+
+
+<!--
+  UFAL info
+-->
+         <reporting>
+            <plugins>
+              <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>2.6</version>
+                <reportSets>
+                  <reportSet>
+                    <reports><!-- select reports -->
+                      <report>index</report>
+                    </reports>
+                  </reportSet>
+                </reportSets>
+              </plugin>
+
+              <plugin>
+                  <groupId>org.codehaus.mojo</groupId>
+                  <artifactId>findbugs-maven-plugin</artifactId>
+              </plugin>
+
+              <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-pmd-plugin</artifactId>
+              </plugin>
+
+            </plugins>
+          </reporting>
+
+
 
     <!--
        Runtime and Compile Time dependencies for DSpace.
     -->
     <build>
         <plugins>
+
+<!--
+  needed for UFAL info
+-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>3.3</version>
+      </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.0.2</version>
+                <version>3.1</version>
                 <configuration>
                     <debug>true</debug>
                     <showDeprecation>true</showDeprecation>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
             <plugin>
@@ -59,14 +110,14 @@
     </build>
 
     <dependencies>
+  <dependency>
+            <groupId>cz.cuni.mff.ufal.lindat</groupId>
+            <artifactId>utilities</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.dspace</groupId>
             <artifactId>handle</artifactId>
             <version>6.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.dspace</groupId>
-            <artifactId>jargon</artifactId>
         </dependency>
         <dependency>
             <groupId>org.dspace</groupId>
@@ -115,6 +166,10 @@
         <dependency>
             <groupId>commons-pool</groupId>
             <artifactId>commons-pool</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.mail</groupId>
@@ -251,10 +306,22 @@
             <version>1.0</version>
         </dependency>
         <dependency>
-            <groupId>com.coverity.security</groupId>
-            <artifactId>coverity-escapers</artifactId>
-            <version>1.1.1</version>
+          <groupId>edu.sdsc.grid</groupId>
+          <artifactId>jargon</artifactId>
+          <version>3.0.0</version>
         </dependency>
-      </dependencies>
+        <dependency>
+          <groupId>com.googlecode.json-simple</groupId>
+          <artifactId>json-simple</artifactId>
+          <version>1.1.1</version>
+        </dependency>
+        <!--  Gson: Java to Json conversion -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>1.7.1</version>
+            <scope>compile</scope>
+        </dependency>        
+    </dependencies>
 
 </project>

@@ -43,7 +43,8 @@ import org.dspace.sort.OrderFormat;
  * To see a full definition of the usage of this class just run it without any
  * arguments, and you will get the help message.
  * 
- * @author Richard Jones
+ * based on class by Richard Jones
+ * modified for LINDAT/CLARIN
  */
 public class IndexBrowse
 {
@@ -372,6 +373,10 @@ public class IndexBrowse
                 // This item shouldn't exist in either index - ensure that it is removed
                 dao.deleteByItemID(BrowseIndex.getItemBrowseIndex().getTableName(), item.getID());
                 dao.deleteByItemID(BrowseIndex.getWithdrawnBrowseIndex().getTableName(), item.getID());
+            }
+            
+            if(item.isHidden()){
+            	dao.deleteByItemID(BrowseIndex.getItemBrowseIndex().getTableName(), item.getID());
             }
 
             // Update the community mappings if they are required, or remove them if they aren't
@@ -1254,6 +1259,14 @@ public class IndexBrowse
             }
             
             return browseItem.isWithdrawn();
+        }
+        
+        public boolean isHidden(){
+        	if(item != null){
+        		return item.isHidden();
+        	}
+        	
+        	return browseItem.isHidden();
         }
 	}
 }

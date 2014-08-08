@@ -10,6 +10,7 @@ package org.dspace.app.xmlui.aspect.statistics;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -20,12 +21,16 @@ import org.dspace.app.xmlui.wing.WingException;
 import org.dspace.app.xmlui.wing.Message;
 import org.dspace.app.xmlui.wing.element.*;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.DCValue;
 import org.dspace.content.DSpaceObject;
 import org.dspace.core.Constants;
 import org.dspace.statistics.Dataset;
 import org.dspace.statistics.content.*;
 import org.xml.sax.SAXException;
 
+/**
+ * modified for LINDAT/CLARIN
+*/
 public class StatisticsTransformer extends AbstractDSpaceTransformer {
 
 	private static Logger log = Logger.getLogger(StatisticsTransformer.class);
@@ -51,10 +56,10 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 
         if(dso != null)
         {
-            HandleUtil.buildHandleTrail(dso, pageMeta, contextPath);
+        	HandleUtil.buildHandleTrailTerminal(dso, pageMeta, contextPath);
         }
-        pageMeta.addTrailLink(contextPath + "/handle" + (dso != null && dso.getHandle() != null ? "/" + dso.getHandle() : "/statistics"), T_statistics_trail);
-
+                        
+        pageMeta.addTrail().addContent(T_statistics_trail);
         // Add the page title
         pageMeta.addMetadata("title").addContent(T_head_title);
     }
@@ -71,7 +76,7 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 		try
 		{
 			if(dso != null)
-			{
+			{				
 				renderViewer(body, dso);
 			}
 			else
@@ -115,8 +120,8 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 		try {
             /** List of the top 10 items for the entire repository **/
 			StatisticsListing statListing = new StatisticsListing(
-					new StatisticsDataVisits());
-
+					new StatisticsDataVisits());						
+			
 			statListing.setTitle(T_head_visits_total);
 			statListing.setId("list1");
 
@@ -143,15 +148,28 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 		// Build the collection viewer division.
 		Division division = home.addDivision("stats", "secondary stats");
 		division.setHead(T_head_title);
-
 		
-		try {
-			StatisticsListing statListing = new StatisticsListing(
-					new StatisticsDataVisits(dso));
+		String sdate = null;
 
+		if(Constants.ITEM == dso.getType()) {				
+			org.dspace.content.Item item = (org.dspace.content.Item)dso;
+			DCValue[] dates = item.getMetadata("dc", "date", "issued", org.dspace.content.Item.ANY);
+			if(dates!=null || dates.length>1) {
+				sdate = dates[0].value;
+			}
+		}			
+		
+		if(sdate!=null) {
+			division.addPara(null, "label").addContent("Showing statistics from " + sdate);
+		}
+				
+		try {
+			StatisticsListing statListing = new StatisticsListing(new StatisticsDataVisits(dso));
+						
 			statListing.setTitle(T_head_visits_total);
 			statListing.setId("list1");
 
+			
 			DatasetDSpaceObjectGenerator dsoAxis = new DatasetDSpaceObjectGenerator();
 			dsoAxis.addDsoChild(dso.getType(), 10, false, -1);
 			statListing.addDatasetGenerator(dsoAxis);
@@ -170,12 +188,13 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 		try {
 
 			StatisticsTable statisticsTable = new StatisticsTable(new StatisticsDataVisits(dso));
-
+			
 			statisticsTable.setTitle(T_head_visits_month);
 			statisticsTable.setId("tab1");
 
 			DatasetTimeGenerator timeAxis = new DatasetTimeGenerator();
-			timeAxis.setDateInterval("month", "-6", "+1");
+			//Year wise breakup of last 12 years + this year
+			timeAxis.setDateInterval("year", "-12", "+1");
 			statisticsTable.addDatasetGenerator(timeAxis);
 
 			DatasetDSpaceObjectGenerator dsoAxis = new DatasetDSpaceObjectGenerator();
@@ -297,7 +316,7 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 			/** Generate Table */
 			Division wrapper = mainDiv.addDivision("tablewrapper");
 			Table table = wrapper.addTable("list-table", 1, 1,
-					title == null ? "" : "tableWithTitle");
+					title == null ? "detailtable" : "tableWithTitle detailtable");
 			if (title != null)
             {
                 table.setHead(message(title));
@@ -353,7 +372,7 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 			// String[] rLabels = dataset.getRowLabels().toArray(new String[0]);
 
 			Table table = mainDiv.addTable("list-table", matrix.length, 2,
-					title == null ? "" : "tableWithTitle");
+					title == null ? "detailtable" : "tableWithTitle detailtable");
 			if (title != null)
             {
                 table.setHead(message(title));
@@ -367,12 +386,25 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 
 			/** Generate Table Body */
 			for (int col = 0; col < matrix[0].length; col++) {
-				Row valListRow = table.addRow();
+				String url = dataset.getColLabelsAttrs().get(col).get("url");
+				
+				String rend = "";
+				
+				if(url==null) {
+					rend = "hidden";
+				}
+				
+				Row valListRow = table.addRow(null, null, rend);
 
 				Cell catCell = valListRow.addCell(col + "1", Cell.ROLE_DATA,
 						"labelcell");
-				catCell.addContent(dataset.getColLabels().get(col));
-
+								
+				if(url != null && !url.equals("")) {
+					catCell.addXref(url, dataset.getColLabels().get(col));
+				} else {
+					catCell.addContent(dataset.getColLabels().get(col));					
+				}				
+				
 				Cell valCell = valListRow.addCell(col + "2", Cell.ROLE_DATA,
 						"datacell");
 				valCell.addContent(matrix[0][col]);
@@ -388,3 +420,4 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 
 	}
 }
+

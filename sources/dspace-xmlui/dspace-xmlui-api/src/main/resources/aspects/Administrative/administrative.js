@@ -33,6 +33,8 @@ importClass(Packages.org.dspace.app.xmlui.aspect.administrative.FlowAuthorizatio
 importClass(Packages.org.dspace.app.xmlui.aspect.administrative.FlowContainerUtils);
 importClass(Packages.org.dspace.app.xmlui.aspect.administrative.FlowCurationUtils);
 importClass(Packages.org.dspace.app.xmlui.aspect.administrative.FlowMetadataImportUtils);
+importClass(Packages.cz.cuni.mff.ufal.dspace.app.xmlui.aspect.administrative.FlowHandleUtils);
+importClass(Packages.cz.cuni.mff.ufal.administrative.LicenseForm);
 importClass(Packages.java.lang.System);
 importClass(Packages.org.dspace.core.ConfigurationManager);
 
@@ -51,7 +53,7 @@ function getObjectModel()
  */
 function getDSContext()
 {
-	return ContextUtil.obtainContext(getObjectModel());
+    return ContextUtil.obtainContext(getObjectModel());
 }
 
 /**
@@ -215,10 +217,10 @@ function isAuthorized(objectType, objectID, action) {
  */
 function assertAuthorized(objectType, objectID, action) {
 
-	if ( ! isAuthorized(objectType, objectID, action)) {
-		sendPage("admin/not-authorized");
-		cocoon.exit();
-	}
+    if ( ! isAuthorized(objectType, objectID, action)) {
+        sendPage("admin/not-authorized");
+        cocoon.exit();
+    }
 }
 
 /**
@@ -226,9 +228,9 @@ function assertAuthorized(objectType, objectID, action) {
  */
 function canEditItem(itemID)
 {
-	var item = Item.find(getDSContext(),itemID);
+    var item = Item.find(getDSContext(),itemID);
 
-	return item.canEdit();
+    return item.canEdit();
 }
 
 /**
@@ -237,10 +239,10 @@ function canEditItem(itemID)
  */
 function assertEditItem(itemID) {
 
-	if ( ! canEditItem(itemID)) {
-		sendPage("admin/not-authorized");
-		cocoon.exit();
-	}
+    if ( ! canEditItem(itemID)) {
+        sendPage("admin/not-authorized");
+        cocoon.exit();
+    }
 }
 
 /**
@@ -248,12 +250,12 @@ function assertEditItem(itemID) {
  */
 function canEditCollection(collectionID)
 {
-	var collection = Collection.find(getDSContext(),collectionID);
+    var collection = Collection.find(getDSContext(),collectionID);
 
   if (collection == null) {
      return isAdministrator();
   }
-	return collection.canEditBoolean();
+    return collection.canEditBoolean();
 }
 
 /**
@@ -262,10 +264,10 @@ function canEditCollection(collectionID)
  */
 function assertEditCollection(collectionID) {
 
-	if ( ! canEditCollection(collectionID)) {
-		sendPage("admin/not-authorized");
-		cocoon.exit();
-	}
+    if ( ! canEditCollection(collectionID)) {
+        sendPage("admin/not-authorized");
+        cocoon.exit();
+    }
 }
 
 
@@ -274,12 +276,12 @@ function assertEditCollection(collectionID) {
  */
 function canAdminCollection(collectionID)
 {
-	var collection = Collection.find(getDSContext(),collectionID);
+    var collection = Collection.find(getDSContext(),collectionID);
 
   if (collection == null) {
      return isAdministrator();
   }
-	return AuthorizeManager.authorizeActionBoolean(getDSContext(), collection, Constants.ADMIN);
+    return AuthorizeManager.authorizeActionBoolean(getDSContext(), collection, Constants.ADMIN);
 }
 
 /**
@@ -288,10 +290,10 @@ function canAdminCollection(collectionID)
  */
 function assertAdminCollection(collectionID) {
 
-	if ( ! canAdminCollection(collectionID)) {
-		sendPage("admin/not-authorized");
-		cocoon.exit();
-	}
+    if ( ! canAdminCollection(collectionID)) {
+        sendPage("admin/not-authorized");
+        cocoon.exit();
+    }
 }
 
 
@@ -304,12 +306,12 @@ function canEditCommunity(communityID)
         return isAdministrator();
     }
 
-	  var community = Community.find(getDSContext(),communityID);
+      var community = Community.find(getDSContext(),communityID);
 
     if (community == null) {
         return isAdministrator();
     }
-	  return community.canEditBoolean();
+      return community.canEditBoolean();
 }
 
 /**
@@ -318,10 +320,10 @@ function canEditCommunity(communityID)
  */
 function assertEditCommunity(communityID) {
 
-	if ( ! canEditCommunity(communityID)) {
-		sendPage("admin/not-authorized");
-		cocoon.exit();
-	}
+    if ( ! canEditCommunity(communityID)) {
+        sendPage("admin/not-authorized");
+        cocoon.exit();
+    }
 }
 
 /**
@@ -329,12 +331,12 @@ function assertEditCommunity(communityID) {
  */
 function canAdminCommunity(communityID)
 {
-	var community = Community.find(getDSContext(),communityID);
+    var community = Community.find(getDSContext(),communityID);
 
   if (community == null) {
      return isAdministrator();
   }
-	return AuthorizeManager.authorizeActionBoolean(getDSContext(), community, Constants.ADMIN);
+    return AuthorizeManager.authorizeActionBoolean(getDSContext(), community, Constants.ADMIN);
 }
 
 /**
@@ -343,10 +345,10 @@ function canAdminCommunity(communityID)
  */
 function assertAdminCommunity(communityID) {
 
-	if ( ! canAdminCommunity(communityID)) {
-		sendPage("admin/not-authorized");
-		cocoon.exit();
-	}
+    if ( ! canAdminCommunity(communityID)) {
+        sendPage("admin/not-authorized");
+        cocoon.exit();
+    }
 }
 
 /**
@@ -356,15 +358,25 @@ function assertAdminCommunity(communityID) {
 function assertEditGroup(groupID)
 {
     // Check authorizations
-	if (groupID == -1)
-	{
-		// only system admin can create "top level" group
-		assertAdministrator();
-	}
-	else
-	{
-		assertAuthorized(Constants.GROUP, groupID, Constants.WRITE);
-	}
+    if (groupID == -1)
+    {
+        // only system admin can create "top level" group
+        assertAdministrator();
+    }
+    else
+    {
+        assertAuthorized(Constants.GROUP, groupID, Constants.WRITE);
+    }
+}
+
+/**
+ * Assert that the currently authenticated eperson can edit the given handle. If they can
+ * not then this method will never return.
+ */
+function assertEditHandle(handleID)
+{    
+    // only system admin can create or edit handles at the moment
+    assertAdministrator();    
 }
 
 /**
@@ -372,7 +384,7 @@ function assertEditGroup(groupID)
  * administrator.
  */
 function isAdministrator() {
-	return AuthorizeManager.isAdmin(getDSContext());
+    return AuthorizeManager.isAdmin(getDSContext());
 }
 
 /**
@@ -382,13 +394,20 @@ function isAdministrator() {
  */
 function assertAdministrator() {
 
-	if ( ! isAdministrator()) {
-		sendPage("admin/not-authorized");
-		cocoon.exit();
-	}
+    if ( ! isAdministrator()) {
+        sendPage("admin/not-authorized");
+        cocoon.exit();
+    }
 }
 
-
+function assertCurator(){
+	if(! isAdministrator()){
+        if( ! FlowCurationUtils.isReviewer(getDSContext(), cocoon.request) ){
+                sendPage("admin/not-authorized");
+                cocoon.exit();
+		}
+	}
+}
 
 /*********************
  * Entry Point flows
@@ -400,15 +419,15 @@ function assertAdministrator() {
  */
 function startManageEPeople()
 {
-	assertAdministrator();
+    assertAdministrator();
 
-	doManageEPeople();
+    doManageEPeople();
 
-	// This should never return, but just in case it does then point
-	// the user to the home page.
-	cocoon.redirectTo(cocoon.request.getContextPath());
-	getDSContext().complete();
-	cocoon.exit();
+    // This should never return, but just in case it does then point
+    // the user to the home page.
+    cocoon.redirectTo(cocoon.request.getContextPath());
+    getDSContext().complete();
+    cocoon.exit();
 }
 
 /**
@@ -416,15 +435,15 @@ function startManageEPeople()
  */
 function startManageGroups()
 {
-	assertAdministrator();
+    assertAdministrator();
 
-	doManageGroups();
+    doManageGroups();
 
-	// This should never return, but just in case it does then point
-	// the user to the home page.
-	cocoon.redirectTo(cocoon.request.getContextPath());
-	getDSContext().complete();
-	cocoon.exit();
+    // This should never return, but just in case it does then point
+    // the user to the home page.
+    cocoon.redirectTo(cocoon.request.getContextPath());
+    getDSContext().complete();
+    cocoon.exit();
 }
 
 /**
@@ -432,15 +451,15 @@ function startManageGroups()
  */
 function startManageMetadataRegistry()
 {
-	assertAdministrator();
+    assertAdministrator();
 
-	doManageMetadataRegistry();
+    doManageMetadataRegistry();
 
-	// This should never return, but just in case it does then point
-	// the user to the home page.
-	cocoon.redirectTo(cocoon.request.getContextPath());
-	getDSContext().complete();
-	cocoon.exit();
+    // This should never return, but just in case it does then point
+    // the user to the home page.
+    cocoon.redirectTo(cocoon.request.getContextPath());
+    getDSContext().complete();
+    cocoon.exit();
 }
 
 /**
@@ -448,15 +467,15 @@ function startManageMetadataRegistry()
  */
 function startManageFormatRegistry()
 {
-	assertAdministrator();
+    assertAdministrator();
 
-	doManageFormatRegistry();
+    doManageFormatRegistry();
 
-	// This should never return, but just in case it does then point
-	// the user to the home page.
-	cocoon.redirectTo(cocoon.request.getContextPath());
-	getDSContext().complete();
-	cocoon.exit();
+    // This should never return, but just in case it does then point
+    // the user to the home page.
+    cocoon.redirectTo(cocoon.request.getContextPath());
+    getDSContext().complete();
+    cocoon.exit();
 }
 
 /**
@@ -464,15 +483,15 @@ function startManageFormatRegistry()
  */
 function startManageItems()
 {
-	assertAdministrator();
+    assertAdministrator();
 
-	doManageItems();
+    doManageItems();
 
-	// This should never return, but just in case it does then point
-	// the user to the home page.
-	cocoon.redirectTo(cocoon.request.getContextPath());
-	getDSContext().complete();
-	cocoon.exit();
+    // This should never return, but just in case it does then point
+    // the user to the home page.
+    cocoon.redirectTo(cocoon.request.getContextPath());
+    getDSContext().complete();
+    cocoon.exit();
 }
 
 /**
@@ -480,15 +499,15 @@ function startManageItems()
  */
 function startManageAuthorizations()
 {
-	assertAdministrator();
+    assertAdministrator();
 
-	doManageAuthorizations();
+    doManageAuthorizations();
 
-	// This should never return, but just in case it does then point
-	// the user to the home page.
-	cocoon.redirectTo(cocoon.request.getContextPath());
-	getDSContext().complete();
-	cocoon.exit();
+    // This should never return, but just in case it does then point
+    // the user to the home page.
+    cocoon.redirectTo(cocoon.request.getContextPath());
+    getDSContext().complete();
+    cocoon.exit();
 }
 
 
@@ -497,17 +516,17 @@ function startManageAuthorizations()
  */
 function startEditItem()
 {
-	var itemID = cocoon.request.get("itemID");
+    var itemID = cocoon.request.get("itemID");
 
-	assertEditItem(itemID);
+    assertEditItem(itemID);
 
-	doEditItem(itemID);
+    doEditItem(itemID);
 
-	var item = Item.find(getDSContext(),itemID);
-	cocoon.redirectTo(cocoon.request.getContextPath()+"/handle/"+item.getHandle(),true);
-	getDSContext().complete();
-	item = null;
-	cocoon.exit();
+    var item = Item.find(getDSContext(),itemID);
+    cocoon.redirectTo(cocoon.request.getContextPath()+"/handle/"+item.getHandle(),true);
+    getDSContext().complete();
+    item = null;
+    cocoon.exit();
 }
 
 /**
@@ -517,16 +536,16 @@ function startMapItems()
 {
     var collectionID = cocoon.request.get("collectionID");
 
-	// they can edit the collection they are maping items into.
-	assertEditCollection(collectionID);
+    // they can edit the collection they are maping items into.
+    assertEditCollection(collectionID);
 
-	doMapItems(collectionID);
+    doMapItems(collectionID);
 
-	var collection = Collection.find(getDSContext(),collectionID);
-	cocoon.redirectTo(cocoon.request.getContextPath()+"/handle/"+collection.getHandle(),true);
+    var collection = Collection.find(getDSContext(),collectionID);
+    cocoon.redirectTo(cocoon.request.getContextPath()+"/handle/"+collection.getHandle(),true);
     getDSContext().complete();
-	collection = null;
-	cocoon.exit();
+    collection = null;
+    cocoon.exit();
 }
 
 function startMetadataImport()
@@ -534,11 +553,11 @@ function startMetadataImport()
 
         assertAdministrator();
 
-	doMetadataImport();
+    doMetadataImport();
 
-	cocoon.redirectTo(cocoon.request.getContextPath());
+    cocoon.redirectTo(cocoon.request.getContextPath());
         getDSContext().complete();
-	cocoon.exit();
+    cocoon.exit();
 }
 
 /**
@@ -546,16 +565,16 @@ function startMetadataImport()
  */
 function startCreateCollection()
 {
-	var communityID = cocoon.request.get("communityID");
+    var communityID = cocoon.request.get("communityID");
 
-	assertAuthorized(Constants.COMMUNITY,communityID,Constants.ADD);
+    assertAuthorized(Constants.COMMUNITY,communityID,Constants.ADD);
 
-	doCreateCollection(communityID);
+    doCreateCollection(communityID);
 
-	// Root level community, cancel out to the global community list.
-	cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
-	getDSContext().complete();
-	cocoon.exit();
+    // Root level community, cancel out to the global community list.
+    cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
+    getDSContext().complete();
+    cocoon.exit();
 }
 
 
@@ -564,18 +583,18 @@ function startCreateCollection()
  */
 function startEditCollection()
 {
-	var collectionID = cocoon.request.get("collectionID");
+    var collectionID = cocoon.request.get("collectionID");
 
-	assertEditCollection(collectionID);
+    assertEditCollection(collectionID);
 
-	doEditCollection(collectionID);
+    doEditCollection(collectionID);
 
-	// Go back to the collection
-	var collection = Collection.find(getDSContext(),collectionID);
-	cocoon.redirectTo(cocoon.request.getContextPath()+"/handle/"+collection.getHandle(),true);
-	getDSContext().complete();
-	collection = null;
-	cocoon.exit();
+    // Go back to the collection
+    var collection = Collection.find(getDSContext(),collectionID);
+    cocoon.redirectTo(cocoon.request.getContextPath()+"/handle/"+collection.getHandle(),true);
+    getDSContext().complete();
+    collection = null;
+    cocoon.exit();
 }
 
 /**
@@ -583,14 +602,14 @@ function startEditCollection()
  */
 function startCreateCommunity()
 {
-	var communityID = cocoon.request.get("communityID");
+    var communityID = cocoon.request.get("communityID");
 
-	doCreateCommunity(communityID);
+    doCreateCommunity(communityID);
 
-	// Root level community, cancel out to the global community list.
-	cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
-	getDSContext().complete();
-	cocoon.exit();
+    // Root level community, cancel out to the global community list.
+    cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
+    getDSContext().complete();
+    cocoon.exit();
 }
 
 /**
@@ -598,18 +617,18 @@ function startCreateCommunity()
  */
 function startEditCommunity()
 {
-	var communityID = cocoon.request.get("communityID");
+    var communityID = cocoon.request.get("communityID");
 
-	assertEditCommunity(communityID);
+    assertEditCommunity(communityID);
 
-	doEditCommunity(communityID);
+    doEditCommunity(communityID);
 
-	// Go back to the community
-	var community = Community.find(getDSContext(),communityID);
-	cocoon.redirectTo(cocoon.request.getContextPath()+"/handle/"+community.getHandle(),true);
-	getDSContext().complete();
-	community = null;
-	cocoon.exit();
+    // Go back to the community
+    var community = Community.find(getDSContext(),communityID);
+    cocoon.redirectTo(cocoon.request.getContextPath()+"/handle/"+community.getHandle(),true);
+    getDSContext().complete();
+    community = null;
+    cocoon.exit();
 }
 
 /**
@@ -617,7 +636,7 @@ function startEditCommunity()
  */
 function startCurate()
 {
-        assertAdministrator();
+        assertCurator();
 
         doCurate();
 
@@ -626,6 +645,34 @@ function startCurate()
         cocoon.exit();
 }
 
+
+/**
+ * Start (site-wide) licenses
+ */
+function startLicenses()
+{
+        assertAdministrator();
+
+        licenses();
+
+        cocoon.redirectTo(cocoon.request.getContextPath());
+        getDSContext().complete();
+        cocoon.exit();
+}
+
+/**
+ * Start (site-wide) handles
+ */
+function startManageHandles()
+{
+        assertAdministrator();
+
+        doManageHandles();
+
+        cocoon.redirectTo(cocoon.request.getContextPath());
+        getDSContext().complete();
+        cocoon.exit();
+}
 
 
 
@@ -642,7 +689,7 @@ function startCurate()
  */
 function doManageEPeople()
 {
-	assertAdministrator();
+    assertAdministrator();
 
     var query = "";
     var page = 0;
@@ -672,7 +719,7 @@ function doManageEPeople()
             result = doAddEPerson();
 
             if (result != null && result.getParameter("epersonID"))
-              	highlightID = result.getParameter("epersonID");
+                highlightID = result.getParameter("epersonID");
         }
         else if (cocoon.request.get("submit_edit") && cocoon.request.get("epersonID"))
         {
@@ -709,7 +756,7 @@ function doManageEPeople()
  */
 function doAddEPerson()
 {
-	assertAdministrator();
+    assertAdministrator();
 
     var result;
     do {
@@ -740,8 +787,8 @@ function doAddEPerson()
  */
 function doEditEPerson(epersonID)
 {
-	// We can't assert any privleges at this point, the user could be a collection
-	// admin or a supper admin. Instead we protect each operation.
+    // We can't assert any privleges at this point, the user could be a collection
+    // admin or a supper admin. Instead we protect each operation.
     var result;
     do {
         sendPageAndWait("admin/epeople/edit",{"epersonID":epersonID},result);
@@ -791,19 +838,19 @@ function doEditEPerson(epersonID)
         }
         else if (cocoon.request.get("submit_login_as"))
         {
-        	// Login as this user.
-        	assertAdministrator();
-        	result = FlowEPersonUtils.processLoginAs(getDSContext(),getObjectModel(),epersonID);
+            // Login as this user.
+            assertAdministrator();
+            result = FlowEPersonUtils.processLoginAs(getDSContext(),getObjectModel(),epersonID);
 
-        	if (result != null && result.getOutcome().equals("success"))
-        	{
-        		// the user is loged in as another user, we can't let them continue on
-        		// using this flow because they might not have permissions. So forward
-        		// them to the homepage.
-        		cocoon.redirectTo(cocoon.request.getContextPath(),true);
-				getDSContext().complete();
-				cocoon.exit();
-        	}
+            if (result != null && result.getOutcome().equals("success"))
+            {
+                // the user is loged in as another user, we can't let them continue on
+                // using this flow because they might not have permissions. So forward
+                // them to the homepage.
+                cocoon.redirectTo(cocoon.request.getContextPath(),true);
+                getDSContext().complete();
+                cocoon.exit();
+            }
         }
 
     } while (result == null || !result.getContinue())
@@ -817,7 +864,7 @@ function doEditEPerson(epersonID)
  */
 function doDeleteEPeople(epeopleIDs)
 {
-	assertAdministrator();
+    assertAdministrator();
 
     sendPageAndWait("admin/epeople/delete",{"epeopleIDs":epeopleIDs.join(',')});
 
@@ -845,9 +892,9 @@ function doDeleteEPeople(epeopleIDs)
  */
 function doManageGroups()
 {
-	assertAdministrator();
+    assertAdministrator();
 
-	var highlightID = -1
+    var highlightID = -1
     var query = "";
     var page = 0;
     var result;
@@ -856,7 +903,7 @@ function doManageGroups()
 
         sendPageAndWait("admin/group/main",{"query":query,"page":page,"highlightID":highlightID},result);
         assertAdministrator();
-		result = null;
+        result = null;
 
 
          // Update the page parameter if supplied.
@@ -876,14 +923,14 @@ function doManageGroups()
             result = doEditGroup(-1);
 
             if (result != null && result.getParameter("groupID"))
-           		highlightID = result.getParameter("groupID");
+                highlightID = result.getParameter("groupID");
         }
         else if (cocoon.request.get("submit_edit") && cocoon.request.get("groupID"))
         {
             // Edit a specific group
-			var groupID = cocoon.request.get("groupID");
-			result = doEditGroup(groupID);
-			highlightID = groupID;
+            var groupID = cocoon.request.get("groupID");
+            result = doEditGroup(groupID);
+            highlightID = groupID;
         }
         else if (cocoon.request.get("submit_delete") && cocoon.request.get("select_group"))
         {
@@ -909,14 +956,14 @@ function doManageGroups()
  */
 function doEditGroup(groupID)
 {
-	var groupName        = FlowGroupUtils.getName(getDSContext(),groupID);
-	var memberEPeopleIDs = FlowGroupUtils.getEPeopleMembers(getDSContext(),groupID);
-	var memberGroupIDs   = FlowGroupUtils.getGroupMembers(getDSContext(),groupID);
+    var groupName        = FlowGroupUtils.getName(getDSContext(),groupID);
+    var memberEPeopleIDs = FlowGroupUtils.getEPeopleMembers(getDSContext(),groupID);
+    var memberGroupIDs   = FlowGroupUtils.getGroupMembers(getDSContext(),groupID);
 
-	assertEditGroup(groupID);
+    assertEditGroup(groupID);
 
-	var highlightEPersonID;
-	var highlightGroupID;
+    var highlightEPersonID;
+    var highlightGroupID;
     var type = "";
     var query = "";
     var page = 0;
@@ -925,30 +972,30 @@ function doEditGroup(groupID)
         sendPageAndWait("admin/group/edit",{"groupID":groupID,"groupName":groupName,"memberGroupIDs":memberGroupIDs.join(','),"memberEPeopleIDs":memberEPeopleIDs.join(','),"highlightEPersonID":highlightEPersonID,"highlightGroupID":highlightGroupID,"query":query,"page":page,"type":type},result);
         assertEditGroup(groupID);
 
-		result = null;
+        result = null;
         highlightEPersonID = null;
         highlightGroupID = null;
 
         // Update the groupName
-		if (cocoon.request.get("group_name"))
-			groupName = cocoon.request.get("group_name");
+        if (cocoon.request.get("group_name"))
+            groupName = cocoon.request.get("group_name");
 
-		if (cocoon.request.get("page"))
-			page = cocoon.request.get("page");
+        if (cocoon.request.get("page"))
+            page = cocoon.request.get("page");
 
         if (cocoon.request.get("submit_cancel"))
         {
             // Just return with out saving anything.
             return null;
         }
-       	else if (cocoon.request.get("submit_save"))
-       	{
-       		result = FlowGroupUtils.processSaveGroup(getDSContext(),groupID,groupName,memberEPeopleIDs,memberGroupIDs);
+        else if (cocoon.request.get("submit_save"))
+        {
+            result = FlowGroupUtils.processSaveGroup(getDSContext(),groupID,groupName,memberEPeopleIDs,memberGroupIDs);
 
-       		// Incase a group was created, update our id.
-       		if (result != null && result.getParameter("groupID"))
-           		groupID = result.getParameter("groupID");
-       	}
+            // Incase a group was created, update our id.
+            if (result != null && result.getParameter("groupID"))
+                groupID = result.getParameter("groupID");
+        }
         else if (cocoon.request.get("submit_search_epeople") && cocoon.request.get("query"))
         {
             // Preform a new search for epeople.
@@ -993,38 +1040,38 @@ function doEditGroup(groupID)
         var names = cocoon.request.getParameterNames();
         while (names.hasMoreElements())
         {
-        	var name = names.nextElement();
-        	var match = null;
+            var name = names.nextElement();
+            var match = null;
 
-        	if ((match = name.match(/submit_add_eperson_(\d+)/)) != null)
-        	{
-        		// Add an eperson
-        		var epersonID = match[1];
-        		memberEPeopleIDs = FlowGroupUtils.addMember(memberEPeopleIDs,epersonID);
-        		highlightEPersonID = epersonID;
-        	}
+            if ((match = name.match(/submit_add_eperson_(\d+)/)) != null)
+            {
+                // Add an eperson
+                var epersonID = match[1];
+                memberEPeopleIDs = FlowGroupUtils.addMember(memberEPeopleIDs,epersonID);
+                highlightEPersonID = epersonID;
+            }
 
-        	if ((match = name.match(/submit_add_group_(\d+)/)) != null)
-        	{
-        		// Add a group
-        		var _groupID = match[1];
-        		memberGroupIDs = FlowGroupUtils.addMember(memberGroupIDs,_groupID);
-        		highlightGroupID = _groupID;
-        	}
-        	if ((match = name.match(/submit_remove_eperson_(\d+)/)) != null)
-        	{
-        		// remove an eperson
-        		var epersonID = match[1];
-				memberEPeopleIDs = FlowGroupUtils.removeMember(memberEPeopleIDs,epersonID);
-				highlightEPersonID = epersonID;
-        	}
-        	if ((match = name.match(/submit_remove_group_(\d+)/)) != null)
-        	{
-        		// remove a group
-        		var _groupID = match[1];
-        		memberGroupIDs = FlowGroupUtils.removeMember(memberGroupIDs,_groupID);
-        		highlightGroupID = _groupID;
-        	}
+            if ((match = name.match(/submit_add_group_(\d+)/)) != null)
+            {
+                // Add a group
+                var _groupID = match[1];
+                memberGroupIDs = FlowGroupUtils.addMember(memberGroupIDs,_groupID);
+                highlightGroupID = _groupID;
+            }
+            if ((match = name.match(/submit_remove_eperson_(\d+)/)) != null)
+            {
+                // remove an eperson
+                var epersonID = match[1];
+                memberEPeopleIDs = FlowGroupUtils.removeMember(memberEPeopleIDs,epersonID);
+                highlightEPersonID = epersonID;
+            }
+            if ((match = name.match(/submit_remove_group_(\d+)/)) != null)
+            {
+                // remove a group
+                var _groupID = match[1];
+                memberGroupIDs = FlowGroupUtils.removeMember(memberGroupIDs,_groupID);
+                highlightGroupID = _groupID;
+            }
         }
 
 
@@ -1038,7 +1085,7 @@ function doEditGroup(groupID)
  */
 function doDeleteGroups(groupIDs)
 {
-	assertAdministrator();
+    assertAdministrator();
 
     sendPageAndWait("admin/group/delete",{"groupIDs":groupIDs.join(',')});
 
@@ -1066,12 +1113,12 @@ function doDeleteGroups(groupIDs)
  */
 function doManageMetadataRegistry()
 {
-	assertAdministrator();
+    assertAdministrator();
 
     var result = null;
     do {
         sendPageAndWait("admin/metadata-registry/main",{},result);
-		assertAdministrator();
+        assertAdministrator();
         result = null;
 
         if (cocoon.request.get("submit_edit") && cocoon.request.get("schemaID"))
@@ -1106,14 +1153,14 @@ function doManageMetadataRegistry()
  */
 function doEditMetadataSchema(schemaID)
 {
-	assertAdministrator();
+    assertAdministrator();
 
     var highlightID = -1 // Field that is highlighted
     var updateID = -1; // Field being updated
     var result = null;
     do {
         sendPageAndWait("admin/metadata-registry/edit-schema",{"schemaID":schemaID,"updateID":updateID,"highlightID":highlightID},result);
-		assertAdministrator();
+        assertAdministrator();
         result = null;
 
         if (cocoon.request.get("submit_return"))
@@ -1185,7 +1232,7 @@ function doEditMetadataSchema(schemaID)
  */
 function doDeleteMetadataFields(fieldIDs)
 {
-	assertAdministrator();
+    assertAdministrator();
 
     sendPageAndWait("admin/metadata-registry/delete-fields",{"fieldIDs":fieldIDs.join(',')})
     assertAdministrator();
@@ -1205,10 +1252,10 @@ function doDeleteMetadataFields(fieldIDs)
  */
 function doMoveMetadataFields(fieldIDs)
 {
-	assertAdministrator();
+    assertAdministrator();
 
     sendPageAndWait("admin/metadata-registry/move-fields",{"fieldIDs":fieldIDs.join(',')});
-	assertAdministrator();
+    assertAdministrator();
 
     if (cocoon.request.get("submit_move") && cocoon.request.get("to_schema"))
     {
@@ -1226,7 +1273,7 @@ function doMoveMetadataFields(fieldIDs)
  */
 function doDeleteMetadataSchemas(schemaIDs)
 {
-	assertAdministrator();
+    assertAdministrator();
 
     sendPageAndWait("admin/metadata-registry/delete-schemas",{"schemaIDs":schemaIDs.join(',')});
     assertAdministrator();
@@ -1251,7 +1298,7 @@ function doDeleteMetadataSchemas(schemaIDs)
  */
 function doManageFormatRegistry()
 {
-	assertAdministrator();
+    assertAdministrator();
 
     var highlightID = -1 // Field that is highlighted
     var updateID = -1; // Field being updated
@@ -1259,7 +1306,7 @@ function doManageFormatRegistry()
     do {
         sendPageAndWait("admin/format-registry/main",{"updateID":updateID,"highlightID":highlightID},result);
         assertAdministrator();
-		result = null;
+        result = null;
 
         if (cocoon.request.get("submit_return"))
         {
@@ -1304,12 +1351,12 @@ function doManageFormatRegistry()
  */
 function doEditBitstreamFormat(formatID)
 {
-	assertAdministrator();
+    assertAdministrator();
 
     var result = null;
     do {
         sendPageAndWait("admin/format-registry/edit",{"formatID":formatID},result);
-		assertAdministrator();
+        assertAdministrator();
         result = null;
 
 
@@ -1334,10 +1381,10 @@ function doEditBitstreamFormat(formatID)
  */
 function doDeleteBitstreamFormats(formatIDs)
 {
-	assertAdministrator();
+    assertAdministrator();
 
     sendPageAndWait("admin/format-registry/delete",{"formatIDs":formatIDs.join(',')});
-	assertAdministrator();
+    assertAdministrator();
 
     if (cocoon.request.get("submit_confirm"))
     {
@@ -1358,29 +1405,29 @@ function doDeleteBitstreamFormats(formatIDs)
  */
 function doManageItems()
 {
-	assertAdministrator();
+    assertAdministrator();
 
-	var identifier;
-	var result;
-	do {
-		sendPageAndWait("admin/item/find",{"identifier":identifier},result);
-   		assertAdministrator();
-		result = null;
+    var identifier;
+    var result;
+    do {
+        sendPageAndWait("admin/item/find",{"identifier":identifier},result);
+        assertAdministrator();
+        result = null;
 
-		if (cocoon.request.get("submit_find") && cocoon.request.get("identifier"))
-		{
-			// Search for the identifier
-			identifier = cocoon.request.get("identifier");
-			result = FlowItemUtils.resolveItemIdentifier(getDSContext(),identifier);
+        if (cocoon.request.get("submit_find") && cocoon.request.get("identifier"))
+        {
+            // Search for the identifier
+            identifier = cocoon.request.get("identifier");
+            result = FlowItemUtils.resolveItemIdentifier(getDSContext(),identifier);
 
-			// If an item was found then allow the user to edit the item.
-			if (result != null && result.getParameter("itemID"))
-			{
-				var itemID = result.getParameter("itemID");
-				result = doEditItem(itemID);
-			}
-		}
-	} while (true)
+            // If an item was found then allow the user to edit the item.
+            if (result != null && result.getParameter("itemID"))
+            {
+                var itemID = result.getParameter("itemID");
+                result = doEditItem(itemID);
+            }
+        }
+    } while (true)
 }
 
 
@@ -1390,57 +1437,141 @@ function doManageItems()
  */
 function doEditItem(itemID)
 {
-	// Always go to the status page first
-	doEditItemStatus(itemID);
+    // Always go to the status page first
+    doEditItemStatus(itemID);
 
-	do {
-	    if (cocoon.request.get("submit_return"))
-		{
-			// go back to where ever we came from.
-			return null;
-		}
-		else if (cocoon.request.get("submit_status"))
-		{
-			doEditItemStatus(itemID);
-		}
-		else if (cocoon.request.get("submit_bitstreams"))
-		{
-			doEditItemBitstreams(itemID);
-		}
-		else if (cocoon.request.get("submit_metadata"))
-		{
-			doEditItemMetadata(itemID, -1);
-		}
-		else if (cocoon.request.get("view_item"))
-		{
-			doViewItem(itemID);
-		}
-	        else if (cocoon.request.get("submit_curate"))
-                {
-                        doCurateItem(itemID, cocoon.request.get("curate_task"));
-                }
-                else
-		{
-			// This case should never happen but to prevent an infinite loop
-			// from occuring let's just return null.
-			return null;
-		}
-	} while (true)
+    do {
+        if (cocoon.request.get("submit_return"))
+        {
+            // go back to where ever we came from.
+            return null;
+        }
+        else if (cocoon.request.get("submit_status"))
+        {
+            doEditItemStatus(itemID);
+        }
+        else if (cocoon.request.get("submit_bitstreams"))
+        {
+            doEditItemBitstreams(itemID);
+        }
+        else if (cocoon.request.get("submit_metadata"))
+        {
+            doEditItemMetadata(itemID, -1);
+        }
+        else if (cocoon.request.get("view_item"))
+        {
+            doViewItem(itemID);
+        }
+        else if (cocoon.request.get("submit_curate"))
+        {
+            doCurateItem(itemID, cocoon.request.get("curate_task"));
+        }
+        else if (cocoon.request.get("edit_license"))
+        {
+            doEditItemLicense(itemID);
+        }
+        else if (cocoon.request.get("edit_license_define"))
+        {
+            defineNewLicense(itemID);
+        }
+        else if (cocoon.request.get("embargo"))
+        {
+            editEmbargo(itemID);
+        }
+        else
+        {
+            // This case should never happen but to prevent an infinite loop
+            // from occuring let's just return null.
+            return null;
+        }
+    } while (true)
+}
+
+// should we stay in current edit item tab?
+function doEditNavigateAway(should_stay) {
+  if ( cocoon.request.get(should_stay) ) {
+    return false;
+  }
+  
+  if ( cocoon.request.get("submit_return") 
+    || cocoon.request.get("submit_status") 
+    || cocoon.request.get("submit_bitstreams") 
+    || cocoon.request.get("submit_metadata") 
+    || cocoon.request.get("view_item") 
+    || cocoon.request.get("submit_curate") 
+    || cocoon.request.get("edit_license") 
+    || cocoon.request.get("embargo") 
+    ) {
+      return true;
+    }
+    
+    return false;
 }
 
 /**
 *  Just show the item
 */
 function doViewItem(itemID){
-	do {
-		sendPageAndWait("admin/item/view_item",{"itemID":itemID},null);
-		assertEditItem(itemID);
-		if ( !cocoon.request.get("view_item"))
-		{
-			// go back to where ever we came from.
-			return null;
-		}
-	} while (true)
+    do {
+        sendPageAndWait("admin/item/view_item",{"itemID":itemID},null);
+        assertEditItem(itemID);
+        if ( !cocoon.request.get("view_item"))
+        {
+            // go back to where ever we came from.
+            return null;
+        }
+    } while (true)
+}
+
+/**
+ *  Show/Edit Item License
+ */
+function doEditItemLicense(itemID) {
+    var result;
+    do{
+        sendPageAndWait("admin/item/edit_license",{"itemID":itemID}, result);
+        assertEditItem(itemID);
+        if (cocoon.request.get("update_item_license"))
+        {
+            var licenseID = cocoon.request.get("licenseSelect");
+            result = LicenseForm.updateLicense(getDSContext(), itemID, licenseID);
+        }
+        else if (cocoon.request.get("remove_license"))
+        {
+            result = LicenseForm.removeLicense(getDSContext(), itemID);
+        }
+        else
+        {
+            return null;
+        }
+    } while (true)
+}
+
+
+/**
+ * Define New License
+ */
+function defineNewLicense(itemID) {
+    var result;
+    do{
+        sendPageAndWait("admin/item/edit_license_define",{"itemID":itemID}, result);
+        assertEditItem(itemID);
+        if (cocoon.request.get("new_license_save"))
+        {   
+            var name = cocoon.request.get("license_name");
+            var url = cocoon.request.get("license_url");
+            var confirmation = cocoon.request.get("license_confirmation");
+            var required = cocoon.request.get("license_required");
+            var label = cocoon.request.get("license_label");
+            var exLabel = cocoon.request.get("license_label_extended");
+            result = LicenseForm.defineLicense(getDSContext(), name, url, confirmation, required, label, exLabel);            
+        } else if (cocoon.request.get("new_license_return")) {      
+            doEditItemLicense(itemID);
+            break;
+        } else {
+            return null;
+        }
+    } while (true)  
 }
 
 /**
@@ -1448,56 +1579,56 @@ function doViewItem(itemID){
  */
 function doEditItemStatus(itemID)
 {
-	assertEditItem(itemID);
+    assertEditItem(itemID);
 
-	var result;
-	do {
-		sendPageAndWait("admin/item/status",{"itemID":itemID},result);
-		assertEditItem(itemID);
-		result = null;
+    var result;
+    do {
+        sendPageAndWait("admin/item/status",{"itemID":itemID},result);
+        assertEditItem(itemID);
+        result = null;
 
-		if (cocoon.request.get("submit_return")  || cocoon.request.get("submit_bitstreams") || cocoon.request.get("submit_metadata") || cocoon.request.get("view_item") || cocoon.request.get("submit_curate") )
-		{
-			// go back to where ever we came from.
-			return null;
-		}
-		else if (cocoon.request.get("submit_delete"))
-		{
-			assertAuthorized(Constants.ITEM, itemID, Constants.DELETE);
+        if (doEditNavigateAway("submit_status"))
+        {
+            // go back to where ever we came from.
+            return null;
+        }
+        else if (cocoon.request.get("submit_delete"))
+        {
+            assertAuthorized(Constants.ITEM, itemID, Constants.DELETE);
 
-			// Confirm the item's deletion
-			result = doDeleteItem(itemID);
+            // Confirm the item's deletion
+            result = doDeleteItem(itemID);
 
-			// If the user actualy deleted the item the return back
-			// to the manage items page.
-			if (result != null)
-				return result;
-		}
-		else if (cocoon.request.get("submit_withdraw"))
-		{
-			// Confirm the withdrawl of the item
-			result = doWithdrawItem(itemID);
-		}
-		else if (cocoon.request.get("submit_reinstate"))
-		{
-			// Confirm the reinstation of the item
-			result = doReinstateItem(itemID);
-		}
-		else if (cocoon.request.get("submit_move"))
-		{
-			// Move this item somewhere else
-			result = doMoveItem(itemID);
-		}
-		else if (cocoon.request.get("submit_authorization"))
-		{
-			// Edit the authorizations for this
-			// authorization check performed by the doAuthorize methods in FlowAuthorizationUtils
-			// assertAdministrator();
+            // If the user actualy deleted the item the return back
+            // to the manage items page.
+            if (result != null)
+                return result;
+        }
+        else if (cocoon.request.get("submit_withdraw"))
+        {
+            // Confirm the withdrawl of the item
+            result = doWithdrawItem(itemID);
+        }
+        else if (cocoon.request.get("submit_reinstate"))
+        {
+            // Confirm the reinstation of the item
+            result = doReinstateItem(itemID);
+        }
+        else if (cocoon.request.get("submit_move"))
+        {
+            // Move this item somewhere else
+            result = doMoveItem(itemID);
+        }
+        else if (cocoon.request.get("submit_authorization"))
+        {
+            // Edit the authorizations for this
+            // authorization check performed by the doAuthorize methods in FlowAuthorizationUtils
+            // assertAdministrator();
 
-			doAuthorizeItem(itemID);
-		}
+            doAuthorizeItem(itemID);
+        }
 
-	} while (true)
+    } while (true)
 }
 
 /**
@@ -1505,45 +1636,45 @@ function doEditItemStatus(itemID)
  */
 function doEditItemBitstreams(itemID)
 {
-	assertEditItem(itemID);
+    assertEditItem(itemID);
 
-	var result;
-	do {
-		sendPageAndWait("admin/item/bitstreams",{"itemID":itemID}, result);
-		assertEditItem(itemID);
-		result = null;
+    var result;
+    do {
+        sendPageAndWait("admin/item/bitstreams",{"itemID":itemID}, result);
+        assertEditItem(itemID);
+        result = null;
 
         var submitButton = Util.getSubmitButton(cocoon.request, "submit_return");
-		if (cocoon.request.get("submit_return") || cocoon.request.get("submit_status") || cocoon.request.get("submit_bitstreams") || cocoon.request.get("submit_metadata") || cocoon.request.get("view_item") || cocoon.request.get("submit_curate"))
-		{
-			// go back to where ever we came from.
-			return null;
-		}
-		else if (cocoon.request.get("submit_add"))
-		{
-		    // Upload a new bitstream
-		    assertAuthorized(Constants.ITEM,itemID,Constants.ADD)
-		    result = doAddBitstream(itemID);
-		}
-		else if (cocoon.request.get("submit_edit") && cocoon.request.get("bitstreamID"))
-		{
-		    // Update the bitstream's metadata
-		    var bitstreamID = cocoon.request.get("bitstreamID");
-			assertAuthorized(Constants.BITSTREAM,bitstreamID,Constants.WRITE)
-		    result = doEditBitstream(itemID, bitstreamID);
-		}
-		else if (cocoon.request.get("submit_delete") && cocoon.request.get("remove"))
-		{
-			// Delete the bitstream
-			assertAuthorized(Constants.ITEM,itemID,Constants.REMOVE);
-			var bitstreamIDs = cocoon.request.getParameterValues("remove");
+        if (doEditNavigateAway(""))
+        {
+            // go back to where ever we came from.
+            return null;
+        }
+        else if (cocoon.request.get("submit_add"))
+        {
+            // Upload a new bitstream
+            assertAuthorized(Constants.ITEM,itemID,Constants.ADD)
+            result = doAddBitstream(itemID);
+        }
+        else if (cocoon.request.get("submit_edit") && cocoon.request.get("bitstreamID"))
+        {
+            // Update the bitstream's metadata
+            var bitstreamID = cocoon.request.get("bitstreamID");
+            assertAuthorized(Constants.BITSTREAM,bitstreamID,Constants.WRITE)
+            result = doEditBitstream(itemID, bitstreamID);
+        }
+        else if (cocoon.request.get("submit_delete") && cocoon.request.get("remove"))
+        {
+            // Delete the bitstream
+            assertAuthorized(Constants.ITEM,itemID,Constants.REMOVE);
+            var bitstreamIDs = cocoon.request.getParameterValues("remove");
 
-			result = doDeleteBitstreams(itemID,bitstreamIDs)
-		}
+            result = doDeleteBitstreams(itemID,bitstreamIDs)
+        }
         else if (submitButton.equals("submit_update_order") || submitButton.startsWith("submit_order_")){
             result = FlowItemUtils.processReorderBitstream(getDSContext(), itemID, cocoon.request);
         }
-	} while (true)
+    } while (true)
 }
 
 /**
@@ -1551,33 +1682,58 @@ function doEditItemBitstreams(itemID)
  */
 function doEditItemMetadata(itemID, templateCollectionID)
 {
-	assertEditItem(itemID);
+    assertEditItem(itemID);
 
-	var result;
-	do {
-		sendPageAndWait("admin/item/metadata",{"itemID":itemID,
+    var result;
+    do {
+        sendPageAndWait("admin/item/metadata",{"itemID":itemID,
                                                "templateCollectionID":templateCollectionID},result);
-		assertEditItem(itemID);
-		result = null;
+        assertEditItem(itemID);
+        result = null;
 
-		if (cocoon.request.get("submit_return") || cocoon.request.get("submit_status") ||
-                    cocoon.request.get("submit_bitstreams") || cocoon.request.get("submit_metadata") ||
-                    cocoon.request.get("view_item") || cocoon.request.get("submit_curate"))
-		{
-			// go back to where ever we came from.
-			return null;
-		}
-		else if (cocoon.request.get("submit_add"))
-		{
-			// Add a new metadata entry
-			result = FlowItemUtils.processAddMetadata(getDSContext(),itemID,cocoon.request);
-		}
-		else if (cocoon.request.get("submit_update"))
-		{
-			// Update the item
-			result = FlowItemUtils.processEditItem(getDSContext(),itemID,cocoon.request);
-		}
-	} while (true)
+        if (doEditNavigateAway(""))
+        
+        {
+            // go back to where ever we came from.
+            return null;
+        }
+        else if (cocoon.request.get("submit_add"))
+        {
+            // Add a new metadata entry
+            result = FlowItemUtils.processAddMetadata(getDSContext(),itemID,cocoon.request);
+        }
+        else if (cocoon.request.get("submit_update"))
+        {
+            // Update the item
+            result = FlowItemUtils.processEditItem(getDSContext(),itemID,cocoon.request);
+        }
+    } while (true)
+}
+
+/**
+ * Allow changing embargo.
+ */
+function editEmbargo(itemID)
+{
+    assertEditItem(itemID);
+
+    var result;
+    do {
+        sendPageAndWait("admin/item/embargo",{"itemID":itemID},result);
+        assertEditItem(itemID);
+        result = null;
+
+        if (doEditNavigateAway(""))
+        {
+            // go back to where ever we came from.
+            return null;
+        }
+        else if (cocoon.request.get("submit_update"))
+        {
+            // Update the item
+            result = FlowItemUtils.processEmbargoItem(getDSContext(),itemID,cocoon.request);
+        }
+    } while (true)
 }
 
 
@@ -1591,10 +1747,10 @@ function doCurateItem(itemID, task)
 
     do {
            if (cocoon.request.get("select_curate_group"))
-	   {
+       {
                 var select_curate_group = cocoon.request.getParameter("select_curate_group");
                 sendPageAndWait("admin/item/curateItem",{"itemID":itemID,"select_curate_group":select_curate_group}, result);
-	   } else {
+       } else {
                 sendPageAndWait("admin/item/curateItem",{"itemID":itemID}, result);
            }
            assertEditItem(itemID);
@@ -1619,25 +1775,25 @@ function doCurateItem(itemID, task)
  */
 function doDeleteItem(itemID)
 {
-	assertAuthorized(Constants.ITEM, itemID, Constants.DELETE);
+    assertAuthorized(Constants.ITEM, itemID, Constants.DELETE);
 
-	sendPageAndWait("admin/item/delete",{"itemID":itemID});
+    sendPageAndWait("admin/item/delete",{"itemID":itemID});
 
-	if (cocoon.request.get("submit_confirm"))
-	{
-		// It's been confirmed, delete the item.
-		assertAuthorized(Constants.ITEM, itemID, Constants.DELETE);
-		var result = FlowItemUtils.processDeleteItem(getDSContext(),itemID);
+    if (cocoon.request.get("submit_confirm"))
+    {
+        // It's been confirmed, delete the item.
+        assertAuthorized(Constants.ITEM, itemID, Constants.DELETE);
+        var result = FlowItemUtils.processDeleteItem(getDSContext(),itemID);
 
-		if (result.getContinue()) {
-			cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
-			getDSContext().complete();
-			cocoon.exit();
-		}
+        if (result.getContinue()) {
+            cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
+            getDSContext().complete();
+            cocoon.exit();
+        }
 
-		return result;
-	}
-	return null;
+        return result;
+    }
+    return null;
 }
 
 /**
@@ -1645,20 +1801,20 @@ function doDeleteItem(itemID)
  */
 function doWithdrawItem(itemID)
 {
-	// authorization check performed directly by the dspace-api
-	// assertAdministrator();
+    // authorization check performed directly by the dspace-api
+    // assertAdministrator();
 
-	sendPageAndWait("admin/item/withdraw",{"itemID":itemID});
+    sendPageAndWait("admin/item/withdraw",{"itemID":itemID});
 
-	if (cocoon.request.get("submit_confirm"))
-	{
-		// Actualy withdraw the item
-		// authorization check performed directly by the dspace-api
-		// assertAdministrator();
-		var result = FlowItemUtils.processWithdrawItem(getDSContext(),itemID);
-		return result;
-	}
-	return null;
+    if (cocoon.request.get("submit_confirm"))
+    {
+        // Actualy withdraw the item
+        // authorization check performed directly by the dspace-api
+        // assertAdministrator();
+        var result = FlowItemUtils.processWithdrawItem(getDSContext(),itemID);
+        return result;
+    }
+    return null;
 }
 
 /**
@@ -1666,21 +1822,21 @@ function doWithdrawItem(itemID)
  */
 function doReinstateItem(itemID)
 {
-	// authorization check performed directly by the dspace-api
-	// assertAdministrator();
+    // authorization check performed directly by the dspace-api
+    // assertAdministrator();
 
-	sendPageAndWait("admin/item/reinstate",{"itemID":itemID});
+    sendPageAndWait("admin/item/reinstate",{"itemID":itemID});
 
-	if (cocoon.request.get("submit_confirm"))
-	{
-		// Actually reinstate the item
-		// authorization check performed directly by the dspace-api
-		// assertAdministrator();
+    if (cocoon.request.get("submit_confirm"))
+    {
+        // Actually reinstate the item
+        // authorization check performed directly by the dspace-api
+        // assertAdministrator();
 
-		var result = FlowItemUtils.processReinstateItem(getDSContext(),itemID);
-		return result;
-	}
-	return null;
+        var result = FlowItemUtils.processReinstateItem(getDSContext(),itemID);
+        return result;
+    }
+    return null;
 }
 
 /*
@@ -1728,11 +1884,11 @@ function doMoveItem(itemID)
  */
 function doAddBitstream(itemID)
 {
-	assertAuthorized(Constants.ITEM,itemID,Constants.ADD);
+    assertAuthorized(Constants.ITEM,itemID,Constants.ADD);
     var result;
     do {
         sendPageAndWait("admin/item/add-bitstream",{"itemID":itemID},result);
-		assertAuthorized(Constants.ITEM,itemID,Constants.ADD);
+        assertAuthorized(Constants.ITEM,itemID,Constants.ADD);
         result = null;
 
         if (cocoon.request.get("submit_cancel"))
@@ -1755,11 +1911,11 @@ function doAddBitstream(itemID)
  */
 function doEditBitstream(itemID, bitstreamID)
 {
-	assertAuthorized(Constants.BITSTREAM,bitstreamID,Constants.WRITE);
+    assertAuthorized(Constants.BITSTREAM,bitstreamID,Constants.WRITE);
     var result;
     do {
         sendPageAndWait("admin/item/edit-bitstream",{"itemID":itemID,"bitstreamID":bitstreamID},result);
-		assertAuthorized(Constants.BITSTREAM,bitstreamID,Constants.WRITE);
+        assertAuthorized(Constants.BITSTREAM,bitstreamID,Constants.WRITE);
         result = null;
 
         if (cocoon.request.get("submit_cancel"))
@@ -1788,7 +1944,7 @@ function doEditBitstream(itemID, bitstreamID)
  */
 function doDeleteBitstreams(itemID, bitstreamIDs)
 {
-	assertAuthorized(Constants.ITEM,itemID,Constants.REMOVE);
+    assertAuthorized(Constants.ITEM,itemID,Constants.REMOVE);
 
     sendPageAndWait("admin/item/delete-bitstreams",{"itemID":itemID,"bitstreamIDs":bitstreamIDs.join(',')});
 
@@ -1810,13 +1966,13 @@ function doDeleteBitstreams(itemID, bitstreamIDs)
  */
 function doMapItems(collectionID)
 {
-	assertEditCollection(collectionID);
+    assertEditCollection(collectionID);
     var result;
 
     do
     {
         sendPageAndWait("admin/mapper/main",{"collectionID":collectionID},result);
-		assertEditCollection(collectionID);
+        assertEditCollection(collectionID);
         result = null;
 
 
@@ -1827,7 +1983,7 @@ function doMapItems(collectionID)
         if (cocoon.request.get("submit_author"))
         {
             // Search for new items to added
-			assertAuthorized(Constants.COLLECTION,collectionID,Constants.ADD);
+            assertAuthorized(Constants.COLLECTION,collectionID,Constants.ADD);
             result = doMapItemSearch(collectionID);
         }
         else if (cocoon.request.get("submit_browse"))
@@ -1898,13 +2054,13 @@ function doMetadataImportConfirm()
  */
 function doMapItemSearch(collectionID)
 {
- 	assertAuthorized(Constants.COLLECTION,collectionID,Constants.ADD);
+    assertAuthorized(Constants.COLLECTION,collectionID,Constants.ADD);
     var result;
     var query = cocoon.request.get("query");
 
 
     sendPageAndWait("admin/mapper/search",{"collectionID":collectionID,"query":query},result);
-	assertAuthorized(Constants.COLLECTION,collectionID,Constants.ADD);
+    assertAuthorized(Constants.COLLECTION,collectionID,Constants.ADD);
 
     if (cocoon.request.get("submit_cancel"))
     {
@@ -1939,13 +2095,167 @@ function doMapItemBrowse(collectionID)
         else if (cocoon.request.get("submit_unmap") && cocoon.request.get("itemID"))
         {
             // Unmap these items.
-			assertAuthorized(Constants.COLLECTION,collectionID,Constants.REMOVE);
+            assertAuthorized(Constants.COLLECTION,collectionID,Constants.REMOVE);
             var itemIDs = cocoon.request.getParameterValues("itemID");
             result = FlowMapperUtils.processUnmapItems(getDSContext(), collectionID, itemIDs);
         }
     } while (true);
 }
 
+/********************
+ * Handle flows
+ ********************/
+
+/**
+ * Manage handles, allow users to create new, edit exiting,
+ * or remove handles. The user may also list handles
+ * and change prefixes of handles.
+ *
+ * The is typicaly used as an entry point flow.
+ */
+function doManageHandles()
+{
+	assertAdministrator();
+
+    var result = null;
+    
+    do {
+	    sendPageAndWait("admin/handle/main",{},result);
+	    assertAdministrator();
+	
+	    result = null;
+	
+	    if (cocoon.request.get("submit_add"))
+	    {
+	        // Just create a blank handle then pass it to the handle editor.
+	        result = doEditHandle(-1);
+	    }
+	    else if (cocoon.request.get("submit_edit") && cocoon.request.get("handle_id"))
+	    {
+	        // Edit a specific handle
+	        var handleID = cocoon.request.get("handle_id");
+	        result = doEditHandle(handleID);
+	    }
+	    else if (cocoon.request.get("submit_delete") && cocoon.request.get("handle_id"))
+	    {
+	        // Delete a specific handle
+	        var handleID = cocoon.request.get("handle_id");
+	        result = doDeleteHandle(handleID);
+	    }	 
+	    else if (cocoon.request.get("submit_change_prefix"))
+	    {
+	        // Change prefix	        
+	        result = doChangeHandlePrefix();
+	    }
+    } while (true);
+}
+
+
+/**
+ * This flow allows for the full editing of a handle.
+ */
+
+function doEditHandle(handleID)
+{
+    assertEditHandle();
+
+    var result = null;
+    do {
+        sendPageAndWait("admin/handle/edit",{"handle_id":handleID},result);
+        assertEditHandle();
+
+        result = null;
+
+        if (cocoon.request.get("submit_cancel"))
+        {
+            // Just return with out saving anything.
+            return null;
+        }
+        else if (cocoon.request.get("submit_save"))
+        {            
+
+            var handle = cocoon.request.get("handle");
+            var url = cocoon.request.get("url");
+
+            var resourceTypeID = cocoon.request.get("resource_type_id");
+            if(resourceTypeID == null) 
+                resourceTypeID = -1;
+
+            var resourceID = cocoon.request.get("resource_id");
+            if(resourceID == null) 
+                resourceID = -1;
+            
+            var archiveOldHandle = cocoon.request.get("archive_old_handle") == null ? false : true;
+
+            result = FlowHandleUtils.processSaveHandle(getDSContext(),handleID,handle,url,resourceTypeID,resourceID,archiveOldHandle);
+
+            // In case a handle was created, update our id.
+            if (result != null && result.getParameter("handle_id"))
+                handleID = result.getParameter("handle_id");
+        }
+
+    } while (result == null || !result.getContinue())
+
+    return result;
+}
+
+/**
+ * Confirm that the given handleID should be deleted, if confirmed it will be deleted.
+ */
+function doDeleteHandle(handleID)
+{
+	assertEditHandle();
+	
+    var result = null;
+    do {
+	    sendPageAndWait("admin/handle/delete",{"handle_id":handleID},result);
+	    assertEditHandle();	
+	    
+	    result = null;
+	    
+	    if (cocoon.request.get("submit_cancel"))
+        {
+            // Just return with out saving anything.
+            return null;
+        }
+	    else if (cocoon.request.get("submit_confirm"))
+	    {
+	        // The user has confirmed, actualy delete the handle	        
+	        result = FlowHandleUtils.processDeleteHandle(getDSContext(),handleID);	        
+	    }
+    } while (result == null || !result.getContinue())
+    return result;
+}
+
+/**
+ * Change handle prefix.
+ */
+function doChangeHandlePrefix()
+{
+	assertEditHandle();
+
+	var result = null;
+	do {
+	    sendPageAndWait("admin/handle/change-prefix",{},result);
+	    assertEditHandle();
+	    
+	    result = null;
+	    
+	    if (cocoon.request.get("submit_cancel")) {
+	    	// Just return with out saving anything.
+            return null;
+	    }
+	    if (cocoon.request.get("submit_change"))
+	    {   
+	        var oldPrefix = cocoon.request.get("old_prefix");
+	        var newPrefix = cocoon.request.get("new_prefix");
+	        var archiveOldHandles = cocoon.request.get("archive_old_handles") == null ? false : true;                
+	        
+	        result = FlowHandleUtils.changeHandlePrefix(getDSContext(),oldPrefix,newPrefix,archiveOldHandles);	        
+	    }
+	} while (result == null || !result.getContinue())
+    return result;
+}
 
 
 /**
@@ -1958,8 +2268,8 @@ function doMapItemBrowse(collectionID)
  */
 function doManageAuthorizations()
 {
-	// authorization check moved to FlowAuthorizationUtils
-	// assertAdministrator();
+    // authorization check moved to FlowAuthorizationUtils
+    // assertAdministrator();
 
     var result = null;
     var query = "";
@@ -1968,7 +2278,7 @@ function doManageAuthorizations()
         sendPageAndWait("admin/authorize/main",{"query":query},result);
 
         // authorization check moved to FlowAuthorizationUtils
-    	// assertAdministrator();
+        // assertAdministrator();
 
         result = null;
 
@@ -1978,21 +2288,21 @@ function doManageAuthorizations()
             var identifier = cocoon.request.get("identifier");
             query = identifier;
 
-			// resolve the identifier to a type, look up its associated object, and act accordingly
+            // resolve the identifier to a type, look up its associated object, and act accordingly
             result = FlowAuthorizationUtils.resolveItemIdentifier(getDSContext(),identifier);
             if (result.getParameter("type") == Constants.ITEM && result.getParameter("itemID"))
             {
-            	var itemID = result.getParameter("itemID");
+                var itemID = result.getParameter("itemID");
                 result = doAuthorizeItem(itemID);
             }
             else if (result.getParameter("type") == Constants.COLLECTION && result.getParameter("collectionID"))
             {
-            	var collectionID = result.getParameter("collectionID");
+                var collectionID = result.getParameter("collectionID");
                 result = doAuthorizeCollection(collectionID);
             }
             else if (result.getParameter("type") == Constants.COMMUNITY && result.getParameter("communityID"))
             {
-            	var communityID = result.getParameter("communityID");
+                var communityID = result.getParameter("communityID");
                 result = doAuthorizeCommunity(communityID);
             }
         }
@@ -2035,9 +2345,9 @@ function doAuthorizeCommunity(communityID)
  */
 function doAuthorizeContainer(containerType, containerID)
 {
-	// authorization check moved to FlowAuthorizationUtils
+    // authorization check moved to FlowAuthorizationUtils
     // must be an ADMIN on the container to change its authorizations
-	// assertAuthorized(containerType, containerID, Constants.ADMIN);
+    // assertAuthorized(containerType, containerID, Constants.ADMIN);
 
     var result;
     var highlightID;
@@ -2045,7 +2355,7 @@ function doAuthorizeContainer(containerType, containerID)
     do {
         sendPageAndWait("admin/authorize/container",{"containerType":containerType,"containerID":containerID,"highlightID":highlightID},result);
         // authorization check moved to FlowAuthorizationUtils
-    	// assertAuthorized(containerType, containerID, Constants.ADMIN);
+        // assertAuthorized(containerType, containerID, Constants.ADMIN);
         result = null;
 
         // Cancel out the operation
@@ -2056,7 +2366,7 @@ function doAuthorizeContainer(containerType, containerID)
             // Create a new policy
             result = doEditPolicy(containerType,containerID,-1);
             if (result != null && result.getParameter("policyID"))
-            	highlightID = result.getParameter("policyID");
+                highlightID = result.getParameter("policyID");
         }
         else if (cocoon.request.get("submit_edit") && cocoon.request.get("policy_id")) {
             // Edit an existing policy
@@ -2086,8 +2396,8 @@ function doAuthorizeContainer(containerType, containerID)
  */
 function doAuthorizeItem(itemID)
 {
-	// authorization check moved to FlowAuthorizationUtils
-	// assertAdministrator();
+    // authorization check moved to FlowAuthorizationUtils
+    // assertAdministrator();
 
     var result;
     var highlightID;
@@ -2095,7 +2405,7 @@ function doAuthorizeItem(itemID)
     do {
         sendPageAndWait("admin/authorize/item",{"itemID":itemID,"highlightID":highlightID},result);
         // authorization check moved to FlowAuthorizationUtils
-    	// assertAdministrator();
+        // assertAdministrator();
         result = null;
 
         var bundleID = extractSubmitSuffix("submit_add_bundle_");
@@ -2110,20 +2420,20 @@ function doAuthorizeItem(itemID)
             // Create a new policy for a bundle
             result = doEditPolicy(Constants.BUNDLE, bundleID,-1);
             if (result != null && result.getParameter("policyID"))
-            	highlightID = result.getParameter("policyID");
+                highlightID = result.getParameter("policyID");
         }
         else if (bitstreamID)
         {
             // Create a new policy for a bitstream
              result = doEditPolicy(Constants.BITSTREAM, bitstreamID,-1);
             if (result != null && result.getParameter("policyID"))
-            	highlightID = result.getParameter("policyID");
+                highlightID = result.getParameter("policyID");
         }
         else if (cocoon.request.get("submit_add_item")) {
             // Create a new policy for the item
             result = doEditPolicy(Constants.ITEM, itemID,-1);
             if (result != null && result.getParameter("policyID"))
-            	highlightID = result.getParameter("policyID");
+                highlightID = result.getParameter("policyID");
         }
         else if (cocoon.request.get("submit_edit") && cocoon.request.get("policy_id")
                 && cocoon.request.get("object_id") && cocoon.request.get("object_type")) {
@@ -2157,7 +2467,7 @@ function doAuthorizeItem(itemID)
  */
 function doAdvancedAuthorization()
 {
-	assertAdministrator();
+    assertAdministrator();
     var result;
 
     do {
@@ -2197,8 +2507,8 @@ function doAdvancedAuthorization()
  */
 function doEditPolicy(objectType,objectID,policyID)
 {
-	// authorize check moved to FlowAuthorizationUtils.processEditPolicy
-	// assertAdministrator();
+    // authorize check moved to FlowAuthorizationUtils.processEditPolicy
+    // assertAdministrator();
 
     var result;
     var query= "-1";
@@ -2207,40 +2517,40 @@ function doEditPolicy(objectType,objectID,policyID)
     var page = 0;
 
     do {
-    	/* The page recieves parameters for the type and ID of the DSpace object that the policy is assciated with, the
-    	 * policy ID, the group search query (if a search was performed), the ID of the currenly associated group, the
-    	 * current action and the currently viewed page (if a search returned more than one page of results) */
+        /* The page recieves parameters for the type and ID of the DSpace object that the policy is assciated with, the
+         * policy ID, the group search query (if a search was performed), the ID of the currenly associated group, the
+         * current action and the currently viewed page (if a search returned more than one page of results) */
         sendPageAndWait("admin/authorize/edit",{"objectType":objectType,"objectID":objectID,"policyID":policyID,"query":query,"groupID":groupID,"actionID":actionID,"page":page},result);
         // authorize check moved to FlowAuthorizationUtils.processEditPolicy
-    	// assertAdministrator();
+        // assertAdministrator();
         result = null;
 
         // Figure out which button was pressed on the group search results page
         var names = cocoon.request.getParameterNames();
         while (names.hasMoreElements())
         {
-			var name = names.nextElement();
-			var match = null;
+            var name = names.nextElement();
+            var match = null;
 
-	        if ((match = name.match(/submit_group_id_(\d+)/)) != null)
-			{
-	        	groupID = match[1];
-			}
+            if ((match = name.match(/submit_group_id_(\d+)/)) != null)
+            {
+                groupID = match[1];
+            }
 
-			if (cocoon.request.get("action_id"))
-        		actionID = cocoon.request.get("action_id");
+            if (cocoon.request.get("action_id"))
+                actionID = cocoon.request.get("action_id");
         }
 
         if (cocoon.request.get("page")) {
-        	page = cocoon.request.get("page");
+            page = cocoon.request.get("page");
         }
 
         // perform a search to set a group
         if (cocoon.request.get("submit_search_groups")) {
-        	query = cocoon.request.get("query");
-        	if (cocoon.request.get("action_id"))
-        		actionID = cocoon.request.get("action_id");
-        	page = 0;
+            query = cocoon.request.get("query");
+            if (cocoon.request.get("action_id"))
+                actionID = cocoon.request.get("action_id");
+            page = 0;
         }
         else if (cocoon.request.get("submit_save"))
         {
@@ -2277,15 +2587,15 @@ function doEditPolicy(objectType,objectID,policyID)
  */
 function doDeletePolicies(policyIDs)
 {
-	// authorization check moved to FlowAuthorizationUtils
-	// assertAdministrator();
+    // authorization check moved to FlowAuthorizationUtils
+    // assertAdministrator();
     sendPageAndWait("admin/authorize/delete",{"policyIDs":policyIDs.join(',')});
 
     if (cocoon.request.get("submit_confirm"))
     {
         // The user has confirmed, actualy delete these policies
-    	// authorization check moved to FlowAuthorizationUtils
-    	// assertAdministrator();
+        // authorization check moved to FlowAuthorizationUtils
+        // assertAdministrator();
 
         var result = FlowAuthorizationUtils.processDeletePolicies(getDSContext(),policyIDs);
         return result;
@@ -2304,49 +2614,49 @@ function doDeletePolicies(policyIDs)
 
 function doEditCollection(collectionID,newCollectionP)
 {
-	assertEditCollection(collectionID);
+    assertEditCollection(collectionID);
 
-	// If this is a new collection, then go to
-	// role assignment first, otherwise start with
-	// the metadata
-	if (newCollectionP)
-		doAssignCollectionRoles(collectionID);
-	else
-		doEditCollectionMetadata(collectionID);
+    // If this is a new collection, then go to
+    // role assignment first, otherwise start with
+    // the metadata
+    if (newCollectionP)
+        doAssignCollectionRoles(collectionID);
+    else
+        doEditCollectionMetadata(collectionID);
 
-	do {
+    do {
 
-		if (cocoon.request.get("submit_return") || cocoon.request.get("submit_save"))
-		{
-			// go back to where ever we came from.
-			return null;
-		}
-		else if (cocoon.request.get("submit_metadata"))
-		{
-			// go edit collection metadata
-			doEditCollectionMetadata(collectionID)
-		}
-		else if (cocoon.request.get("submit_roles"))
-		{
-			// go assign collection roles
-			doAssignCollectionRoles(collectionID);
-		}
-		else if (cocoon.request.get("submit_harvesting"))
-		{
-			// edit collection harvesting settings
-			doEditCollectionHarvesting(collectionID);
-		}
-		else  if (cocoon.request.get("submit_curate"))
+        if (cocoon.request.get("submit_return") || cocoon.request.get("submit_save"))
+        {
+            // go back to where ever we came from.
+            return null;
+        }
+        else if (cocoon.request.get("submit_metadata"))
+        {
+            // go edit collection metadata
+            doEditCollectionMetadata(collectionID)
+        }
+        else if (cocoon.request.get("submit_roles"))
+        {
+            // go assign collection roles
+            doAssignCollectionRoles(collectionID);
+        }
+        else if (cocoon.request.get("submit_harvesting"))
+        {
+            // edit collection harvesting settings
+            doEditCollectionHarvesting(collectionID);
+        }
+        else  if (cocoon.request.get("submit_curate"))
                 {
                         doCurateCollection(collectionID, cocoon.request.get("curate_task"));
                 }
                 else
-		{
-			// This case should never happen but to prevent an infinite loop
-			// from occuring let's just return null.
-			return null;
-		}
-	} while (true)
+        {
+            // This case should never happen but to prevent an infinite loop
+            // from occuring let's just return null.
+            return null;
+        }
+    } while (true)
 }
 
 
@@ -2357,56 +2667,56 @@ function doEditCollection(collectionID,newCollectionP)
  */
 function doEditCollectionMetadata(collectionID)
 {
-	assertEditCollection(collectionID);
+    assertEditCollection(collectionID);
 
-	var result;
+    var result;
 
-	do {
-		sendPageAndWait("admin/collection/editMetadata",{"collectionID":collectionID},result);
-		assertEditCollection(collectionID);
-		result=null;
+    do {
+        sendPageAndWait("admin/collection/editMetadata",{"collectionID":collectionID},result);
+        assertEditCollection(collectionID);
+        result=null;
 
-		if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||
-			cocoon.request.get("submit_roles") || cocoon.request.get("submit_harvesting") ||
+        if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||
+            cocoon.request.get("submit_roles") || cocoon.request.get("submit_harvesting") ||
                         cocoon.request.get("submit_curate"))
-		{
-			// return to the editCollection function which will determine where to go next.
-			return null;
-		}
-		else if (cocoon.request.get("submit_save"))
-		{
-			// Save updates
-			result = FlowContainerUtils.processEditCollection(getDSContext(), collectionID, false, cocoon.request);
+        {
+            // return to the editCollection function which will determine where to go next.
+            return null;
+        }
+        else if (cocoon.request.get("submit_save"))
+        {
+            // Save updates
+            result = FlowContainerUtils.processEditCollection(getDSContext(), collectionID, false, cocoon.request);
       if (result.getContinue())
          return null;
-		}
-		else if (cocoon.request.get("submit_delete"))
-		{
-			// delete collection
-			assertAdministrator();
+        }
+        else if (cocoon.request.get("submit_delete"))
+        {
+            // delete collection
+            assertAdministrator();
 
-			result = doDeleteCollection(collectionID);
-		}
-		else if (cocoon.request.get("submit_delete_logo"))
-		{
-			// Delete the collection's logo
-			result = FlowContainerUtils.processEditCollection(getDSContext(), collectionID, true, cocoon.request);
-		}
-		else if (cocoon.request.get("submit_create_template") || cocoon.request.get("submit_edit_template"))
-		{
-			// Create or edit the item's template
-			var itemID = FlowContainerUtils.getTemplateItemID(getDSContext(), collectionID);
-			result = doEditItemMetadata(itemID, collectionID);
-		}
-		else if (cocoon.request.get("submit_delete_template"))
-		{
-			// Delete the item's template
-	    assertEditCollection(collectionID);
+            result = doDeleteCollection(collectionID);
+        }
+        else if (cocoon.request.get("submit_delete_logo"))
+        {
+            // Delete the collection's logo
+            result = FlowContainerUtils.processEditCollection(getDSContext(), collectionID, true, cocoon.request);
+        }
+        else if (cocoon.request.get("submit_create_template") || cocoon.request.get("submit_edit_template"))
+        {
+            // Create or edit the item's template
+            var itemID = FlowContainerUtils.getTemplateItemID(getDSContext(), collectionID);
+            result = doEditItemMetadata(itemID, collectionID);
+        }
+        else if (cocoon.request.get("submit_delete_template"))
+        {
+            // Delete the item's template
+        assertEditCollection(collectionID);
 
- 			result = FlowContainerUtils.processDeleteTemplateItem(getDSContext(), collectionID);
-		}
+            result = FlowContainerUtils.processDeleteTemplateItem(getDSContext(), collectionID);
+        }
 
-	}while (true);
+    }while (true);
 }
 
 /**
@@ -2466,73 +2776,73 @@ function setOriginalWorkflowRoles(collectionID, result) {
 }
 function doAssignCollectionRoles(collectionID)
 {
-	assertEditCollection(collectionID);
+    assertEditCollection(collectionID);
 
-	var result;
-	var workflow = null;
+    var result;
+    var workflow = null;
 
-	do {
-		sendPageAndWait("admin/collection/assignRoles",{"collectionID":collectionID},result);
-		assertEditCollection(collectionID);
-		result = null;
+    do {
+        sendPageAndWait("admin/collection/assignRoles",{"collectionID":collectionID},result);
+        assertEditCollection(collectionID);
+        result = null;
 
 
-		if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||
-			cocoon.request.get("submit_roles") || cocoon.request.get("submit_harvesting") ||
+        if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||
+            cocoon.request.get("submit_roles") || cocoon.request.get("submit_harvesting") ||
                         cocoon.request.get("submit_curate"))
-		{
-			// return to the editCollection function which will determine where to go next.
-			return null;
-		}
+        {
+            // return to the editCollection function which will determine where to go next.
+            return null;
+        }
 
-		else if (cocoon.request.get("submit_authorizations"))
-		{
-			// general authorizations
-			// assertAdminCollection(collectionID);
-			result = doAuthorizeCollection(collectionID);
-		}
+        else if (cocoon.request.get("submit_authorizations"))
+        {
+            // general authorizations
+            // assertAdminCollection(collectionID);
+            result = doAuthorizeCollection(collectionID);
+        }
 
-		// ADMIN
-		else if (cocoon.request.get("submit_edit_admin") || cocoon.request.get("submit_create_admin"))
-		{
-			assertEditCollection(collectionID);
-			var groupID = FlowContainerUtils.getCollectionRole(getDSContext(),collectionID, "ADMIN");
-			result = doEditGroup(groupID);
-		}
-		else if (cocoon.request.get("submit_delete_admin")) {
-			result = doDeleteCollectionRole(collectionID, "ADMIN");
-		}
+        // ADMIN
+        else if (cocoon.request.get("submit_edit_admin") || cocoon.request.get("submit_create_admin"))
+        {
+            assertEditCollection(collectionID);
+            var groupID = FlowContainerUtils.getCollectionRole(getDSContext(),collectionID, "ADMIN");
+            result = doEditGroup(groupID);
+        }
+        else if (cocoon.request.get("submit_delete_admin")) {
+            result = doDeleteCollectionRole(collectionID, "ADMIN");
+        }
 
-		// SUBMIT
-		else if (cocoon.request.get("submit_edit_submit") || cocoon.request.get("submit_create_submit"))
-		{
-			assertEditCollection(collectionID);
-			var groupID = FlowContainerUtils.getCollectionRole(getDSContext(),collectionID, "SUBMIT");
-			result = doEditGroup(groupID);
-		}
-		else if (cocoon.request.get("submit_delete_submit"))
-		{
-			result = doDeleteCollectionRole(collectionID, "SUBMIT");
-		}
+        // SUBMIT
+        else if (cocoon.request.get("submit_edit_submit") || cocoon.request.get("submit_create_submit"))
+        {
+            assertEditCollection(collectionID);
+            var groupID = FlowContainerUtils.getCollectionRole(getDSContext(),collectionID, "SUBMIT");
+            result = doEditGroup(groupID);
+        }
+        else if (cocoon.request.get("submit_delete_submit"))
+        {
+            result = doDeleteCollectionRole(collectionID, "SUBMIT");
+        }
 
-		// DEFAULT_READ
-		else if (cocoon.request.get("submit_create_default_read"))
-		{
+        // DEFAULT_READ
+        else if (cocoon.request.get("submit_create_default_read"))
+        {
         assertAdminCollection(collectionID);
 
-		    var groupID = FlowContainerUtils.createCollectionDefaultReadGroup(getDSContext(), collectionID);
-		    result = doEditGroup(groupID);
-		}
-		else if (cocoon.request.get("submit_edit_default_read"))
-		{
-			assertEditCollection(collectionID);
-			var groupID = FlowContainerUtils.getCollectionDefaultRead(getDSContext(), collectionID);
-			result = doEditGroup(groupID);
-		}
-		else if (cocoon.request.get("submit_delete_default_read"))
-		{
-			result = doDeleteCollectionRole(collectionID, "DEFAULT_READ");
-		}else{
+            var groupID = FlowContainerUtils.createCollectionDefaultReadGroup(getDSContext(), collectionID);
+            result = doEditGroup(groupID);
+        }
+        else if (cocoon.request.get("submit_edit_default_read"))
+        {
+            assertEditCollection(collectionID);
+            var groupID = FlowContainerUtils.getCollectionDefaultRead(getDSContext(), collectionID);
+            result = doEditGroup(groupID);
+        }
+        else if (cocoon.request.get("submit_delete_default_read"))
+        {
+            result = doDeleteCollectionRole(collectionID, "DEFAULT_READ");
+        }else{
             if(ConfigurationManager.getProperty("workflow","workflow.framework").equals("xmlworkflow")){
                 if(workflow == null){
                     var collection = Collection.find(getDSContext(),collectionID);
@@ -2541,10 +2851,10 @@ function doAssignCollectionRoles(collectionID)
                 result = setXMLWorkflowRoles(workflow, collectionID, result);
             }else{
                 result = setOriginalWorkflowRoles(collectionID, result);
-		    }
+            }
         }
 
-	}while(true);
+    }while(true);
 }
 
 /**
@@ -2562,20 +2872,20 @@ function doCurateCollection(collectionID, task) {
                    } else {
                       sendPageAndWait("admin/collection/curateCollection",{"collectionID":collectionID}, result);
                    } 
-		   assertEditCollection(collectionID);
-		   result = null;
-		   if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||
-			cocoon.request.get("submit_roles") || cocoon.request.get("submit_harvesting") ||
+           assertEditCollection(collectionID);
+           result = null;
+           if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||
+            cocoon.request.get("submit_roles") || cocoon.request.get("submit_harvesting") ||
                         cocoon.request.get("submit_curate"))
                    {
-			   //return to the editCollection function which will determine where to go next.
-			  return null;
-		   }
+               //return to the editCollection function which will determine where to go next.
+              return null;
+           }
 
                   if (cocoon.request.get("submit_curate_task"))
-		   {
-			   result = FlowContainerUtils.processCurateCollection(getDSContext(), collectionID, cocoon.request);
-		   }
+           {
+               result = FlowContainerUtils.processCurateCollection(getDSContext(), collectionID, cocoon.request);
+           }
                    else if (cocoon.request.get("submit_queue_task"))
                    {
                            result = FlowContainerUtils.processQueueCollection(getDSContext(), collectionID, cocoon.request);
@@ -2592,46 +2902,46 @@ function doCurateCollection(collectionID, task) {
  */
 function doSetupCollectionHarvesting(collectionID)
 {
-	assertAdminCollection(collectionID);
+    assertAdminCollection(collectionID);
 
-	var result = null;
-	var oaiProviderValue = null;
-	var oaiSetAll = null;
-	var oaiSetIdValue = null;
-	var metadataFormatValue = null;
-	var harvestLevelValue = null;
+    var result = null;
+    var oaiProviderValue = null;
+    var oaiSetAll = null;
+    var oaiSetIdValue = null;
+    var metadataFormatValue = null;
+    var harvestLevelValue = null;
 
-	do {
-		sendPageAndWait("admin/collection/setupHarvesting",{"collectionID":collectionID,"oaiProviderValue":oaiProviderValue,"oaiSetAll":oaiSetAll,"oaiSetIdValue":oaiSetIdValue,"metadataFormatValue":metadataFormatValue,"harvestLevelValue":harvestLevelValue},result);
-		result = null;
-		oaiProviderValue = cocoon.request.get("oai_provider");
+    do {
+        sendPageAndWait("admin/collection/setupHarvesting",{"collectionID":collectionID,"oaiProviderValue":oaiProviderValue,"oaiSetAll":oaiSetAll,"oaiSetIdValue":oaiSetIdValue,"metadataFormatValue":metadataFormatValue,"harvestLevelValue":harvestLevelValue},result);
+        result = null;
+        oaiProviderValue = cocoon.request.get("oai_provider");
         oaiSetAll = cocoon.request.get("oai-set-setting");
-		oaiSetIdValue = cocoon.request.get("oai_setid");
-		metadataFormatValue = cocoon.request.get("metadata_format");
-		harvestLevelValue = cocoon.request.get("harvest_level");
+        oaiSetIdValue = cocoon.request.get("oai_setid");
+        metadataFormatValue = cocoon.request.get("metadata_format");
+        harvestLevelValue = cocoon.request.get("harvest_level");
 
-		assertAdminCollection(collectionID);
+        assertAdminCollection(collectionID);
 
         if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||
-			cocoon.request.get("submit_roles") || cocoon.request.get("submit_harvesting") ||
+            cocoon.request.get("submit_roles") || cocoon.request.get("submit_harvesting") ||
             cocoon.request.get("submit_curate"))
-		{
-			// return to the editCollection function which will determine where to go next.
-			return null;
-		}
-		else if (cocoon.request.get("submit_save"))
-		{
-			// Save updates
-			result = FlowContainerUtils.processSetupCollectionHarvesting(getDSContext(), collectionID, cocoon.request);
-		}
-		else if (cocoon.request.get("submit_test"))
-		{
-			// Ping the OAI server and verify that the address/set/metadata combo is present there
-			// Can get this either in a single GetRecords OAI request or via two separate ones: ListSets and ListMetadataFormats
-			result = FlowContainerUtils.testOAISettings(getDSContext(), cocoon.request);
-		}
+        {
+            // return to the editCollection function which will determine where to go next.
+            return null;
+        }
+        else if (cocoon.request.get("submit_save"))
+        {
+            // Save updates
+            result = FlowContainerUtils.processSetupCollectionHarvesting(getDSContext(), collectionID, cocoon.request);
+        }
+        else if (cocoon.request.get("submit_test"))
+        {
+            // Ping the OAI server and verify that the address/set/metadata combo is present there
+            // Can get this either in a single GetRecords OAI request or via two separate ones: ListSets and ListMetadataFormats
+            result = FlowContainerUtils.testOAISettings(getDSContext(), cocoon.request);
+        }
 
-	} while (!result.getContinue());
+    } while (!result.getContinue());
 }
 
 
@@ -2641,52 +2951,52 @@ function doSetupCollectionHarvesting(collectionID)
  */
 function doEditCollectionHarvesting(collectionID)
 {
-	assertAdminCollection(collectionID);
+    assertAdminCollection(collectionID);
 
-	var result = null;
-	do
-	{
-		// If this collection's havresting is not set up properly, redirect to the setup screen
-		if (HarvestedCollection.find(getDSContext(), collectionID) == null) {
-			sendPageAndWait("admin/collection/toggleHarvesting",{"collectionID":collectionID},result);
-		}
-		else if (!HarvestedCollection.isHarvestable(getDSContext(), collectionID)) {
-			doSetupCollectionHarvesting(collectionID);
-		}
-		else {
-			sendPageAndWait("admin/collection/editHarvesting",{"collectionID":collectionID},result);
-		}
+    var result = null;
+    do
+    {
+        // If this collection's havresting is not set up properly, redirect to the setup screen
+        if (HarvestedCollection.find(getDSContext(), collectionID) == null) {
+            sendPageAndWait("admin/collection/toggleHarvesting",{"collectionID":collectionID},result);
+        }
+        else if (!HarvestedCollection.isHarvestable(getDSContext(), collectionID)) {
+            doSetupCollectionHarvesting(collectionID);
+        }
+        else {
+            sendPageAndWait("admin/collection/editHarvesting",{"collectionID":collectionID},result);
+        }
 
-		result = null;
-		assertAdminCollection(collectionID);
+        result = null;
+        assertAdminCollection(collectionID);
 
-		if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||
-			cocoon.request.get("submit_roles") || cocoon.request.get("submit_harvesting") ||
+        if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||
+            cocoon.request.get("submit_roles") || cocoon.request.get("submit_harvesting") ||
                         cocoon.request.get("submit_curate"))
-		{
-			// return to the editCollection function which will determine where to go next.
-			return null;
-		}
-		else if (cocoon.request.get("submit_save"))
-		{
-			// Save updates
-			result = FlowContainerUtils.processSetupCollectionHarvesting(getDSContext(), collectionID, cocoon.request);
-		}
-		else if (cocoon.request.get("submit_import_now"))
-		{
-			// Test the settings and run the import immediately
-			result = FlowContainerUtils.processRunCollectionHarvest(getDSContext(), collectionID, cocoon.request);
-		}
-		else if (cocoon.request.get("submit_reimport"))
-		{
-			// Test the settings and run the import immediately
-			result = FlowContainerUtils.processReimportCollection(getDSContext(), collectionID, cocoon.request);
-		}
-		else if (cocoon.request.get("submit_change"))
-		{
-			doSetupCollectionHarvesting(collectionID);
-		}
-	} while (true);
+        {
+            // return to the editCollection function which will determine where to go next.
+            return null;
+        }
+        else if (cocoon.request.get("submit_save"))
+        {
+            // Save updates
+            result = FlowContainerUtils.processSetupCollectionHarvesting(getDSContext(), collectionID, cocoon.request);
+        }
+        else if (cocoon.request.get("submit_import_now"))
+        {
+            // Test the settings and run the import immediately
+            result = FlowContainerUtils.processRunCollectionHarvest(getDSContext(), collectionID, cocoon.request);
+        }
+        else if (cocoon.request.get("submit_reimport"))
+        {
+            // Test the settings and run the import immediately
+            result = FlowContainerUtils.processReimportCollection(getDSContext(), collectionID, cocoon.request);
+        }
+        else if (cocoon.request.get("submit_change"))
+        {
+            doSetupCollectionHarvesting(collectionID);
+        }
+    } while (true);
 }
 
 
@@ -2699,33 +3009,33 @@ function doEditCollectionHarvesting(collectionID)
  */
 function doDeleteCollectionRole(collectionID,role)
 {
-	assertAdminCollection(collectionID);
+    assertAdminCollection(collectionID);
 
-	var groupID;
+    var groupID;
 
-	if (role == "DEFAULT_READ") {
-		groupID = FlowContainerUtils.getCollectionDefaultRead(getDSContext(), collectionID);
-	}
-	else {
-		groupID = FlowContainerUtils.getCollectionRole(getDSContext(),collectionID, role);
-	}
+    if (role == "DEFAULT_READ") {
+        groupID = FlowContainerUtils.getCollectionDefaultRead(getDSContext(), collectionID);
+    }
+    else {
+        groupID = FlowContainerUtils.getCollectionRole(getDSContext(),collectionID, role);
+    }
 
-	sendPageAndWait("admin/collection/deleteRole",{"collectionID":collectionID,"role":role,"groupID":groupID});
- 	assertAdminCollection(collectionID);
+    sendPageAndWait("admin/collection/deleteRole",{"collectionID":collectionID,"role":role,"groupID":groupID});
+    assertAdminCollection(collectionID);
 
-	if (cocoon.request.get("submit_confirm") && role == "DEFAULT_READ")
-	{
-	    // Special case for default_read
-	    var result = FlowContainerUtils.changeCollectionDefaultReadToAnonymous(getDSContext(), collectionID);
-	    return result;
-	}
-	else if  (cocoon.request.get("submit_confirm"))
-	{
-	    // All other roles use the standard methods
-		var result = FlowContainerUtils.processDeleteCollectionRole(getDSContext(),collectionID,role,groupID);
-		return result;
-	}
-	return null;
+    if (cocoon.request.get("submit_confirm") && role == "DEFAULT_READ")
+    {
+        // Special case for default_read
+        var result = FlowContainerUtils.changeCollectionDefaultReadToAnonymous(getDSContext(), collectionID);
+        return result;
+    }
+    else if  (cocoon.request.get("submit_confirm"))
+    {
+        // All other roles use the standard methods
+        var result = FlowContainerUtils.processDeleteCollectionRole(getDSContext(),collectionID,role,groupID);
+        return result;
+    }
+    return null;
 }
 
 /**
@@ -2733,56 +3043,56 @@ function doDeleteCollectionRole(collectionID,role)
  */
 function doDeleteCollection(collectionID)
 {
-	assertAuthorized(Constants.COLLECTION, collectionID, Constants.DELETE);
+    assertAuthorized(Constants.COLLECTION, collectionID, Constants.DELETE);
 
-	sendPageAndWait("admin/collection/delete",{"collectionID":collectionID});
-	assertAuthorized(Constants.COLLECTION, collectionID, Constants.DELETE);
+    sendPageAndWait("admin/collection/delete",{"collectionID":collectionID});
+    assertAuthorized(Constants.COLLECTION, collectionID, Constants.DELETE);
 
-	if (cocoon.request.get("submit_confirm"))
-	{
-		var result = FlowContainerUtils.processDeleteCollection(getDSContext(),collectionID);
+    if (cocoon.request.get("submit_confirm"))
+    {
+        var result = FlowContainerUtils.processDeleteCollection(getDSContext(),collectionID);
 
-		if (result.getContinue()) {
-			cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
-			getDSContext().complete();
-			cocoon.exit();
-		}
-	}
-	return null;
+        if (result.getContinue()) {
+            cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
+            getDSContext().complete();
+            cocoon.exit();
+        }
+    }
+    return null;
 }
 
 
 // Creating a new collection, given the ID of its parent community
 function doCreateCollection(communityID)
 {
-	assertAuthorized(Constants.COMMUNITY,communityID,Constants.ADD);
+    assertAuthorized(Constants.COMMUNITY,communityID,Constants.ADD);
 
-	var result;
-	var collectionID;
+    var result;
+    var collectionID;
 
-	do {
-		sendPageAndWait("admin/collection/createCollection",{"communityID":communityID},result);
-		assertAuthorized(Constants.COMMUNITY,communityID,Constants.ADD);
-		result=null;
+    do {
+        sendPageAndWait("admin/collection/createCollection",{"communityID":communityID},result);
+        assertAuthorized(Constants.COMMUNITY,communityID,Constants.ADD);
+        result=null;
 
-		if (cocoon.request.get("submit_save")) {
-			// create the collection, passing back its ID
-			result = FlowContainerUtils.processCreateCollection(getDSContext(), communityID, cocoon.request);
+        if (cocoon.request.get("submit_save")) {
+            // create the collection, passing back its ID
+            result = FlowContainerUtils.processCreateCollection(getDSContext(), communityID, cocoon.request);
 
-			// send the user to the authorization screen
-			if (result.getContinue() && result.getParameter("collectionID")) {
-				collectionID = result.getParameter("collectionID");
-				result = doEditCollection(collectionID,true);
-				// If they return then pass them back to where they came from.
-				return result;
-			}
-		}
-		else if (cocoon.request.get("submit_cancel")) {
-			cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
-			getDSContext().complete();
-			cocoon.exit();
-		}
-	} while (true);
+            // send the user to the authorization screen
+            if (result.getContinue() && result.getParameter("collectionID")) {
+                collectionID = result.getParameter("collectionID");
+                result = doEditCollection(collectionID,true);
+                // If they return then pass them back to where they came from.
+                return result;
+            }
+        }
+        else if (cocoon.request.get("submit_cancel")) {
+            cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
+            getDSContext().complete();
+            cocoon.exit();
+        }
+    } while (true);
 }
 
 
@@ -2792,43 +3102,43 @@ function doCreateCollection(communityID)
 // Creating a new community, given the ID of its parent community or an ID of -1 to designate top-level
 function doCreateCommunity(parentCommunityID)
 {
-	var result;
-	var newCommunityID;
-	// If we are not passed a communityID from the flow, we assume that is passed in from the sitemap
-	if (parentCommunityID == null && cocoon.request.getParameter("communityID") != null)
-	{
-		parentCommunityID = cocoon.request.getParameter("communityID");
-	}
-	else if (parentCommunityID == null)
-	{
-		parentCommunityID = -1;
-	}
+    var result;
+    var newCommunityID;
+    // If we are not passed a communityID from the flow, we assume that is passed in from the sitemap
+    if (parentCommunityID == null && cocoon.request.getParameter("communityID") != null)
+    {
+        parentCommunityID = cocoon.request.getParameter("communityID");
+    }
+    else if (parentCommunityID == null)
+    {
+        parentCommunityID = -1;
+    }
 
-	assertEditCommunity(parentCommunityID);
-
-
-	do {
-		sendPageAndWait("admin/community/createCommunity",{"communityID":parentCommunityID},result);
     assertEditCommunity(parentCommunityID);
-		result=null;
 
-		if (cocoon.request.get("submit_save")) {
-			// create the community, passing back its ID
-			result = FlowContainerUtils.processCreateCommunity(getDSContext(), parentCommunityID, cocoon.request);
 
-			// send the user to the newly created community
-			if (result.getContinue() && result.getParameter("communityID")) {
-				newCommunityID = result.getParameter("communityID");
-				result = doEditCommunity(newCommunityID);
-				return result;
-			}
-		}
-		else if (cocoon.request.get("submit_cancel")) {
-			cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
-			getDSContext().complete();
-			cocoon.exit();
-		}
-	} while (true);
+    do {
+        sendPageAndWait("admin/community/createCommunity",{"communityID":parentCommunityID},result);
+    assertEditCommunity(parentCommunityID);
+        result=null;
+
+        if (cocoon.request.get("submit_save")) {
+            // create the community, passing back its ID
+            result = FlowContainerUtils.processCreateCommunity(getDSContext(), parentCommunityID, cocoon.request);
+
+            // send the user to the newly created community
+            if (result.getContinue() && result.getParameter("communityID")) {
+                newCommunityID = result.getParameter("communityID");
+                result = doEditCommunity(newCommunityID);
+                return result;
+            }
+        }
+        else if (cocoon.request.get("submit_cancel")) {
+            cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
+            getDSContext().complete();
+            cocoon.exit();
+        }
+    } while (true);
 }
 
 
@@ -2837,46 +3147,46 @@ function doCreateCommunity(parentCommunityID)
  */
 function doEditCommunity(itemID)
 {
-	// Always go to the status page first
-	doEditCommunityMetadata(itemID);
+    // Always go to the status page first
+    doEditCommunityMetadata(itemID);
 
-	do {
-	    if (cocoon.request.get("submit_return"))
-		{
-			return null;
-		}
+    do {
+        if (cocoon.request.get("submit_return"))
+        {
+            return null;
+        }
                 else if (cocoon.request.get("submit_metadata")) {
                     doEditCommunityMetadata(itemID);
                 }
-		else if (cocoon.request.get("submit_status"))
-		{
-			doEditItemStatus(itemID);
-		}
-		else if (cocoon.request.get("submit_bitstreams"))
-		{
-			doEditItemBitstreams(itemID);
-		}
-		else if (cocoon.request.get("submit_save") || cocoon.request.get("submit_delete") || cocoon.request.get("submit_delete_logo"))
-		{
-			doEditCommunityMetadata(itemID, -1);
-		}
+        else if (cocoon.request.get("submit_status"))
+        {
+            doEditItemStatus(itemID);
+        }
+        else if (cocoon.request.get("submit_bitstreams"))
+        {
+            doEditItemBitstreams(itemID);
+        }
+        else if (cocoon.request.get("submit_save") || cocoon.request.get("submit_delete") || cocoon.request.get("submit_delete_logo"))
+        {
+            doEditCommunityMetadata(itemID, -1);
+        }
                 else if (cocoon.request.get("submit_authorizations")) {
-			result = doAuthorizeCommunity(communityID);
-		}
-		else if (cocoon.request.get("submit_roles"))
-		{
-			doAssignCommunityRoles(itemID);
-		}
-	        else if (cocoon.request.get("submit_curate"))  {
+            result = doAuthorizeCommunity(communityID);
+        }
+        else if (cocoon.request.get("submit_roles"))
+        {
+            doAssignCommunityRoles(itemID);
+        }
+            else if (cocoon.request.get("submit_curate"))  {
                         doCurateCommunity(itemID, cocoon.request.get("curate_task"));
                 }
                 else
-		{
-			// This case should never happen but to prevent an infinite loop
-			// from occuring let's just return null.
-			return null;
-		}
-	} while (true)
+        {
+            // This case should never happen but to prevent an infinite loop
+            // from occuring let's just return null.
+            return null;
+        }
+    } while (true)
 }
 
 /**
@@ -2885,29 +3195,29 @@ function doEditCommunity(itemID)
  */
 function doEditCommunityMetadata(communityID)
 {
-	assertEditCommunity(communityID);
-	var result;
+    assertEditCommunity(communityID);
+    var result;
 
-	do {
-		sendPageAndWait("admin/community/editMetadata",{"communityID":communityID},result);
-		assertEditCommunity(communityID);
-		result=null;
+    do {
+        sendPageAndWait("admin/community/editMetadata",{"communityID":communityID},result);
+        assertEditCommunity(communityID);
+        result=null;
 
-		if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||  cocoon.request.get("submit_roles") || cocoon.request.get("submit_curate")){
-			return null;
-		}
-		if (cocoon.request.get("submit_save")) {
-			result = FlowContainerUtils.processEditCommunity(getDSContext(), communityID, false, cocoon.request);
+        if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") ||  cocoon.request.get("submit_roles") || cocoon.request.get("submit_curate")){
+            return null;
+        }
+        if (cocoon.request.get("submit_save")) {
+            result = FlowContainerUtils.processEditCommunity(getDSContext(), communityID, false, cocoon.request);
                         if (result.getContinue())
                             return null;
-		} else if (cocoon.request.get("submit_delete"))  {
-			assertAuthorized(Constants.COMMUNITY, communityID, Constants.DELETE);
-			result = doDeleteCommunity(communityID);
-		}
-		else if (cocoon.request.get("submit_delete_logo")) {
-			result = FlowContainerUtils.processEditCommunity(getDSContext(), communityID, true, cocoon.request);
-		}
-	}
+        } else if (cocoon.request.get("submit_delete"))  {
+            assertAuthorized(Constants.COMMUNITY, communityID, Constants.DELETE);
+            result = doDeleteCommunity(communityID);
+        }
+        else if (cocoon.request.get("submit_delete_logo")) {
+            result = FlowContainerUtils.processEditCommunity(getDSContext(), communityID, true, cocoon.request);
+        }
+    }
         while (true);
 }
 
@@ -2915,22 +3225,22 @@ function doEditCommunityMetadata(communityID)
  * Delete an entire community, asking for a confirmation first
  */
 function doDeleteCommunity(communityID) {
-	assertAuthorized(Constants.COMMUNITY, communityID, Constants.DELETE);
+    assertAuthorized(Constants.COMMUNITY, communityID, Constants.DELETE);
 
-	sendPageAndWait("admin/community/delete",{"communityID":communityID});
-	assertAuthorized(Constants.COMMUNITY, communityID, Constants.DELETE);
+    sendPageAndWait("admin/community/delete",{"communityID":communityID});
+    assertAuthorized(Constants.COMMUNITY, communityID, Constants.DELETE);
 
-	if (cocoon.request.get("submit_confirm"))
-	{
-		var result = FlowContainerUtils.processDeleteCommunity(getDSContext(),communityID);
+    if (cocoon.request.get("submit_confirm"))
+    {
+        var result = FlowContainerUtils.processDeleteCommunity(getDSContext(),communityID);
 
-		if (result.getContinue()) {
-			cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
-			getDSContext().complete();
-			cocoon.exit();
-		}
-	}
-	return null;
+        if (result.getContinue()) {
+            cocoon.redirectTo(cocoon.request.getContextPath()+"/community-list",true);
+            getDSContext().complete();
+            cocoon.exit();
+        }
+    }
+    return null;
 }
 
 /**
@@ -2941,32 +3251,32 @@ function doAssignCommunityRoles(communityID)
     var result;
 
     do {
-		   sendPageAndWait("admin/community/assignRoles",{"communityID":communityID},result);
-		   assertEditCommunity(communityID);
-		   result = null;
+           sendPageAndWait("admin/community/assignRoles",{"communityID":communityID},result);
+           assertEditCommunity(communityID);
+           result = null;
 
 
-		   if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") || cocoon.request.get("submit_roles") || cocoon.request.get("submit_curate") )
-		   {
-			   // return to the editCommunity function which will determine where to go next.
-			   return null;
-		   }
-		   else if (cocoon.request.get("submit_authorizations"))
-		   {
-			   // authorization check moved to FlowAuthorizationUtils
-			   // assertAdministrator();
-			   result = doAuthorizeCommunity(communityID);
-		   }
+           if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") || cocoon.request.get("submit_roles") || cocoon.request.get("submit_curate") )
+           {
+               // return to the editCommunity function which will determine where to go next.
+               return null;
+           }
+           else if (cocoon.request.get("submit_authorizations"))
+           {
+               // authorization check moved to FlowAuthorizationUtils
+               // assertAdministrator();
+               result = doAuthorizeCommunity(communityID);
+           }
 
-		   // ADMIN
-		   else if (cocoon.request.get("submit_edit_admin") || cocoon.request.get("submit_create_admin"))
-		   {
-			   var groupID = FlowContainerUtils.getCommunityRole(getDSContext(),communityID, "ADMIN");
-			   result = doEditGroup(groupID);
-		   }
-		   else if (cocoon.request.get("submit_delete_admin")) {
-			   result = doDeleteCommunityRole(communityID, "ADMIN");
-		   }
+           // ADMIN
+           else if (cocoon.request.get("submit_edit_admin") || cocoon.request.get("submit_create_admin"))
+           {
+               var groupID = FlowContainerUtils.getCommunityRole(getDSContext(),communityID, "ADMIN");
+               result = doEditGroup(groupID);
+           }
+           else if (cocoon.request.get("submit_delete_admin")) {
+               result = doDeleteCommunityRole(communityID, "ADMIN");
+           }
 
     }while (true);
 }
@@ -2979,23 +3289,23 @@ function doCurateCommunity(communityID, task) {
     var result;
 
     do {
-		   if (cocoon.request.get("select_curate_group"))
+           if (cocoon.request.get("select_curate_group"))
                    {
                       var select_curate_group = cocoon.request.getParameter("select_curate_group");
                       sendPageAndWait("admin/community/curateCommunity",{"communityID":communityID,"select_curate_group":select_curate_group}, result);
                    } else {
                       sendPageAndWait("admin/community/curateCommunity",{"communityID":communityID}, result);
-           	   }
-		   assertEditCommunity(communityID);
-		   result = null;
-		   if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") || cocoon.request.get("submit_roles") || cocoon.request.get("submit_curate") )
-		   {
-			return null;
-		   }
-		   else if (cocoon.request.get("submit_curate_task"))
-		   {
+               }
+           assertEditCommunity(communityID);
+           result = null;
+           if (cocoon.request.get("submit_return") || cocoon.request.get("submit_metadata") || cocoon.request.get("submit_roles") || cocoon.request.get("submit_curate") )
+           {
+            return null;
+           }
+           else if (cocoon.request.get("submit_curate_task"))
+           {
                         result = FlowContainerUtils.processCurateCommunity(getDSContext(), communityID, cocoon.request);
-		   }
+           }
                    else if (cocoon.request.get("submit_queue_task"))
                     {
                       result = FlowContainerUtils.processQueueCommunity(getDSContext(), communityID, cocoon.request);
@@ -3011,22 +3321,134 @@ function doCurateCommunity(communityID, task) {
  */
 function doDeleteCommunityRole(communityID,role)
 {
-	// authorization check performed directly by the dspace-api
-	// assertAdminCommunity(communityID);
+    // authorization check performed directly by the dspace-api
+    // assertAdminCommunity(communityID);
     var groupID = FlowContainerUtils.getCommunityRole(getDSContext(), communityID, role);
 
-	sendPageAndWait("admin/community/deleteRole",{"communityID":communityID,"role":role,"groupID":groupID});
-	// authorization check performed directly by the dspace-api
-	// assertAdminCommunity(communityID);
+    sendPageAndWait("admin/community/deleteRole",{"communityID":communityID,"role":role,"groupID":groupID});
+    // authorization check performed directly by the dspace-api
+    // assertAdminCommunity(communityID);
 
   if (cocoon.request.get("submit_confirm"))
-	{
-	    // All other roles use the standard methods
-		var result = FlowContainerUtils.processDeleteCommunityRole(getDSContext(),communityID,role,groupID);
-		return result;
-	}
-	return null;
+    {
+        // All other roles use the standard methods
+        var result = FlowContainerUtils.processDeleteCommunityRole(getDSContext(),communityID,role,groupID);
+        return result;
+    }
+    return null;
 }
+
+
+/**
+ * Edit Licenses / Add licenses
+ * (Can only be performed by a DSpace Administrator)
+ */
+
+function licenses()
+{
+    
+    listLicenses();
+    
+    do {
+        if(cocoon.request.get("license_list"))
+        {
+            listLicenses();
+        }
+        else if(cocoon.request.get("license_define"))
+        {
+            newLicense();
+        }
+        else if(cocoon.request.get("label_define"))
+        {
+            newLabel();
+        }
+        else
+        {
+            return null;
+        }
+    }
+    while (true);
+}
+
+function newLicense() {
+    var result;
+    do {
+        sendPageAndWait("admin/licenses/define", {}, result);
+        assertAdministrator();
+        if (cocoon.request.get("new_license_save")){    
+            var name = cocoon.request.get("license_name");
+            var url = cocoon.request.get("license_url");
+            var confirmation = cocoon.request.get("license_confirmation");
+            var required = cocoon.request.get("license_required");
+            var label = cocoon.request.get("license_label");
+            var exLabel = cocoon.request.get("license_label_extended");
+            result = LicenseForm.defineLicense(getDSContext(), name, url, confirmation, required, label, exLabel);            
+        } else if(cocoon.request.get("new_license_return")) {
+            listLicenses();
+            break;
+        } else {
+            return null;
+        }
+    } while (true);
+}
+
+function newLabel() {
+    var result;
+    do {
+        sendPageAndWait("admin/licenses/label", {}, result);
+        assertAdministrator();
+        if (cocoon.request.get("new_label_save")){  
+            var label = cocoon.request.get("label");
+            var title = cocoon.request.get("title");
+            var extended = cocoon.request.get("extended");
+            var icon = cocoon.request.get("icon");
+            result = LicenseForm.defineLabel(getDSContext(), cocoon.request);           
+        } else if(cocoon.request.get("new_label_return")) {
+            listLicenses();
+            break;
+        } else {
+            return null;
+        }
+    } while (true);
+}
+
+
+function listLicenses()
+{
+    assertAdministrator();
+    var result;
+    var licenseIDs;
+    var del = false;
+    do {
+        if(del) {
+            sendPageAndWait("admin/licenses/main", {"licenseIDs":licenseIDs, "delete":true}, result);
+            del = false;
+        } else {
+            sendPageAndWait("admin/licenses/main", {"licenseIDs":licenseIDs}, result);
+        }
+        
+        if(cocoon.request.get("edit")) {
+            result = null;
+            licenseIDs = cocoon.request.get("license_id");
+        } else if(cocoon.request.get("update")){
+            result = LicenseForm.updateLicense(getDSContext(), cocoon.request);
+            licenseIDs = result.getParameter("licenseIDs");
+        } else if(cocoon.request.get("delete")) {
+            result = null;
+            licenseIDs = cocoon.request.get("license_id");
+            del = true;
+        } else if(cocoon.request.get("confirm")) {
+            result = LicenseForm.deleteLicense(getDSContext(), cocoon.request);         
+            licenseIDs = "";
+        } else if(cocoon.request.get("cancel")) {
+            result = null;
+            licenseIDs = "";
+        } else {
+            return null;
+        }
+    } while (true)  
+}
+
 
 /**
  * Curate a DSpace Object, from site-wide Administrator tools
@@ -3036,7 +3458,7 @@ function doCurate()
 {
     var result;
     
-    assertAdministrator();
+    assertCurator();
 
     var identifier;
     var curateTask;
@@ -3050,9 +3472,9 @@ function doCurate()
         }
         else
         {
-             sendPageAndWait("admin/curate/main",{"identifier":identifier,"curate_task":curateTask},result);	   
+             sendPageAndWait("admin/curate/main",{"identifier":identifier,"curate_task":curateTask},result);       
         } 
-       	   
+           
         if (cocoon.request.get("submit_curate_task"))
         {
             result = FlowCurationUtils.processCurateObject(getDSContext(), cocoon.request);
@@ -3060,6 +3482,9 @@ function doCurate()
         else if (cocoon.request.get("submit_queue_task"))
         {
             result = FlowCurationUtils.processQueueObject(getDSContext(), cocoon.request);
+        }
+        else if (cocoon.request.get("submit_run_all_tasks")){
+        	result = FlowCurationUtils.processRunAll(getDSContext(), cocoon.request);
         }
         
         //if 'identifier' parameter was set in result, pass it back to sendPageAndWait call (so it is prepopulated in Admin UI)
@@ -3080,3 +3505,4 @@ function doCurate()
     }
     while (true);
 }
+

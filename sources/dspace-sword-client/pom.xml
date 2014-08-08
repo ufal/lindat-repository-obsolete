@@ -4,13 +4,13 @@
     <packaging>pom</packaging>
     <groupId>org.dspace</groupId>
     <artifactId>dspace-sword-client</artifactId>
-    <version>1.8.4-SNAPSHOT</version>
+    <version>1.8.2</version>
     <name>DSpace Sword Client</name>
 
     <parent>
         <artifactId>dspace-parent</artifactId>
         <groupId>org.dspace</groupId>
-        <version>1.8.4-SNAPSHOT</version>
+        <version>1.8.2</version>
         <relativePath>..</relativePath>
     </parent>
     
@@ -20,10 +20,18 @@
         <module>dspace-sword-client-xmlui-webapp</module>
     </modules>
 
-    <properties>
-        <!-- This is the path to the root [dspace-src] directory. -->
-        <root.basedir>${basedir}/..</root.basedir>
-    </properties>
+    <!--
+       The Subversion repository location is used by Continuum to update
+       against when changes have occurred, this spawns a new build cycle
+       and releases snapshots into the snapshot repository below.
+    -->
+    <scm>
+        <connection>scm:svn:http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</connection>
+        <developerConnection>
+            scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2
+        </developerConnection>
+        <url>http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</url>
+    </scm>
 
     <issueManagement>
       <system>JIRA</system>

@@ -9,21 +9,124 @@
         DSpace/Manakin XML UI Based APIs and components using the Cocoon
         and Wing frameworks.
     </description>
+    
+  <repositories>
+    <repository>
+      <id>google-api-services</id>
+      <url>http://google-api-client-libraries.appspot.com/mavenrepo</url>
+    </repository>
+  </repositories>    
 
     <parent>
         <groupId>org.dspace</groupId>
         <artifactId>dspace-xmlui</artifactId>
-        <version>1.8.4-SNAPSHOT</version>
+        <version>1.8.2</version>
       <relativePath>..</relativePath>
     </parent>
 
-    <properties>
-        <!-- This is the path to the root [dspace-src] directory. -->
-        <root.basedir>${basedir}/../..</root.basedir>
-    </properties>
+    <scm>
+        <connection>scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2</connection>
+        <developerConnection>scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2
+        </developerConnection>
+        <url>http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</url>
+    </scm>
+
+<!--
+  UFAL info
+-->
+         <reporting>
+            <plugins>
+              <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>2.6</version>
+                <reportSets>
+                  <reportSet>
+                    <reports><!-- select reports -->
+                      <report>index</report>
+                    </reports>
+                  </reportSet>
+                </reportSets>
+              </plugin>
+
+              <plugin>
+                  <groupId>org.codehaus.mojo</groupId>
+                  <artifactId>findbugs-maven-plugin</artifactId>
+              </plugin>
+
+              <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-pmd-plugin</artifactId>
+              </plugin>
+
+            </plugins>
+          </reporting>
+
+    <build>
+        <plugins>
+
+<!--
+  needed for UFAL info
+-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>3.3</version>
+      </plugin>
+        </plugins>
+    </build>
+
+
+
 
     <dependencies>
+        
+        <dependency>
+            <groupId>cz.cuni.mff.ufal.lindat</groupId>
+            <artifactId>utilities</artifactId>
+        </dependency>
 
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+        </dependency>
+
+        <dependency>
+                <groupId>com.googlecode.json-simple</groupId>
+                <artifactId>json-simple</artifactId>
+                <version>1.1.1</version>
+        </dependency>
+
+          
+        <dependency>
+          <groupId>com.google.api-client</groupId>
+          <artifactId>google-api-client</artifactId>
+          <version>1.12.0-beta</version>
+        </dependency>
+      
+        <dependency>
+          <groupId>com.google.apis</groupId>
+          <artifactId>google-api-services-analytics</artifactId>
+          <version>v3-rev23-1.12.0-beta</version>
+        </dependency>
+        
+        <dependency>
+          <groupId>com.google.http-client</groupId>
+          <artifactId>google-http-client-jackson</artifactId>
+          <version>1.12.0-beta</version>
+        </dependency>
+        
+        <dependency>
+          <groupId>com.google.oauth-client</groupId>
+          <artifactId>google-oauth-client-java6</artifactId>
+          <version>1.12.0-beta</version>
+        </dependency>
+        
         <!-- Wing framework -->
         <dependency>
             <groupId>org.dspace</groupId>
@@ -32,10 +135,14 @@
         <dependency>
             <groupId>org.dspace</groupId>
             <artifactId>dspace-api</artifactId>
-        </dependency>
+        </dependency>         
         <dependency>
             <groupId>org.dspace</groupId>
             <artifactId>dspace-api-lang</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.dspace</groupId>
+            <artifactId>dspace-stats</artifactId>
         </dependency>
         <dependency>
             <groupId>org.dspace</groupId>
@@ -66,6 +173,11 @@
             <version>2.3.6</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.2.1</version>
+        </dependency>
     </dependencies>
 
 </project>

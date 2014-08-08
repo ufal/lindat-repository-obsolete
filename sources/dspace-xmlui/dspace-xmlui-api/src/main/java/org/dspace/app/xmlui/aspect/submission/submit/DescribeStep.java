@@ -11,9 +11,12 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.dspace.app.util.DCInput;
 import org.dspace.app.util.DCInputSet;
 import org.dspace.app.util.DCInputsReader;
@@ -28,6 +31,7 @@ import org.dspace.app.xmlui.wing.element.CheckBox;
 import org.dspace.app.xmlui.wing.element.Composite;
 import org.dspace.app.xmlui.wing.element.Division;
 import org.dspace.app.xmlui.wing.element.Field;
+import org.dspace.app.xmlui.wing.element.Hidden;
 import org.dspace.app.xmlui.wing.element.Instance;
 import org.dspace.app.xmlui.wing.element.List;
 import org.dspace.app.xmlui.wing.element.PageMeta;
@@ -37,6 +41,7 @@ import org.dspace.app.xmlui.wing.element.Select;
 import org.dspace.app.xmlui.wing.element.Text;
 import org.dspace.app.xmlui.wing.element.TextArea;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.authorize.AuthorizeManager;
 import org.dspace.content.Collection;
 import org.dspace.content.DCDate;
 import org.dspace.content.DCPersonName;
@@ -47,8 +52,13 @@ import org.dspace.content.authority.MetadataAuthorityManager;
 import org.dspace.content.authority.ChoiceAuthorityManager;
 import org.dspace.content.authority.Choice;
 import org.dspace.content.authority.Choices;
-
+import org.dspace.core.ConfigurationManager;
+import org.dspace.core.Context;
+import org.dspace.services.ConfigurationService;
+import org.dspace.utils.DSpace;
 import org.xml.sax.SAXException;
+
+import cz.cuni.mff.ufal.dspace.app.util.ACL;
 
 /**
  * This is a step of the item submission processes. The describe step queries
@@ -58,14 +68,17 @@ import org.xml.sax.SAXException;
  * from all other stages in that it may represent multiple stages within the
  * submission processes.
  *
- * @author Scott Phillips
- * @author Tim Donohue (updated for Configurable Submission)
+ * based on class by Scott Phillips and Tim Donohue (updated for Configurable Submission)
+ * modified for LINDAT/CLARIN
  */
 public class DescribeStep extends AbstractSubmissionStep
 {
+    private static Logger log = Logger.getLogger(DescribeStep.class);
         /** Language Strings **/
     protected static final Message T_head =
         message("xmlui.Submission.submit.DescribeStep.head");
+    protected static final Message T_head2 =
+        message("xmlui.Submission.submit.DescribeStep.head2");
     protected static final Message T_unknown_field=
         message("xmlui.Submission.submit.DescribeStep.unknown_field");
     protected static final Message T_required_field=
@@ -91,17 +104,21 @@ public class DescribeStep extends AbstractSubmissionStep
      * submission process. The reader is a utility class to read
      * that configuration file.
      */
-    private static DCInputsReader INPUTS_READER = null;
+    protected static DCInputsReader INPUTS_READER = null;
+    private static final Message T_vocabulary_link = message("xmlui.Submission.submit.DescribeStep.controlledvocabulary.link");
     
     /**
      * Ensure that the inputs reader has been initialized, this method may be
      * called multiple times with no ill-effect.
      */
-    private static void initializeInputsReader() throws DCInputsReaderException
+    private static void initializeInputsReader( DCInputsReader inputs_reader ) throws DCInputsReaderException
     {
         if (INPUTS_READER == null)
         {
-            INPUTS_READER = new DCInputsReader();
+            if ( inputs_reader != null )
+                INPUTS_READER = inputs_reader;
+            else
+                INPUTS_READER = new DCInputsReader();
         }
     }
     
@@ -111,7 +128,7 @@ public class DescribeStep extends AbstractSubmissionStep
      *
      * @return The input reader.
      */
-    private static DCInputsReader getInputsReader()
+    protected static DCInputsReader getInputsReader()
     {
         return INPUTS_READER;
     }
@@ -128,7 +145,22 @@ public class DescribeStep extends AbstractSubmissionStep
                 //Ensure that the InputsReader is initialized.
                 try
                 {
-                    initializeInputsReader();
+                    initializeInputsReader( null );
+                }
+                catch (DCInputsReaderException e)
+                {
+                    throw new ServletException(e);
+                }
+        }
+        public DescribeStep( DCInputsReader input ) throws ServletException
+        {
+                this.requireSubmission = true;
+                this.requireStep = true;
+
+                //Ensure that the InputsReader is initialized.
+                try
+                {
+                    initializeInputsReader( input );
                 }
                 catch (DCInputsReaderException e)
                 {
@@ -142,6 +174,8 @@ public class DescribeStep extends AbstractSubmissionStep
             super.addPageMeta(pageMeta);
             int collectionID = submission.getCollection().getID();
             pageMeta.addMetadata("choice", "collection").addContent(String.valueOf(collectionID));
+            pageMeta.addMetadata("include-library", "datepicker");
+
 
             String jumpTo = submissionInfo.getJumpToField();
             if (jumpTo != null)
@@ -160,6 +194,12 @@ public class DescribeStep extends AbstractSubmissionStep
 
                 DCInputSet inputSet;
                 DCInput[] inputs;
+
+                //set publishedbefore here after hiding initial question page
+                submission.setPublishedBefore(true);
+                submission.update();
+                context.commit();
+
                 try
                 {
                         inputSet = getInputsReader().getInputs(submission.getCollection().getHandle());
@@ -175,18 +215,53 @@ public class DescribeStep extends AbstractSubmissionStep
                 addSubmissionProgressList(div);
 
                 List form = div.addList("submit-describe",List.TYPE_FORM);
-                form.setHead(T_head);
+                if ( this.getPage() == 1 ) {
+                    form.setHead(T_head);
+                }else {
+                    form.setHead(T_head2);
+                }
 
+                // Fetch the document type (dc.type)
+                String documentType = "";
+                if( (item.getMetadata("dc.type") != null) && (item.getMetadata("dc.type").length >0) )
+                {
+                    documentType = item.getMetadata("dc.type")[0].value;
+                }
+                
                 // Iterate over all inputs and add it to the form.
                 for(DCInput dcInput : inputs)
                 {
                     String scope = submissionInfo.isInWorkflow() ? DCInput.WORKFLOW_SCOPE : DCInput.SUBMISSION_SCOPE;
                     boolean readonly = dcInput.isReadOnly(scope);
                     
+                	// Omit fields not allowed for this document type
+                    if(!dcInput.isAllowedFor(documentType))
+                    {
+                    	continue;
+                    }
+                    
                     // If the input is invisible in this scope, then skip it.
                         if (!dcInput.isVisible(scope) && !readonly)
                         {
                             continue;
+                        }
+                        
+                        //skip if acl says so
+                        if(!isInputAuthorized(context,dcInput)){
+                        	continue;
+                        }
+                        
+                        //add some eye candy
+                        if(dcInput.hasACL()) 
+                        {
+                            if(AuthorizeManager.isAdmin(context)) 
+                            {
+                                dcInput.addRend("admin-field");
+                            }
+                            else 
+                            {
+                                dcInput.addRend("specialuser-field");
+                            }
                         }
                         
                         String schema = dcInput.getSchema();
@@ -295,7 +370,7 @@ public class DescribeStep extends AbstractSubmissionStep
     {
         //Create a new list section for this step (and set its heading)
         List describeSection = reviewList.addList("submit-review-" + this.stepAndPage, List.TYPE_FORM);
-        describeSection.setHead(T_head);
+        describeSection.setHead(T_head2);
         
         //Review the values assigned to all inputs
         //on this page of the Describe step.
@@ -311,14 +386,26 @@ public class DescribeStep extends AbstractSubmissionStep
         
         MetadataAuthorityManager mam = MetadataAuthorityManager.getManager();
         DCInput[] inputs = inputSet.getPageRows(getPage()-1, submission.hasMultipleTitles(), submission.isPublishedBefore());
+        
+        // Fetch the document type (dc.type)
+        Item item = submission.getItem();
+        String documentType = "";
+        if( (item.getMetadata("dc.type") != null) && (item.getMetadata("dc.type").length >0) )
+        {
+            documentType = item.getMetadata("dc.type")[0].value;
+        }
+        
 
         for (DCInput input : inputs)
         {
             // If the input is invisible in this scope, then skip it.
             String scope = submissionInfo.isInWorkflow() ? DCInput.WORKFLOW_SCOPE : DCInput.SUBMISSION_SCOPE;
-            if (!input.isVisible(scope) && !input.isReadOnly(scope))
-            {
+            if(!input.isVisible(scope) && !input.isReadOnly(scope)) {
                 continue;
+            }
+            
+            if(!input.isAllowedFor(documentType)) {
+            	continue;
             }
 
             String inputType = input.getInputType();
@@ -404,65 +491,31 @@ public class DescribeStep extends AbstractSubmissionStep
          * @param dcValues
          *                      The field's pre-existing values.
          */
-        private void renderNameField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
+        protected void renderNameField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
         {
                 // The name field is a composite field containing two text fields, one
-                // for first name the other for last name.
-                Composite fullName = form.addItem().addComposite(fieldName, "submit-name");
-                Text lastName = fullName.addText(fieldName+"_last");
+                // for first name the other for last name.        	        	
+        		
+        		String rend = dcInput.getRendsAsString();
+        		
+        		org.dspace.app.xmlui.wing.element.Item item = form.addItem(null, rend);
+        		
+        		rend = "submit-name";
+        		
+        		Composite fullName = item.addComposite(fieldName, rend);        		
+        	
+	        	if(isAutocompletable(dcInput)) {
+	            	rend += " autocomplete";
+	            	addAutocompleteComponents(fieldName+"_last", dcInput, item);
+	            }        
+                               
+                Text lastName = fullName.addText(fieldName+"_last", rend);
                 Text firstName = fullName.addText(fieldName+"_first");
 
-                // Setup the full name
-                fullName.setLabel(dcInput.getLabel());
-                fullName.setHelp(cleanHints(dcInput.getHints()));
-                if (dcInput.isRequired())
-                {
-                    fullName.setRequired();
-                }
-                if (isFieldInError(fieldName))
-                {
-                    if (dcInput.getWarning() != null && dcInput.getWarning().length() > 0)
-                    {
-                        fullName.addError(dcInput.getWarning());
-                    }
-                    else
-                    {
-                        fullName.addError(T_required_field);
-                    }
-                }
-                if (dcInput.isRepeatable() && !readonly)
-                {
-                    fullName.enableAddOperation();
-                }
-                if ((dcInput.isRepeatable() || dcValues.length > 1)  && !readonly)
-                {
-                    fullName.enableDeleteOperation();
-                }
                 String fieldKey = MetadataAuthorityManager.makeFieldKey(dcInput.getSchema(), dcInput.getElement(), dcInput.getQualifier());
                 boolean isAuthorityControlled = MetadataAuthorityManager.getManager().isAuthorityControlled(fieldKey);
-                if (isAuthorityControlled)
-                {
-                    fullName.setAuthorityControlled();
-                    fullName.setAuthorityRequired(MetadataAuthorityManager.getManager().isAuthorityRequired(fieldKey));
-                }
-                if (ChoiceAuthorityManager.getManager().isChoicesConfigured(fieldKey))
-                {
-                    fullName.setChoices(fieldKey);
-                    fullName.setChoicesPresentation(ChoiceAuthorityManager.getManager().getPresentation(fieldKey));
-                    fullName.setChoicesClosed(ChoiceAuthorityManager.getManager().isClosed(fieldKey));
-                }
 
-                // Setup the first and last name
-                lastName.setLabel(T_last_name_help);
-                firstName.setLabel(T_first_name_help);
-                
-                if (readonly)
-                {
-                    lastName.setDisabled();
-                    firstName.setDisabled();
-                    fullName.setDisabled();
-                }
-                
+
                 // Setup the field's values
                 if (dcInput.isRepeatable() || dcValues.length > 1)
                 {
@@ -505,6 +558,56 @@ public class DescribeStep extends AbstractSubmissionStep
                             }
                 }
         }
+ 
+                // Setup the full name
+                fullName.setLabel(dcInput.getLabel());
+                fullName.setHelp(cleanHints(dcInput.getHints()));
+                if (dcInput.isRequired())
+                {
+                    fullName.setRequired();
+                }
+                if (isFieldInError(fieldName))
+                {
+                    if (dcInput.getWarning() != null && dcInput.getWarning().length() > 0)
+                    {
+                        fullName.addError(dcInput.getWarning());
+                    }
+                    else
+                    {
+                        fullName.addError(T_required_field);
+                    }
+                }
+                if (dcInput.isRepeatable() && !readonly)
+                {
+                    fullName.enableAddOperation();
+                }
+                if ((dcInput.isRepeatable() || dcValues.length > 1)  && !readonly)
+                {
+                    fullName.enableDeleteOperation();
+                }
+                if (isAuthorityControlled)
+                {
+                    fullName.setAuthorityControlled();
+                    fullName.setAuthorityRequired(MetadataAuthorityManager.getManager().isAuthorityRequired(fieldKey));
+                }
+                if (ChoiceAuthorityManager.getManager().isChoicesConfigured(fieldKey))
+                {
+                    fullName.setChoices(fieldKey);
+                    fullName.setChoicesPresentation(ChoiceAuthorityManager.getManager().getPresentation(fieldKey));
+                    fullName.setChoicesClosed(ChoiceAuthorityManager.getManager().isClosed(fieldKey));
+                }
+
+                // Setup the first and last name
+                lastName.setLabel(T_last_name_help);
+                firstName.setLabel(T_first_name_help);
+                
+                if (readonly)
+                {
+                    lastName.setDisabled();
+                    firstName.setDisabled();
+                    fullName.setDisabled();
+                }
+                
         }
         
         /**
@@ -521,12 +624,16 @@ public class DescribeStep extends AbstractSubmissionStep
          * @param dcValues
          *                      The field's pre-existing values.
          */
-        private void renderDateField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
+        protected void renderDateField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
         {
                 // The date field consists of three primitive fields: a text field
                 // for the year, followed by a select box of the months, follewed
                 // by a text box for the day.
-                Composite fullDate = form.addItem().addComposite(fieldName, "submit-date");
+            
+                String rend = dcInput.getRendsAsString();
+                rend += " submit-date";
+            
+                Composite fullDate = form.addItem().addComposite(fieldName, rend);
                 Text year = fullDate.addText(fieldName+"_year");
                 Select month = fullDate.addSelect(fieldName+"_month");
                 Text day = fullDate.addText(fieldName+"_day");
@@ -631,11 +738,14 @@ public class DescribeStep extends AbstractSubmissionStep
          * @param dcValues
          *                      The field's pre-existing values.
          */
-        private void renderSeriesField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
+        protected void renderSeriesField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
         {
-                // The seiries field consists of two parts, a series name (text field)
+                String rend = dcInput.getRendsAsString();
+                rend += " submit-"+dcInput.getInputType();
+            
+                // The series field consists of two parts, a series name (text field)
                 // and report or paper number (also a text field).
-                Composite fullSeries = form.addItem().addComposite(fieldName,"submit-"+dcInput.getInputType());
+                Composite fullSeries = form.addItem().addComposite(fieldName, rend);
                 Text series = fullSeries.addText(fieldName+"_series");
                 Text number = fullSeries.addText(fieldName+"_number");
 
@@ -714,9 +824,12 @@ public class DescribeStep extends AbstractSubmissionStep
          * @param dcValues
          *                      The field's pre-existing values.
          */
-        private void renderQualdropField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
-        {
-                Composite qualdrop = form.addItem().addComposite(fieldName,"submit-qualdrop");
+        protected void renderQualdropField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
+        {            
+                String rend = dcInput.getRendsAsString();
+                rend += " submit-qualdrop";
+            
+                Composite qualdrop = form.addItem().addComposite(fieldName, rend);
                 Select qual = qualdrop.addSelect(fieldName+"_qualifier");
                 Text value = qualdrop.addText(fieldName+"_value");
 
@@ -795,10 +908,13 @@ public class DescribeStep extends AbstractSubmissionStep
          * @param dcValues
          *                      The field's pre-existing values.
          */
-        private void renderTextArea(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
+        protected void renderTextArea(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
         {
+                String rend = dcInput.getRendsAsString();
+                rend += " submit-textarea submission-textarea";
+            
                 // Plain old Textarea
-                TextArea textArea = form.addItem().addTextArea(fieldName,"submit-textarea");
+                TextArea textArea = form.addItem().addTextArea(fieldName, rend);
 
                 // Setup the text area
                 textArea.setLabel(dcInput.getLabel());
@@ -896,16 +1012,19 @@ public class DescribeStep extends AbstractSubmissionStep
          * @param dcValues
          *                      The field's pre-existing values.
          */
-        private void renderChoiceSelectField(List form, String fieldName, Collection coll, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
+        protected void renderChoiceSelectField(List form, String fieldName, Collection coll, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
         {
                 String fieldKey = MetadataAuthorityManager.makeFieldKey(dcInput.getSchema(), dcInput.getElement(), dcInput.getQualifier());
                 if (MetadataAuthorityManager.getManager().isAuthorityControlled(fieldKey))
                 {
                     throw new WingException("Field " + fieldKey + " has choice presentation of type \"" + Params.PRESENTATION_SELECT + "\", it may NOT be authority-controlled.");
                 }
+                
+                String rend = dcInput.getRendsAsString();
+                rend += " submit-select";
 
                 // Plain old select list.
-                Select select = form.addItem().addSelect(fieldName,"submit-select");
+                Select select = form.addItem().addSelect(fieldName, rend);
 
                 //Setup the select field
                 select.setLabel(dcInput.getLabel());
@@ -972,10 +1091,13 @@ public class DescribeStep extends AbstractSubmissionStep
          * @param dcValues
          *                      The field's pre-existing values.
          */
-        private void renderDropdownField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
-        {
+        protected void renderDropdownField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
+        {            
+                String rend = dcInput.getRendsAsString();
+                rend += " submit-select";
+                
                 // Plain old select list.
-                Select select = form.addItem().addSelect(fieldName,"submit-select");
+                Select select = form.addItem().addSelect(fieldName, rend);
 
                 //Setup the select field
                 select.setLabel(dcInput.getLabel());
@@ -1021,7 +1143,13 @@ public class DescribeStep extends AbstractSubmissionStep
                 // Setup the field's pre-selected values
                 for (DCValue dcValue : dcValues)
                 {
-                        select.setOptionSelected(dcValue.value);
+                    log.info( "dc values are present for "+fieldName+" with "+dcValue.value );	
+                    // jmisutka/UFAL - special hack for iso languages
+                    // add the option there artificially
+                    if ( fieldName.equals("dc_language_iso" ) ) {
+                      select.addOption( dcValue.value, dcValue.value );
+                    }
+                    select.setOptionSelected(dcValue.value);
                 }
         }
         
@@ -1043,18 +1171,20 @@ public class DescribeStep extends AbstractSubmissionStep
          * @param dcValues
          *                      The field's pre-existing values.
          */
-        private void renderSelectFromListField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
+        protected void renderSelectFromListField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
         {
                 Field listField = null;
+                
+                String rend = dcInput.getRendsAsString();
                 
                 //if repeatable, this list of fields should be checkboxes
                 if (dcInput.isRepeatable())
                 {
-                        listField = form.addItem().addCheckBox(fieldName);
+                        listField = form.addItem(null, rend).addCheckBox(fieldName);
                 }
                 else //otherwise this is a list of radio buttons
                 {
-                        listField = form.addItem().addRadio(fieldName);
+                        listField = form.addItem(null, rend).addRadio(fieldName);
                 }
                 
                 if (readonly)
@@ -1113,6 +1243,45 @@ public class DescribeStep extends AbstractSubmissionStep
                 }
         }
         
+        protected boolean isAutocompletable(DCInput dcInput) {
+        	 // autocomplete
+            String autocomplete = dcInput.getAutocomplete();
+            if ( null != autocomplete ) 
+            {
+                //ConfigurationService cs = new DSpace().getConfigurationService();
+                //String is_on = cs.getProperty("lr.autocomplete.on");
+            	
+            	String is_on = ConfigurationManager.getProperty("lr", "lr.autocomplete.on");
+            	
+                // UI will have an indication that autocomplete is turned on by
+                // a) using the class autocomplete in the main text box
+                // b) the url will be in a hidden attribute which will be marked by the fieldName
+                // c) the type will be also set in a hidden element
+                if ( null != is_on && is_on.trim().equals("true") ) 
+                {                    
+                	return true;
+                }
+            }
+            return false;
+        }
+        
+        protected void addAutocompleteComponents(String fieldName, DCInput dcInput, org.dspace.app.xmlui.wing.element.Item item) throws WingException {
+        	String autocomplete = dcInput.getAutocomplete();
+        	ConfigurationService cs = new DSpace().getConfigurationService();
+        	String[] parts = autocomplete.split("-");
+            String url_property = String.format("lr.autocomplete.%s.url", parts[0]);
+            //String auto_url = cs.getProperty(url_property);
+            String auto_url = ConfigurationManager.getProperty("lr", url_property);
+            if ( auto_url != null ) {                                       
+	        	item.addHidden(fieldName+"-url").setValue(auto_url);
+	            item.addHidden(fieldName+"-type").setValue(autocomplete);
+            }
+            else {
+            	log.warn(String.format(
+                        "autocomplete has been specified but cannot find the actual url in configuration [%s]",url_property));
+            }
+        }
+        
         /**
          * Render a simple text field to the DRI document
          *
@@ -1125,7 +1294,7 @@ public class DescribeStep extends AbstractSubmissionStep
          * @param dcValues
          *                      The field's pre-existing values.
          */
-        private void renderOneboxField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
+        protected void renderOneboxField(List form, String fieldName, DCInput dcInput, DCValue[] dcValues, boolean readonly) throws WingException
         {
                 // Both onebox and twobox consist a free form text field
                 // that the user may enter any value. The difference between
@@ -1133,8 +1302,28 @@ public class DescribeStep extends AbstractSubmissionStep
                 // as twobox should be listed in a two column format. Since this
                 // decision is not something the Aspect can effect we merely place
                 // as a render hint.
-                Text text = form.addItem().addText(fieldName,"submit-text");
+            
+            String rend = dcInput.getRendsAsString();
+            
+            org.dspace.app.xmlui.wing.element.Item item = form.addItem(null, rend);
+                                    
+            rend = "submit-text";
+                       
+            if(isAutocompletable(dcInput)) {
+            	rend += " autocomplete";
+            	addAutocompleteComponents(fieldName, dcInput, item);
+            }
+            
+            Text text = item.addText(fieldName, rend);                                    
 
+            if(dcInput.getVocabulary() != null){
+                String vocabularyUrl = new DSpace().getConfigurationService().getProperty("dspace.url");
+                vocabularyUrl += "/JSON/controlled-vocabulary?vocabularyIdentifier=" + dcInput.getVocabulary();
+                //Also hand down the field name so our summoning script knows the field the selected value is to end up in
+                vocabularyUrl += "&metadataFieldName=" + fieldName;
+                item.addXref("vocabulary:" + vocabularyUrl).addContent(T_vocabulary_link);
+            }
+            
                 // Setup the select field
                 text.setLabel(dcInput.getLabel());
                 text.setHelp(cleanHints(dcInput.getHints()));
@@ -1167,6 +1356,21 @@ public class DescribeStep extends AbstractSubmissionStep
                         text.addError(T_required_field);
                     }
                 }
+                
+                // regexp checking - should rather be in dspace-api
+                for(DCValue dcv : dcValues) 
+                {
+                    if( !dcInput.isAllowedValue(dcv.value) ) {
+                        if (dcInput.getRegexpWarning() != null 
+                                        && dcInput.getRegexpWarning().length() > 0) {
+                            text.addError(dcInput.getRegexpWarning());
+                        }else {
+                            text.addError(String.format(
+                                "This value must match the given regular expression [%s].", dcInput.getRegexp()) );
+                        }
+                    }
+                }                
+                
                 if (dcInput.isRepeatable() && !readonly)
                 {
                     text.enableAddOperation();
@@ -1263,4 +1467,50 @@ public class DescribeStep extends AbstractSubmissionStep
 
                 return clean;
         }
+             
+        /**
+         * Adds hidden field with the name of the element to jump to using js after page reload
+         * 
+         * @param div
+         * @throws WingException
+         */
+        protected void addJumpToInput(Division div) throws WingException
+        {
+            String name = submissionInfo.getJumpToField();        
+            Hidden jumpTo = div.addHidden("jump_to");
+            jumpTo.setValue(name);        
+        }
+        
+        /**
+         * should we render the metadata field based on field description?
+         */
+        protected boolean isInputDisplayable(Context c, DCInput dcInput, String scope, String documentType)
+        {
+            // Omit fields not allowed for this document type
+            if(!dcInput.isAllowedFor(documentType)) {
+                return false;
+            }
+             
+            // If the input is invisible in this scope, then skip it.
+            if (!dcInput.isVisible(scope) && !dcInput.isReadOnly(scope)) {
+                return false;
+            }
+                    
+            return true;
+        }
+        
+        /**
+         * should we render the metadata field based on authorization?
+         */
+        protected boolean isInputAuthorized(Context c, DCInput dcInput)
+        {       
+            
+            // If the input is not allowed according to ACL, skip it.
+            if(!dcInput.isAllowedAction(context, ACL.ACTION_READ) && !dcInput.isAllowedAction(context, ACL.ACTION_WRITE)) {
+                return false;
+            }
+            
+            return true;
+        }
+        
 }

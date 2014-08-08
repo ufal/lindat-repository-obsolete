@@ -34,7 +34,8 @@ import org.dspace.core.Constants;
  * 
  * FIXME: add documentation
  * 
- * @author Alexey maslov
+ * based on class by Alexey maslov
+ * modified for LINDAT/CLARIN
  */
 public class FlowAuthorizationUtils {
 
@@ -237,8 +238,7 @@ public class FlowAuthorizationUtils {
 	 * @param policyIDs The unique ids of the policies being deleted.
 	 * @return A process result's object.   
 	 */
-	public static FlowResult processDeletePolicies(Context context, String[] policyIDs) throws NumberFormatException, SQLException, AuthorizeException
-	{
+	public static FlowResult processDeletePolicies(Context context, String[] policyIDs) throws NumberFormatException, SQLException, AuthorizeException {
 		FlowResult result = new FlowResult();
 	
 		for (String id : policyIDs) 
@@ -267,12 +267,24 @@ public class FlowAuthorizationUtils {
 	 * @param collectionIDs The IDs of the collections that the policies will be applied to 
 	 * @return A process result's object.
 	 */
-	public static FlowResult processAdvancedPolicyAdd(Context context, String[] groupIDs, int actionID,
-			int resourceID, String [] collectionIDs) throws NumberFormatException, SQLException, AuthorizeException
-	{
+	public static FlowResult processAdvancedPolicyAdd(Context context, String[] groupIDs, int actionID, int resourceID, String [] collectionIDs) throws NumberFormatException, SQLException, AuthorizeException {
 	    AuthorizeUtil.requireAdminRole(context);
 		FlowResult result = new FlowResult();
 		
+		if(groupIDs==null) {
+			result.setContinue(false);
+			result.setOutcome(false);
+			result.setMessage(new Message("default", "Please select group(s)."));
+			return result;
+		}
+
+		if(collectionIDs==null) {
+			result.setContinue(false);
+			result.setOutcome(false);
+			result.setMessage(new Message("default", "Please select collection(s)."));
+			return result;
+		}
+
 		for (String groupID : groupIDs) 
 		{
 			for (String collectionID : collectionIDs) 
@@ -306,11 +318,17 @@ public class FlowAuthorizationUtils {
 	 * @param collectionIDs The IDs of the collections that the policy wipe will be applied to 
 	 * @return A process result's object.
 	 */
-	public static FlowResult processAdvancedPolicyDelete(Context context, int resourceID, String [] collectionIDs) 
-			throws NumberFormatException, SQLException, AuthorizeException
-	{
+	public static FlowResult processAdvancedPolicyDelete(Context context, int resourceID, String [] collectionIDs)  throws NumberFormatException, SQLException, AuthorizeException {
 	    AuthorizeUtil.requireAdminRole(context);
 		FlowResult result = new FlowResult();
+		
+		if(collectionIDs==null) {
+			result.setContinue(false);
+			result.setOutcome(false);
+			result.setMessage(new Message("default", "Please select collection(s)."));
+			return result;
+		}
+
 		
 		for (String collectionID : collectionIDs) 
 		{

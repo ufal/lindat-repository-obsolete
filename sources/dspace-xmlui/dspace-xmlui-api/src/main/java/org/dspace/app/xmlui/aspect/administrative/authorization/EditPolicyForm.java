@@ -190,7 +190,7 @@ public class EditPolicyForm extends AbstractDSpaceTransformer
         actionsList.addLabel(T_label_action);
         Item actionSelectItem = actionsList.addItem();
         Radio actionSelect = actionSelectItem.addRadio("action_id");
-        actionSelect.setLabel(T_label_action);
+        //actionSelect.setLabel(T_label_action);
 		        //Select actionSelect = actionSelectItem.addSelect("action_id");
 		        //actionsBox.addContent(T_label_action);
 		        //Select actionSelect = actionsBox.addSelect("action_id");

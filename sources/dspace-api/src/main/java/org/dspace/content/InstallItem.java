@@ -17,10 +17,13 @@ import org.dspace.embargo.EmbargoManager;
 import org.dspace.event.Event;
 import org.dspace.handle.HandleManager;
 
+import cz.cuni.mff.ufal.dspace.storage.ReplicationManager;
+
 /**
  * Support to install an Item in the archive.
  * 
- * @author dstuve
+ * based on class by dstuve
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class InstallItem
@@ -60,6 +63,12 @@ public class InstallItem
         Item item = is.getItem();
         String handle;
         
+        // <UFAL>
+        // Set owning collection prior to assigning handle so that we can use this information
+        // for community based handle generation
+        item.setOwningCollection(is.getCollection());
+        // </UFAL>
+        
         // if no previous handle supplied, create one
         if (suppliedHandle == null)
         {
@@ -79,8 +88,9 @@ public class InstallItem
         DCDate liftDate = EmbargoManager.getEmbargoDate(c, item);
 
         populateMetadata(c, item, liftDate);
-
-        return finishItem(c, item, is, liftDate);
+        
+        Item i = finishItem(c, item, is, liftDate);
+        return i;
 
     }
 
@@ -144,8 +154,7 @@ public class InstallItem
         }
         
         // Record that the item was restored
-		String provDescription = "Restored into DSpace on "+ now + " (GMT).";
-		item.addDC("description", "provenance", "en", provDescription);
+        item.store_provenance_info("Restored into DSpace", c.getCurrentUser());
 
         return finishItem(c, item, is, null);
     }
@@ -196,18 +205,17 @@ public class InstallItem
             item.addDC("date", "issued", null, issued.toString());
         }
 
-         String provDescription = "Made available in DSpace on " + now
-                + " (GMT). " + getBitstreamProvenanceMessage(item);
+        StringBuilder provDescription = new StringBuilder();
+        provDescription.append("Made available in DSpace ").append(
+                        item.get_provenance_header(c.getCurrentUser()));
 
         if (currentDateIssued.length != 0)
         {
             DCDate d = new DCDate(currentDateIssued[0].value);
-            provDescription = provDescription + "  Previous issue date: "
-                    + d.toString();
+            provDescription.append("  Previous issue date: ").append(d.toString());
         }
 
-        // Add provenance description
-        item.addDC("description", "provenance", "en", provDescription);
+        item.store_provenance_info(provDescription);
     }
 
     // final housekeeping when adding new Item to archive

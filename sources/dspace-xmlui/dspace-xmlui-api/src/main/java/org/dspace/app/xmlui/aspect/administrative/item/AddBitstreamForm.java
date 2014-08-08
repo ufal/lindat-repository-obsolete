@@ -36,7 +36,8 @@ import org.xml.sax.SAXException;
  * user can select the new bitstream's bundle (which is unchangable 
  * after upload) and a description for the file.
  * 
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class AddBitstreamForm extends AbstractDSpaceTransformer
 {
@@ -56,6 +57,12 @@ public class AddBitstreamForm extends AbstractDSpaceTransformer
 	private static final Message T_description_help = message("xmlui.administrative.item.AddBitstreamForm.description_help");
 	private static final Message T_submit_upload = message("xmlui.administrative.item.AddBitstreamForm.submit_upload");
 
+	//
+    protected static final Message T_file = 
+            message("xmlui.Submission.submit.UploadStep.file");
+    protected static final Message T_file_local_help = 
+            message("xmlui.Submission.submit.UploadStep.file_local_help");    
+	
 	private static final Message T_no_bundles = message("xmlui.administrative.item.AddBitstreamForm.no_bundles");
 
 	
@@ -111,7 +118,14 @@ public class AddBitstreamForm extends AbstractDSpaceTransformer
             File file = upload.addItem().addFile("file");
             file.setLabel(T_file_label);
             file.setHelp(T_file_help);
-            file.setRequired();
+            //file.setRequired();
+            
+            // 
+    		Text fileLocal = upload.addItem().addText("file_local");
+    		fileLocal.setLabel(T_file);
+    		fileLocal.setHelp(T_file_local_help);
+	        //
+            
 
             if (bundleCount == 0) {
                 file.setDisabled();
@@ -136,7 +150,7 @@ public class AddBitstreamForm extends AbstractDSpaceTransformer
             if (bundleCount == 0) {
                 button.setDisabled();
             }
-
+            
             actions.addButton("submit_cancel").setValue(T_submit_cancel);
 
             div.addHidden("administrative-continue").setValue(knot.getId());

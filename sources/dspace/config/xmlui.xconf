@@ -66,7 +66,7 @@
         -->
         <aspect name="Displaying Artifacts" path="resource://aspects/ViewArtifacts/" />
         <aspect name="Browsing Artifacts" path="resource://aspects/BrowseArtifacts/" />
-        <aspect name="Searching Artifacts" path="resource://aspects/SearchArtifacts/" />
+        <!-- aspect name="Searching Artifacts" path="resource://aspects/SearchArtifacts/" /-->
         <aspect name="Administration" path="resource://aspects/Administrative/" />
         <aspect name="E-Person" path="resource://aspects/EPerson/" />
         <aspect name="Submission and Workflow" path="resource://aspects/Submission/" />
@@ -77,9 +77,9 @@
             To enable Discovery, uncomment this Aspect that will enable it
             within your existing XMLUI
             Also make sure to comment the SearchArtifacts aspect
-            as leaving it on together with discovery will cause UI overlap issues
+            as leaving it on together with discovery will cause UI overlap issues -->
             <aspect name="Discovery" path="resource://aspects/Discovery/" />
-        -->
+        <!-- -->
         <!--<aspect name="SwordClient" path="resource://aspects/SwordClient/" />-->
 
         <!--
@@ -115,22 +115,12 @@
         their respective items.    
     -->
     <themes>
-        <!-- Example configuration -->
-
-        <!-- <theme name="Test Theme 1" handle="123456789/1" path="theme1/"/>    -->
-        <!-- <theme name="Test Theme 2" regex="community-list" path="theme2/"/> -->
-
-        <!-- Default theme -->
-        <theme name="Default Reference Theme" regex=".*" path="Reference/" />
-
-        <!-- Mirage theme, @mire contribution of new theme to support easier development and branding -->
-        <!-- <theme name="Atmire Mirage Theme" regex=".*" path="Mirage/" /> -->
-
-        <!-- Classic theme, inspired by the JSP UI -->
-        <!-- <theme name="Classic" regex=".*" path="Classic/" /> -->
-
-        <!-- Table based browse display -->
-        <!-- <theme name="Table Theme" regex=".*" path="TableTheme/" /> -->
-
+        
+    	<!-- UFAL Homepage -->
+    	<theme name="UFAL Homepage" regex="^$" path="UFALHome/" />
+    	
+    	<!-- UFAL theme -->
+        <theme name="UFAL Theme" regex=".*" path="UFAL/" />
+    	
     </themes>
 </xmlui>

@@ -29,7 +29,8 @@ import org.xml.sax.SAXException;
 /**
  * This simple component will add a Search Box. It is intended for use on the front page.
  *
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class FrontPageSearch extends AbstractDSpaceTransformer implements CacheableProcessingComponent
 {
@@ -46,6 +47,9 @@ public class FrontPageSearch extends AbstractDSpaceTransformer implements Cachea
     
     private static final Message T_go =
         message("xmlui.general.go");
+    
+    private static final Message T_search = 
+    	message("xmlui.general.search");
     
     
     /**
@@ -103,12 +107,12 @@ public class FrontPageSearch extends AbstractDSpaceTransformer implements Cachea
         Division search = 
         	body.addInteractiveDivision("front-page-search",contextPath+"/search",Division.METHOD_GET,"primary");
         
-        search.setHead(T_head);
+        //search.setHead(T_head);
         
-        search.addPara(T_para1);
+        //search.addPara(T_para1);
         
         Para fields = search.addPara();
-        fields.addText("query");
-        fields.addButton("submit").setValue(T_go);
+        fields.addText("query", "home-search");
+        fields.addButton("submit").setValue(T_search);
     }
 }

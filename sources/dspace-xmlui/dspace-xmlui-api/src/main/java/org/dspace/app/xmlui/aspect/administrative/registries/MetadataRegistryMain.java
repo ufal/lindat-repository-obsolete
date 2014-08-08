@@ -30,7 +30,8 @@ import org.dspace.content.MetadataSchema;
  * shows the list of all current schemas and a form for adding new schema's to the
  * registry.
  * 
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class MetadataRegistryMain extends AbstractDSpaceTransformer   
 {	
@@ -119,8 +120,7 @@ public class MetadataRegistryMain extends AbstractDSpaceTransformer
         main.setHead(T_head1);
         main.addPara(T_para1);
 
-        Table table = main.addTable("metadata-registry-main-table", schemas.length
-                + 1, 5);
+        Table table = main.addTable("metadata-registry-main-table", schemas.length+1, 5);
 
         Row header = table.addRow(Row.ROLE_HEADER);
         header.addCellContent(T_column1);
@@ -148,7 +148,7 @@ public class MetadataRegistryMain extends AbstractDSpaceTransformer
             else
             {
                 // The DC schema can not be removed.
-                row.addCell();
+            	row.addCell().addHighlight("fa fa-ban text-error").addContent(" ");
             }
 
             row.addCell().addContent(schemaID);

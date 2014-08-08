@@ -10,15 +10,21 @@
 	<parent>
 		<groupId>org.dspace</groupId>
 		<artifactId>dspace-parent</artifactId>
-		<version>1.8.4-SNAPSHOT</version>
+		<version>1.8.2</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
-    <properties>
-        <!-- This is the path to the root [dspace-src] directory. -->
-        <root.basedir>${basedir}/../..</root.basedir>
-    </properties>
+    <scm>
+      <connection>scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2</connection>
+      <developerConnection>scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2</developerConnection>
+      <url>http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</url>
+    </scm>
     
+    <!-- The 'additions' module must *always* be built, as it is included
+         as a dependency in most other modules in [src]/dspace/modules -->
+    <modules>
+        <module>additions</module>
+    </modules>
     <!-- 
          List of enabled DSpace Modules to build/install.
          To disable building of modules, you can use the Maven '-P' commandline 

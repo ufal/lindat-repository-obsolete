@@ -730,6 +730,10 @@ Common usage:
 
     	<mkdir dir="${dspace.dir}/solr" />
 
+    	<!-- Runtime files (Could be erased - just for performing purposes) -->
+    	<mkdir dir="${dspace.dir}/var" />
+    	<!-- Runtime files for OAI 2.0 -->
+    	<mkdir dir="${dspace.dir}/var/oai" />
     </target>
 
 
@@ -837,6 +841,22 @@ Common usage:
             <sysproperty key="dspace.log.init.disable" value="true" />
             <sysproperty key="dspace.configuration" value="${config}" />
             <arg line="-f '${dspace.dir}/config/registries/dublin-core-types.xml'" />
+        </java>
+
+        <!-- add metashare metadata elements -->
+        <java classname="org.dspace.administer.MetadataImporter" classpathref="class.path" fork="yes" failonerror="yes">
+            <sysproperty key="log4j.configuration" value="file:config/log4j-console.properties" />
+            <sysproperty key="dspace.log.init.disable" value="true" />
+            <sysproperty key="dspace.configuration" value="${config}" />
+            <arg line="-f '${dspace.dir}/config/registries/metashareSchema.xml'" />
+        </java>
+
+        <!-- add local metadata elements -->
+        <java classname="org.dspace.administer.MetadataImporter" classpathref="class.path" fork="yes" failonerror="yes">
+            <sysproperty key="log4j.configuration" value="file:config/log4j-console.properties" />
+            <sysproperty key="dspace.log.init.disable" value="true" />
+            <sysproperty key="dspace.configuration" value="${config}" />
+            <arg line="-f '${dspace.dir}/config/registries/local-types.xml'" />
         </java>
 
         <!-- FIXME: this should be more modular -->

@@ -9,12 +9,17 @@ package org.dspace.app.xmlui.aspect.administrative;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 
 import org.apache.cocoon.environment.Request;
 import org.apache.cocoon.servlet.multipart.Part;
+import org.apache.log4j.Logger;
 import org.dspace.app.util.Util;
 import org.dspace.app.xmlui.utils.UIException;
 import org.dspace.app.xmlui.wing.Message;
@@ -24,6 +29,8 @@ import org.dspace.content.Bitstream;
 import org.dspace.content.BitstreamFormat;
 import org.dspace.content.Bundle;
 import org.dspace.content.Collection;
+import org.dspace.content.DCDate;
+import org.dspace.content.DCValue;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.FormatIdentifier;
 import org.dspace.content.Item;
@@ -34,14 +41,17 @@ import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.curate.Curator;
+import org.dspace.embargo.EmbargoManager;
 import org.dspace.handle.HandleManager;
+
+import cz.cuni.mff.ufal.administrative.EditItemMetadataForm;
 
 /**
  * Utility methods to processes actions on Groups. These methods are used
  * exclusivly from the administrative flow scripts.
  * 
- * @author Jay Paz
- * @author Scott Phillips
+ * based on class by Jay Paz and Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class FlowItemUtils 
 {
@@ -58,7 +68,9 @@ public class FlowItemUtils
 	private static final Message T_bitstream_updated = new Message("default","The bitstream has been updated.");
 	private static final Message T_bitstream_delete = new Message("default","The selected bitstreams have been deleted.");
 	private static final Message T_bitstream_order = new Message("default","The bitstream order has been successfully altered.");
+    private static final Message T_emgargo_set = new Message("default","The embargo was set.");
 
+    private static Logger log = cz.cuni.mff.ufal.Logger.getLogger(FlowItemUtils.class);
 	
 	/**
 	 * Resolve the given identifier to an item. The identifier may be either an
@@ -141,7 +153,6 @@ public class FlowItemUtils
 
 		Item item = Item.find(context, itemID);
 		
-		
 		// STEP 1:
 		// Clear all metadata within the scope
 		// Only metadata values within this scope will be considered. This
@@ -181,14 +192,15 @@ public class FlowItemUtils
 			}
 		}
 		
+		
 		// STEP 3:
 		// Iterate over all the indexes within the scope and add them back in.
 		for (Integer index=1; index <= indexes.size(); ++index)
 		{
 			String name = request.getParameter("name_"+index);
 			String value = request.getParameter("value_"+index);
-                        String authority = request.getParameter("value_"+index+"_authority");
-                        String confidence = request.getParameter("value_"+index+"_confidence");
+            String authority = request.getParameter("value_"+index+"_authority");
+            String confidence = request.getParameter("value_"+index+"_confidence");
 			String lang = request.getParameter("language_"+index);
 			String remove = request.getParameter("remove_"+index);
 			
@@ -216,6 +228,109 @@ public class FlowItemUtils
                                              value, authority, iconf);
 		}
 		
+		item.store_provenance_info("Item was updated in processEditItem:", context.getCurrentUser());
+		item.update();
+		context.commit();
+		
+		result.setContinue(true);
+		
+		result.setOutcome(true);
+		result.setMessage(T_metadata_updated);
+		
+		return result;
+	}
+	
+	public static FlowResult processEditItemMetadata(Context context, int itemID, Request request) throws SQLException, AuthorizeException, UIException, IOException
+	{
+		FlowResult result = new FlowResult();
+		result.setContinue(false);
+
+		Item item = Item.find(context, itemID);
+		DCValue[] metadata = EditItemMetadataForm.filterValues(item.getMetadata(Item.ANY,Item.ANY,Item.ANY,Item.ANY));
+        Arrays.sort(metadata, new EditItemMetadataForm.DCValueComparator());
+		
+		
+		String scope = request.getParameter("scope");
+		// STEP 2:
+		// First determine all the metadata fields that are within
+		// the scope parameter
+		ArrayList<Integer> indexes = new ArrayList<Integer>();
+		Enumeration parameters = request.getParameterNames();
+		while(parameters.hasMoreElements())
+		{
+
+			// Only consider the name_ fields
+			String parameterName = (String) parameters.nextElement();
+			if (parameterName.startsWith("name_"))
+			{
+				// Check if the name is within the scope
+				String parameterValue = request.getParameter(parameterName);
+				if ("*".equals(scope) || scope.equals(parameterValue))
+				{
+					// Extract the index from the name.
+					String indexString = parameterName.substring("name_".length());
+					Integer index = Integer.valueOf(indexString);
+					indexes.add(index);
+				}
+			}
+		}
+		
+		
+		StringBuilder provenanceLog = new StringBuilder();
+		
+		//clear only the fields that will be updated
+		for(Integer index=1; index <= indexes.size(); ++index){
+			String name = request.getParameter("name_"+index);
+			String[] parts = parseName(name);
+			item.clearMetadata(parts[0], parts[1], parts[2], Item.ANY);
+		}
+		
+		// STEP 3:
+		// Iterate over all the indexes within the scope and add them back in.
+		for (Integer index=1; index <= indexes.size(); ++index)
+		{
+			String name = request.getParameter("name_"+index);
+			String value = request.getParameter("value_"+index);
+            String authority = request.getParameter("value_"+index+"_authority");
+            String confidence = request.getParameter("value_"+index+"_confidence");
+			String lang = request.getParameter("language_"+index);
+			String remove = request.getParameter("remove_"+index);
+			
+			// the user selected the remove checkbox.
+			if (remove != null)
+                        {
+				provenanceLog.append(String.format("Removed field '%s' with value '%s' and lang '%s'.\n", name, value, lang));
+				continue;
+                        }
+			
+			// get the field's name broken up
+			String[] parts = parseName(name);
+			
+                        // probe for a confidence value
+                        int iconf = Choices.CF_UNSET;
+                        if (confidence != null && confidence.length() > 0)
+                        {
+                            iconf = Choices.getConfidenceValue(confidence);
+                        }
+                        // upgrade to a minimum of NOVALUE if there IS an authority key
+                        if (authority != null && authority.length() > 0 && iconf == Choices.CF_UNSET)
+                        {
+                            iconf = Choices.CF_NOVALUE;
+                        }
+                        item.addMetadata(parts[0], parts[1], parts[2], lang,
+                                             value, authority, iconf);
+                        DCValue dcv = metadata[index-1];
+                        	//if language or value was changed
+                        	if(dcv.schema.equals(parts[0]) && 
+                        	    dcv.element.equals(parts[1]) &&
+                        	    org.apache.commons.lang.ObjectUtils.equals(parts[2], dcv.qualifier)){
+                        	    if(!(org.apache.commons.lang.ObjectUtils.equals(dcv.language,lang) && org.apache.commons.lang.ObjectUtils.equals(dcv.value,value))){
+                                    provenanceLog.append(String.format("Field '%s.%s.%s' was changed: '%s' -> '%s'; '%s' -> '%s'\n", parts[0], parts[1],  parts[2] == null ? "" : parts[2], dcv.language, lang, dcv.value, value));
+                        	    }
+                        	}
+		}
+		
+		item.store_provenance_info("Item was updated in processEditItemMetadata:\n" + provenanceLog.toString(), context.getCurrentUser());
 		item.update();
 		context.commit();
 		
@@ -252,6 +367,7 @@ public class FlowItemUtils
 		
 		item.addMetadata(schema.getName(), field.getElement(), field.getQualifier(), language, value);
 		
+		item.store_provenance_info(String.format("Item metadata(%s,%s,%s) were added in processAddMetadata",schema.getName() + "." + field.getElement() +  (field.getQualifier() != null ? "." +field.getQualifier() :"") ,language, value), context.getCurrentUser());
 		item.update();
 		context.commit();
 		
@@ -428,7 +544,15 @@ public class FlowItemUtils
         
         // Note: when removing an item from the last collection it will
         // be removed from the system. So there is no need to also call
-        // an item.delete() method.        
+        // an item.delete() method.
+        
+        // orphan item
+        if ( collections.length == 0 ) {
+        	item.delete();
+        	log.error(String.format(
+        			"A request to delete an item without collection assinged [%s] [%s] - forcing delete!",
+        			item.getName(), item.getHandle()));
+        }
         
         context.commit();
 		
@@ -463,10 +587,28 @@ public class FlowItemUtils
                 {
 			filePart = (Part) object;
                 }
-
-		if (filePart != null && filePart.getSize() > 0)
-		{
-			InputStream is = filePart.getInputStream();
+		
+		InputStream is = null;
+		String upload_name = null;
+		if ( filePart != null && filePart.getSize() > 0 ) {
+			is = filePart.getInputStream();
+			// Strip all but the last filename. It would be nice
+			// to know which OS the file came from.
+			upload_name = filePart.getUploadName();
+		}else {
+			try {
+				String filePath = request.getParameter("file_local");
+	        	if(filePath.startsWith("/")) {
+	        		filePath = "file://" + filePath;
+	         	}
+	        	URL url = new URI(filePath).toURL();
+	        	is = url.openStream();
+	        	upload_name = filePath;
+			} catch (URISyntaxException e) {
+			}
+		}
+		
+		if ( is != null ) {
 
 			String bundleName = request.getParameter("bundle");
 			
@@ -491,22 +633,19 @@ public class FlowItemUtils
 				bitstream = bundles[0].createBitstream(is);
 			}
 
-			// Strip all but the last filename. It would be nice
-			// to know which OS the file came from.
-			String name = filePart.getUploadName();
-
-			while (name.indexOf('/') > -1)
+			String upload_name_stripped = upload_name;
+			while (upload_name_stripped.indexOf('/') > -1)
 			{
-				name = name.substring(name.indexOf('/') + 1);
+				upload_name_stripped = upload_name_stripped.substring(upload_name_stripped.indexOf('/') + 1);
 			}
 
-			while (name.indexOf('\\') > -1)
+			while (upload_name_stripped.indexOf('\\') > -1)
 			{
-				name = name.substring(name.indexOf('\\') + 1);
+				upload_name_stripped = upload_name_stripped.substring(upload_name_stripped.indexOf('\\') + 1);
 			}
 
-			bitstream.setName(name);
-			bitstream.setSource(filePart.getUploadName());
+			bitstream.setName(upload_name_stripped);
+			bitstream.setSource(upload_name);
 			bitstream.setDescription(request.getParameter("description"));
 
 			// Identify the format
@@ -515,6 +654,7 @@ public class FlowItemUtils
 
 			// Update to DB
 			bitstream.update();
+	        item.store_provenance_info("Item was added a bitstream", context.getCurrentUser());
 			item.update();
 			
 			context.commit();
@@ -665,6 +805,7 @@ public class FlowItemUtils
 			}
 		}
 		
+		item.store_provenance_info("Item was deleted a bitstream", context.getCurrentUser());
 		item.update();
 		
 		context.commit();
@@ -675,6 +816,42 @@ public class FlowItemUtils
 		
 		return result;
 	}
+
+    
+    /**
+     * Set or update embargo.
+     * 
+     * @param context Current dspace content
+     * @param itemID The item id to set emargo to
+     * @return A flow result
+     */
+    public static FlowResult processEmbargoItem(Context context, int itemID, Request request) 
+        throws SQLException, AuthorizeException, IOException, UIException
+    {
+        FlowResult result = new FlowResult();
+        result.setContinue(false);
+
+        Item item = Item.find(context, itemID);
+        String date_value = request.getParameter("embargo_date");
+        
+        //
+        DCDate lift_date = new DCDate(date_value);
+        if ( lift_date.toDate() != null ) {
+        	EmbargoManager.setEmbargo(context, item, lift_date);
+            result.setMessage(T_emgargo_set);
+            result.setOutcome(true);
+        }else {
+        	result.setMessage(new Message("default", "The embargo could not be set, invalid date supplied!"));
+            result.setOutcome(false);
+        }
+        
+        //
+        context.commit();
+
+
+        return result;
+    }
+    
 
     public static FlowResult processReorderBitstream(Context context, int itemID, Request request) throws SQLException, AuthorizeException {
         String submitButton = Util.getSubmitButton(request, "submit_update_order");

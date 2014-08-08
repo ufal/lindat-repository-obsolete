@@ -7,9 +7,17 @@
  */
 package org.dspace.eperson;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
@@ -25,10 +33,13 @@ import org.dspace.storage.rdbms.DatabaseManager;
 import org.dspace.storage.rdbms.TableRow;
 import org.dspace.storage.rdbms.TableRowIterator;
 
+import cz.cuni.mff.ufal.DSpaceApi;
+
 /**
  * Class representing an e-person.
  * 
- * @author David Stuve
+ * based on class by David Stuve
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class EPerson extends DSpaceObject
@@ -276,12 +287,21 @@ public class EPerson extends DSpaceObject
      * @return array of EPerson objects
      */
     public static EPerson[] search(Context context, String query, int offset, int limit) 
+    		throws SQLException {
+    	return search(context, query, offset, limit, null);
+    }
+    		
+    public static EPerson[] search(Context context, String query, int offset, int limit, String order_by) 
     		throws SQLException
 	{
+    	if ( order_by == null ) {
+    		order_by = "lastname, firstname ASC";
+    	}
 		String params = "%"+query.toLowerCase()+"%";
         StringBuffer queryBuf = new StringBuffer();
         queryBuf.append("SELECT * FROM eperson WHERE eperson_id = ? OR ");
-        queryBuf.append("LOWER(firstname) LIKE LOWER(?) OR LOWER(lastname) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?) ORDER BY lastname, firstname ASC ");
+        queryBuf.append("LOWER(firstname) LIKE LOWER(?) OR LOWER(lastname) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?) " +
+        		"ORDER BY " + order_by + " ");
 
         // Add offset and limit restrictions - Oracle requires special code
         if ("oracle".equals(ConfigurationManager.getProperty("db.name")))
@@ -517,7 +537,7 @@ public class EPerson extends DSpaceObject
      * @param context
      *            DSpace context object
      */
-    public static EPerson create(Context context) throws SQLException,
+    public static EPerson create(Context context, String detail) throws SQLException,
             AuthorizeException
     {
         // authorized?
@@ -535,9 +555,13 @@ public class EPerson extends DSpaceObject
         log.info(LogManager.getHeader(context, "create_eperson", "eperson_id="
                 + e.getID()));
 
-        context.addEvent(new Event(Event.CREATE, Constants.EPERSON, e.getID(), null));
+        context.addEvent(new Event(Event.CREATE, Constants.EPERSON, e.getID(), detail));
 
         return e;
+    }
+    
+    public static EPerson create(Context context) throws SQLException, AuthorizeException{
+    	return create(context, null);
     }
 
     /**
@@ -589,6 +613,46 @@ public class EPerson extends DSpaceObject
         log.info(LogManager.getHeader(myContext, "delete_eperson",
                 "eperson_id=" + getID()));
     }
+    
+    //
+    //
+    //
+
+    /**
+     * Store the time when the user was logged in.
+     */
+    public void setLoggedIn() 
+    {
+        myRow.setColumn("last_login", 
+                        Calendar.getInstance(TimeZone.getDefault()).getTime().toString());
+    }
+    public String getLoggedIn() {
+        return myRow.getStringColumn("last_login");
+    }
+    
+    /**
+     * Store welcome message.
+     */
+    public void setWelcome() {
+        setWelcome(null);
+    }
+
+    public void setWelcome(String info) 
+    {
+        if ( info == null ) {
+            info = Calendar.getInstance(TimeZone.getDefault()).getTime().toString();
+        }
+        myRow.setColumn("welcome_info", info );
+    }
+    
+    /** Returns non empty or null. */
+    public String getWelcome() {
+        String ret = myRow.getStringColumn("welcome_info");
+        if ( ret != null && ret.length() == 0 ) {
+            ret = null;
+        }
+        return ret;
+    }
 
     /**
      * Get the e-person's internal identifier
@@ -639,7 +703,14 @@ public class EPerson extends DSpaceObject
      */
     public String getEmail()
     {
-        return myRow.getStringColumn("email");
+    	String email = myRow.getStringColumn("email");
+    	if(email != null) {
+    		String emails[] = email.split(";");
+    		if(emails != null && emails.length>0){
+    			email = emails[0];
+    		}
+     	}
+        return email;
     }
 
     /**
@@ -849,6 +920,27 @@ public class EPerson extends DSpaceObject
         modifiedMetadata = true;
         addDetails(field);
     }
+    
+    /**
+     * Get the value of a user metadata field
+     */
+    public String getUserMetadata(String field)
+    {
+        return getUserMetadata().get(field);
+    }
+
+    public Map<String, String> getUserMetadata()
+    {
+        return DSpaceApi.getUserMetadata(this);
+    }
+
+    /**
+     * Set arbitrary metadata (into utilities table).
+     */
+    public void setUserMetadata(String field, String value)
+    {
+        DSpaceApi.addUserMetadata(this, field, value);
+    }    
 
     /**
      * Set the EPerson's password
@@ -963,7 +1055,7 @@ public class EPerson extends DSpaceObject
         {
             if (tri.hasNext())
             {
-                tableList.add("item");
+                tableList.add("Submitter of item(s)");
             }
         }
         finally
@@ -997,7 +1089,7 @@ public class EPerson extends DSpaceObject
         {
             if (tri.hasNext())
             {
-                tableList.add("cwf_claimtask");
+                tableList.add("Eperson in cwf_claimtask");
             }
         }
         finally
@@ -1018,7 +1110,7 @@ public class EPerson extends DSpaceObject
         {
             if (tri.hasNext())
             {
-                tableList.add("cwf_pooltask");
+                tableList.add("Eperson in cwf_pooltask");
             }
         }
         finally
@@ -1039,7 +1131,7 @@ public class EPerson extends DSpaceObject
         {
             if (tri.hasNext())
             {
-                tableList.add("cwf_workflowitemrole");
+                tableList.add("Eperson in cwf_workflowitemrole");
             }
         }
         finally
@@ -1103,4 +1195,137 @@ public class EPerson extends DSpaceObject
         return getEmail();
     }
 
+    // copied from ShibAuthentication - ready for refactoring
+    //
+    //
+    
+    /** Maximum length for eperson additional metadata fields **/
+    public static final int METADATA_MAX_SIZE = 1024;
+
+    /** Validate Postgres Column Names */
+    private static final String COLUMN_NAME_REGEX = "^[_A-Za-z0-9]+$";
+    
+    /**
+     * Automattically create a new column in the EPerson table to support the additional
+     * metadata field. All additional fields are created with type varchar( METADATA_MAX_SIZE )
+     * 
+     * @param metadataName The name of the new metadata field.
+     * @return True if successfull, otherwise false.
+     */
+    public static synchronized boolean autoCreateMetadataField(String metadataName) throws SQLException {
+
+        if (metadataName == null)
+            return false;
+
+        if ("phone".equals(metadataName))
+            // The phone is a predefined field
+            return true;
+
+        if ( ! metadataName.matches(COLUMN_NAME_REGEX))
+            return false;
+
+        // Create a new column for the metadata field. Note the metadataName variable is embedded because we can't use 
+        // paramaterization for column names. However the string comes from the dspace.cfg and at the top of this method
+        // we run a regex on it to validate it.
+        String sql = "ALTER TABLE eperson ADD COLUMN "+metadataName+" varchar("+METADATA_MAX_SIZE+")";
+
+        Connection dbConnection = null;
+        try {
+            dbConnection = DatabaseManager.getConnection();
+            Statement alterStatement = dbConnection.createStatement();
+            alterStatement.execute(sql);
+            alterStatement.close();
+            dbConnection.commit();
+
+            log.info("Auto created the eperson column for additional metadata: '"+metadataName+"'");
+            return true;
+
+        } catch (SQLException sqle) {
+            log.error("Unable to auto-create the eperson column for additional metadata '"+metadataName+"', because of error: ",sqle);
+            return false;
+        } finally {
+            if (dbConnection != null)
+                dbConnection.close();
+        }
+    }
+    
+
+    /**
+     * Check the EPerson table definition to see if the metadata field name is supported. It
+     * checks for three things 1) that the field exists and 2) that the field is of the correct
+     * type, varchar, and 3) that the field's size is suffcient.
+     * 
+     * If either of these checks fail then false is returned.
+     *
+     * If all these checks pass then true is returned, otherwise false.
+     *
+     * @param metadataName The name of the metadata field.
+     * @return True if a valid metadata field, otherwise false.
+     */
+    public static synchronized boolean checkIfMetadataFieldExists(String metadataName) throws SQLException 
+    {
+
+        if (metadataName == null)
+            return false;
+
+        if ("phone".equals(metadataName))
+            // The phone is a predefined field
+            return true;
+
+        // Get a list of all the columns on the eperson table.
+        Connection dbConnection = null;
+        try {
+            dbConnection = DatabaseManager.getConnection();
+            DatabaseMetaData dbMetadata = dbConnection.getMetaData();
+            String dbCatalog = dbConnection.getCatalog();
+            ResultSet rs = dbMetadata.getColumns(dbCatalog,null,"eperson","%");
+
+            // Loop through all the columns looking for our metadata field and check
+            // it's definition.
+            boolean foundColumn = false;
+            boolean columnValid = false;
+            while (rs.next()) {
+                String columnName = rs.getString("COLUMN_NAME");
+                String columnType = rs.getString("TYPE_NAME");
+                int size = rs.getInt("COLUMN_SIZE");
+
+                if (metadataName.equalsIgnoreCase(columnName)) {
+                    foundColumn = true;
+
+                    if ("varchar".equals(columnType) && size >= METADATA_MAX_SIZE)
+                        columnValid = true;
+
+                    break; // skip out on loop after we found our column.
+                }
+
+            } // while rs.next()
+            rs.close();
+
+            if ( foundColumn && columnValid)
+                // The finally statement below will close the connection.
+                return true;
+            else if (!foundColumn)
+                log.error("Unable to find eperson column for additional metadata named: '"+metadataName+"'");
+            else if (!columnValid)
+                log.error("The eperson column for additional metadata, '"+metadataName+"', is not defined as a varchar with at least a length of "+METADATA_MAX_SIZE);
+
+        } finally {
+            if (dbConnection != null)
+                dbConnection.close();
+        }
+        return false;
+    }
+
+	public boolean canEditSubmissionMetadata() {
+        return myRow.getBooleanColumn("can_edit_submission_metadata");
+	}
+
+    public void setCanEditSubmissionMetadata(boolean edit)
+    {
+        myRow.setColumn("can_edit_submission_metadata", edit);
+        modified = true;
+    }
+
+    
 }
+

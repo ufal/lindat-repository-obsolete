@@ -4,7 +4,7 @@
 	<packaging>jar</packaging>
 	<groupId>org.dspace</groupId>
 	<artifactId>dspace-discovery-provider</artifactId>
-	<version>1.8.4-SNAPSHOT</version>
+	<version>1.8.2</version>
     <name>DSpace Discovery :: Discovery Provider Library</name>
     <description>
 
@@ -17,14 +17,9 @@
     <parent>
         <groupId>org.dspace</groupId>
         <artifactId>dspace-discovery</artifactId>
-        <version>1.8.4-SNAPSHOT</version>
+        <version>1.8.2</version>
       <relativePath>..</relativePath>
    </parent>
-
-    <properties>
-        <!-- This is the path to the root [dspace-src] directory. -->
-        <root.basedir>${basedir}/../..</root.basedir>
-    </properties>
 
     <dependencies>
 
@@ -103,4 +98,16 @@
 		</plugins>
 	</build>
 
+    <!--
+       The Subversion repository location is used by Continuum to update
+       against when changes have occured, this spawns a new build cycle
+       and releases snapshots into the snapshot repository below.
+    -->
+    <scm>
+        <connection>scm:svn:http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</connection>
+        <developerConnection>
+            scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2
+        </developerConnection>
+        <url>http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</url>
+    </scm>
 </project>

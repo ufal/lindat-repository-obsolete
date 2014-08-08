@@ -53,7 +53,8 @@ import org.dspace.xmlworkflow.storedcomponents.XmlWorkflowItem;
  * submitters is slightly different - creating or removing this has instant
  * effect.
  * 
- * @author Robert Tansley
+ * based on class by Robert Tansley
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class Collection extends DSpaceObject
@@ -336,7 +337,7 @@ public class Collection extends DSpaceObject
 
         return collectionArray;
     }
-
+    
     /**
      * Get the in_archive items in this collection. The order is indeterminate.
      * 
@@ -1374,14 +1375,13 @@ public class Collection extends DSpaceObject
         }
         else
         {
-            myCollections = Collection.findAll(context);
+        	myCollections = Collection.findAll(context);
         }
 
         // now build a list of collections you have authorization for
         for (int i = 0; i < myCollections.length; i++)
         {
-            if (AuthorizeManager.authorizeActionBoolean(context,
-                    myCollections[i], actionID))
+            if (AuthorizeManager.authorizeActionBoolean(context, myCollections[i], actionID))
             {
                 myResults.add(myCollections[i]);
             }
@@ -1487,4 +1487,15 @@ public class Collection extends DSpaceObject
             return null;
         }
     }
+
+    public boolean epersonIsReviewer() throws SQLException{
+        Group reviewers = getWorkflowGroup(2); //get the review/edit group
+        boolean epersonIsReviewer = false;
+        if(reviewers != null && Group.isMember(this.ourContext, reviewers.getID())){
+            epersonIsReviewer = true;
+        }
+        return epersonIsReviewer;
+    }
 }
+
+

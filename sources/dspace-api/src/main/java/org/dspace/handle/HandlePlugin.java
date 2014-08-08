@@ -26,6 +26,8 @@ import org.apache.log4j.Logger;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Context;
 
+import cz.cuni.mff.ufal.dspace.handle.PIDConfiguration;
+
 /**
  * Extension to the CNRI Handle Server that translates requests to resolve
  * handles into DSpace API calls. The implementation simply stubs out most of
@@ -40,7 +42,8 @@ import org.dspace.core.Context;
  * 5.2.0.
  * </p>
  * 
- * @author Peter Breton
+ * based on class by Peter Breton
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class HandlePlugin implements HandleStorage
@@ -206,9 +209,9 @@ public class HandlePlugin implements HandleStorage
     public byte[][] getRawHandleValues(byte[] theHandle, int[] indexList,
             byte[][] typeList) throws HandleException
     {
-        if (log.isInfoEnabled())
+        if (log.isDebugEnabled())
         {
-            log.info("Called getRawHandleValues");
+            log.debug("Called getRawHandleValues");
         }
 
         Context context = null;
@@ -221,6 +224,7 @@ public class HandlePlugin implements HandleStorage
             }
 
             String handle = Util.decodeString(theHandle);
+            log.info(String.format("Resolving [%s]", handle));
 
             context = new Context();
 
@@ -228,7 +232,29 @@ public class HandlePlugin implements HandleStorage
 
             if (url == null)
             {
-                throw new HandleException(HandleException.HANDLE_DOES_NOT_EXIST);
+                // try with old prefix
+                
+                String prefix = HandleManager.extractHandlePrefix(handle);
+                String suffix = HandleManager.extractHandleSuffix(handle);
+                                
+                String[] alternativePrefixes = PIDConfiguration.getAlternativePrefixes(prefix);
+                
+                for ( String alternativePrefix : alternativePrefixes )
+                {
+                    String alternativeHandle = HandleManager.completeHandle(alternativePrefix, suffix);
+                    url = HandleManager.resolveToURL(context, alternativeHandle);
+                    if ( null != url ) {
+                        break;
+                    }
+                }
+                
+                // still no match
+                if ( null == url ) {
+                    // <UFAL>
+                    log.warn(String.format("Unable to resolve [%s]", handle));          
+                    // </UFAL>
+                    return null;
+                }
             }
 
             HandleValue value = new HandleValue();
@@ -258,7 +284,7 @@ public class HandlePlugin implements HandleStorage
                 rawValues[i] = new byte[Encoder.calcStorageSize(hvalue)];
                 Encoder.encodeHandleValue(rawValues[i], 0, hvalue);
             }
-
+            log.info(String.format("Handle [%s] resolved to [%s]", handle, url));
             return rawValues;
         }
         catch (HandleException he)
@@ -267,10 +293,7 @@ public class HandlePlugin implements HandleStorage
         }
         catch (Exception e)
         {
-            if (log.isDebugEnabled())
-            {
-                log.debug("Exception in getRawHandleValues", e);
-            }
+            log.error("Exception in getRawHandleValues", e);
 
             // Stack loss as exception does not support cause
             throw new HandleException(HandleException.INTERNAL_ERROR);
@@ -303,7 +326,7 @@ public class HandlePlugin implements HandleStorage
     {
         if (log.isInfoEnabled())
         {
-            log.info("Called haveNA");
+            log.debug("Called haveNA");
         }
 
         /*
@@ -325,7 +348,7 @@ public class HandlePlugin implements HandleStorage
         // with their own prefixes and have the one instance handle both prefixes. In this case
         // all new handle would be given a unified prefix but all old handles would still be 
         // resolvable.
-        if (ConfigurationManager.getBooleanProperty("handle.plugin.checknameauthority",true))
+        if (ConfigurationManager.getBooleanProperty("lr", "lr.handle.plugin.checkNameAuthority",true))
         {
 	        // First, construct a string representing the naming authority Handle
 	        // we'd expect.
@@ -361,7 +384,7 @@ public class HandlePlugin implements HandleStorage
 
         if (log.isInfoEnabled())
         {
-            log.info("Called getHandlesForNA for NA " + naHandle);
+            log.debug("Called getHandlesForNA for NA " + naHandle);
         }
 
         Context context = null;
@@ -385,10 +408,7 @@ public class HandlePlugin implements HandleStorage
         }
         catch (SQLException sqle)
         {
-            if (log.isDebugEnabled())
-            {
-                log.debug("Exception in getHandlesForNA", sqle);
-            }
+            log.error("Exception in getHandlesForNA", sqle);
 
             // Stack loss as exception does not support cause
             throw new HandleException(HandleException.INTERNAL_ERROR);

@@ -48,8 +48,8 @@ import org.dspace.authorize.AuthorizeException;
  *   <map:parameter name="message" value="xmlui.<aspect>.<class>.<type>"/>
  * </map:transformer>
  * 
- * @author Scott Phillips
- * @author Alexey Maslov
+ * based on class by Scott Phillips and Alexey Maslov
+ * modified for LINDAT/CLARIN
  */
 public class NoticeTransformer extends AbstractDSpaceTransformer   
 {
@@ -74,38 +74,38 @@ public class NoticeTransformer extends AbstractDSpaceTransformer
             throw new WingException("No message found.");
         }
 		
-		String rend = "notice";
-		if ("netural".equals(outcome))
+		String rend = "linkify alert";
+		if ("neutral".equals(outcome))
         {
-            rend += " netural";
+            rend += " alert-info";
         }
 		else if ("success".equals(outcome))
         {
-            rend += " success";
+            rend += " alert-success";
         }
 		else if ("failure".equals(outcome))
         {
-            rend += " failure";
+            rend += " alert-error";
         }
 		
-		Division div = body.addDivision("general-message",rend);
+		Division div = body.addDivision("general-message", rend);
 		if ((header != null) && (!"".equals(header)))
         {
             div.setHead(message(header));
         }
 		else
         {
-            div.setHead(T_head);
+            //div.setHead(T_head);
         }
 
 		if (message != null && message.length() > 0)
         {
-            div.addPara(message(message));
+            div.addPara("notice-message", "bold no-margin").addContent(message(message));
         }
 		
 		if (characters != null && characters.length() > 0)
         {
-            div.addPara(characters);
+			div.addPara("notice-message", "bold no-margin").addContent(characters);
         }
 	}
 }

@@ -21,6 +21,10 @@ import org.apache.commons.cli.PosixParser;
 
 import org.dspace.core.Context;
 import org.dspace.core.ConfigurationManager;
+import org.dspace.servicemanager.DSpaceKernelImpl;
+import org.dspace.servicemanager.DSpaceKernelInit;
+
+import cz.cuni.mff.ufal.DSpaceApi;
 
 /**
  * This class allows the running of the DSpace statistic tools
@@ -29,7 +33,8 @@ import org.dspace.core.ConfigurationManager;
  * Available: 	<stat-initial> <stat-general> <stat-monthly> <stat-report-initial> 
  * 				<stat-report-general> <stat-report-monthly>
  * 
- * @author Chris Yates
+ * based on class by Chris Yates
+ * modified for LINDAT/CLARIN
  *
  */
 
@@ -52,12 +57,36 @@ public class CreateStatReport {
 	
 	/**User context*/
 	private static Context context;
+	
+	static {
+		DSpaceApi.load_dspace();
+	}
 
     /** the config file from which to configure the analyser */
     private static String configFile = ConfigurationManager.getProperty("dspace.dir") +
                             File.separator + "config" + File.separator +
                             "dstat.cfg";
 
+    public static void load_dspace()
+    {
+        try {
+        	ConfigurationManager.getProperty("dspace.url");
+        	return;
+        }catch( Exception e) {
+        }
+
+        try {
+	        DSpaceKernelImpl kernelImpl = DSpaceKernelInit.getKernel(null);
+	        if (!kernelImpl.isRunning())
+	            kernelImpl.start(ConfigurationManager.getProperty("dspace.dir"));
+	        return;
+	    }catch( Exception e) {
+	    }
+
+        // last option
+        ConfigurationManager.loadConfig("./config/dspace.cfg");
+    }    
+    
     /*
 	 * Main method to be run from the command line executes individual statistic methods
 	 * 

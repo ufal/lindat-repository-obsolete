@@ -38,7 +38,8 @@ import org.dspace.eperson.EPerson;
 import org.xml.sax.SAXException;
 
 /**
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public abstract class AbstractDSpaceTransformer extends AbstractWingTransformer
         implements DSpaceTransformer
@@ -244,7 +245,12 @@ public abstract class AbstractDSpaceTransformer extends AbstractWingTransformer
         {
             if (urlBuffer.length() == 0)
             {
-                urlBuffer.append(baseURL).append('?');
+            	if(baseURL.indexOf("?") < 0) { 
+            		urlBuffer.append(baseURL).append('?');
+            	}
+            	else {
+            		urlBuffer.append(baseURL).append('&');
+            	}
             }
             else
             {

@@ -7,12 +7,27 @@
  */
 package org.dspace.app.xmlui.cocoon;
 
-import com.yahoo.platform.yui.compressor.CssCompressor;
-import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.SequenceInputStream;
+import java.io.Serializable;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.avalon.framework.parameters.ParameterException;
 import org.apache.avalon.framework.parameters.Parameters;
 import org.apache.cocoon.ProcessingException;
-import org.apache.cocoon.environment.*;
+import org.apache.cocoon.ResourceNotFoundException;
+import org.apache.cocoon.environment.SourceResolver;
 import org.apache.cocoon.reading.ResourceReader;
 import org.apache.excalibur.source.Source;
 import org.apache.excalibur.source.SourceValidity;
@@ -22,8 +37,8 @@ import org.dspace.core.ConfigurationManager;
 import org.mozilla.javascript.EvaluatorException;
 import org.xml.sax.SAXException;
 
-import java.io.*;
-import java.util.*;
+import com.yahoo.platform.yui.compressor.CssCompressor;
+import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 
 /**
  * Concatenates and Minifies CSS, JS and JSON files
@@ -39,9 +54,11 @@ import java.util.*;
  * Validity is determined based upon last modified date of
  * the most recently edited file.
  *
- * @author Roel Van Reeth (roel at atmire dot com)
- * @author Art Lowel (art dot lowel at atmire dot com)
- * @author Ben Bosman (ben at atmire dot com)
+ * based on class by:
+ * Roel Van Reeth (roel at atmire dot com)
+ * Art Lowel (art dot lowel at atmire dot com)
+ * Ben Bosman (ben at atmire dot com)
+ * modified for LINDAT/CLARIN
  */
 
 public class ConcatenationReader extends ResourceReader {
@@ -69,8 +86,17 @@ public class ConcatenationReader extends ResourceReader {
 
         // setup list of sources, get relevant parts of path
         this.inputSources = new ArrayList<Source>();
-        String path = src.substring(0, src.lastIndexOf('/'));
-        String file = src.substring(src.lastIndexOf('/')+1);
+        
+        String path;
+        String file;
+        if(src.lastIndexOf('/') >= 0) {
+            path = src.substring(0, src.lastIndexOf('/'));
+            file = src.substring(src.lastIndexOf('/')+1);
+        }
+        else {
+            path = "";
+            file = src;
+        }        
 
         // now build own list of inputsources
         String[] files = file.split(",");
@@ -87,6 +113,21 @@ public class ConcatenationReader extends ResourceReader {
 
             String fullPath = path + "/" + f;
             this.inputSources.add(resolver.resolveURI(fullPath));
+        }
+
+        int index = 0;
+        for (Iterator<Source> it=this.inputSources.iterator(); it.hasNext();) {
+            Source source = it.next();
+            try
+            {
+                InputStream stream = source.getInputStream();
+            } catch (IOException e) {
+                String uri = null != source ? source.getURI() : "null";
+                log.error(String.format("IOException in StreamEnumeration.nextElement when retrieving InputStream [%s]" +
+                        " of a Source; index = %d, inputSources.size = %d", uri, index, inputSources.size()), e);
+                throw new ResourceNotFoundException(uri);
+            }
+            index++;
         }
 
         // do super stuff
@@ -262,13 +303,16 @@ public class ConcatenationReader extends ResourceReader {
         }
 
         public InputStream nextElement() {
+            Source src = null;
             try {
-                InputStream elem = inputSources.get(index).getInputStream();
+                src = inputSources.get(index);
+                InputStream elem = src.getInputStream();
                 index++;
                 return elem;
             } catch (IOException e) {
-                log.error("IOException in StreamEnumeration.nextElement when retrieving InputStream of a Source; index = "
-                        + index + ", inputSources.size = " + inputSources.size(), e);
+                String uri = null != src ? src.getURI() : "null";
+                log.error(String.format("IOException in StreamEnumeration.nextElement when retrieving InputStream [%s]" +
+                                        " of a Source; index = %d, inputSources.size = %d", uri, index, inputSources.size()), e);
                 return null;
             }
         }

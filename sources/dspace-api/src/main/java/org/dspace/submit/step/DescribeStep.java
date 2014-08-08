@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -53,16 +55,20 @@ import org.dspace.submit.AbstractProcessingStep;
  * @see org.dspace.app.util.SubmissionStepConfig
  * @see org.dspace.submit.AbstractProcessingStep
  *
- * @author Tim Donohue
+ * based on class by Tim Donohue
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class DescribeStep extends AbstractProcessingStep
 {
+    
+    public static final String REPEATABLE_SPLIT_REGEX = ",|;";
+    
     /** log4j logger */
     private static Logger log = Logger.getLogger(DescribeStep.class);
 
     /** hash of all submission forms details */
-    private static DCInputsReader inputsReader = null;
+    protected static DCInputsReader inputsReader = null;
 
     /***************************************************************************
      * STATUS / ERROR FLAGS (returned by doProcessing() if an error occurs or
@@ -87,6 +93,11 @@ public class DescribeStep extends AbstractProcessingStep
         getInputsReader();
     }
 
+    public DescribeStep(DCInputsReader inputs_reader) throws ServletException
+    {
+        //load the DCInputsReader
+        inputsReader = inputs_reader;
+    }
    
 
     /**
@@ -139,10 +150,20 @@ public class DescribeStep extends AbstractProcessingStep
             throw new ServletException(e);
         }
 
+        // Fetch the document type (dc.type)
+        String documentType = "";
+        if( (item.getMetadata("dc.type") != null) && (item.getMetadata("dc.type").length >0) )
+        {
+            documentType = item.getMetadata("dc.type")[0].value;
+        }
+        
         // Step 1:
         // clear out all item metadata defined on this page
         for (int i = 0; i < inputs.length; i++)
         {
+
+        	// Allow the clearing out of the metadata defined for other document types, provided it can change anytime
+        	
             if (!inputs[i]
                     .isVisible(subInfo.isInWorkflow() ? DCInput.WORKFLOW_SCOPE
                             : DCInput.SUBMISSION_SCOPE))
@@ -169,6 +190,12 @@ public class DescribeStep extends AbstractProcessingStep
         boolean moreInput = false;
         for (int j = 0; j < inputs.length; j++)
         {
+        	// Omit fields not allowed for this document type
+            if(!inputs[j].isAllowedFor(documentType))
+            {
+            	continue;
+            }
+
             if (!inputs[j]
                         .isVisible(subInfo.isInWorkflow() ? DCInput.WORKFLOW_SCOPE
                                 : DCInput.SUBMISSION_SCOPE))
@@ -251,7 +278,7 @@ public class DescribeStep extends AbstractProcessingStep
                     || (inputType.equals("textarea")))
             {
                 readText(request, item, schema, element, qualifier, inputs[j]
-                        .getRepeatable(), LANGUAGE_QUALIFIER);
+                        .getRepeatable(), LANGUAGE_QUALIFIER, inputs[j].getRepeatableParse());
             }
             else
             {
@@ -284,6 +311,13 @@ public class DescribeStep extends AbstractProcessingStep
         {
             for (int i = 0; i < inputs.length; i++)
             {
+            	// Do not check the required attribute if it is not visible or not allowed for the document type
+            	String scope = subInfo.isInWorkflow() ? DCInput.WORKFLOW_SCOPE : DCInput.SUBMISSION_SCOPE;
+                if ( !( inputs[i].isVisible(scope) && inputs[i].isAllowedFor(documentType) ) )
+                {
+                	continue;
+                }
+            	
                 DCValue[] values = item.getMetadata(inputs[i].getSchema(),
                         inputs[i].getElement(), inputs[i].getQualifier(), Item.ANY);
 
@@ -631,9 +665,17 @@ public class DescribeStep extends AbstractProcessingStep
      *            set to true if the field is repeatable on the form
      * @param lang
      *            language to set (ISO code)
+     * @param repeatable_component
+     *      UFAL/jmisutka - change values to indicate component membership
      */
     protected void readText(HttpServletRequest request, Item item, String schema,
-            String element, String qualifier, boolean repeated, String lang)
+            String element, String qualifier, boolean repeated, String lang, boolean repeatable_parse) {
+      readText( request, item, schema, element, qualifier, repeated, lang, null, repeatable_parse);
+    }
+
+    protected void readText(HttpServletRequest request, Item item, String schema,
+            String element, String qualifier, boolean repeated, String lang, String repeatable_component,
+            boolean repeatable_parse)
     {
         // FIXME: Of course, language should be part of form, or determined
         // some other way
@@ -651,6 +693,14 @@ public class DescribeStep extends AbstractProcessingStep
         if (repeated)
         {
             vals = getRepeatedParameter(request, metadataField, metadataField);
+            
+            // if someone adds strings to repeatable with ;, split them if specified 
+            //   in input-forms.xml
+            if ( repeatable_parse ) 
+            {
+                split_strings(vals);
+            }
+            
             if (isAuthorityControlled)
             {
                 auths = getRepeatedParameter(request, metadataField, metadataField+"_authority");
@@ -701,10 +751,25 @@ public class DescribeStep extends AbstractProcessingStep
         // item.clearMetadata(schema, element, qualifier, Item.ANY);
 
         // Put the names in the correct form
+        int max_num = 0;
         for (int i = 0; i < vals.size(); i++)
         {
             // Add to the database if non-empty
-            String s = vals.get(i);
+            String s = (String) vals.get(i);
+
+            // UFAL/jmisutka
+            if ( null != repeatable_component  &&
+                    Util.getSubmitButton(request,NEXT_BUTTON).startsWith("submit_component_"+repeatable_component) ) {
+              Pattern p = Pattern.compile( "#(\\d+)-.*" );
+              Matcher m = p.matcher(s);
+              if ( m.find() ) {
+                max_num = Math.max( max_num, Integer.parseInt(m.group(1)) );
+              }else {
+                ++max_num;
+                s = String.format("#%s-%s", String.valueOf(max_num),s );
+              }
+          }
+
             if ((s != null) && !s.equals(""))
             {
                 if (isAuthorityControlled)
@@ -981,5 +1046,28 @@ public class DescribeStep extends AbstractProcessingStep
             return dcSchema + "_" + dcElement;
         }
 
+    }
+
+    
+    /**
+     * Split strings on separators.
+     * 
+     * @param vals
+     */
+    public static void split_strings( List<String> string_list )
+    {
+        for ( int i = 0; i < string_list.size(); ++i ) 
+        {
+            String[] splits = string_list.get(i).split(REPEATABLE_SPLIT_REGEX);
+            // replace the one value with multiple
+            if ( splits.length > 1 ) 
+            {
+                string_list.remove(i);
+                // preserve the order 
+                for ( int j = splits.length - 1; j >= 0; --j ) {
+                    string_list.add(i, splits[j].trim() );
+                }
+            }
+        }
     }
 }

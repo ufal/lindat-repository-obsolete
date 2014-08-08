@@ -25,7 +25,8 @@ import org.dspace.eperson.EPerson;
 /**
  * Present the user with a list of not-yet-but-soon-to-be-deleted-epeople.
  * 
- * @author Alexey Maslov
+ * based on class by Alexey Maslov
+ * modified for LINDAT/CLARIN
  */
 public class DeleteEPeopleConfirm extends AbstractDSpaceTransformer   
 {
@@ -85,7 +86,7 @@ public class DeleteEPeopleConfirm extends AbstractDSpaceTransformer
 		}
  
 		// DIVISION: epeople-confirm-delete
-    	Division deleted = body.addInteractiveDivision("epeople-confirm-delete",contextPath+"/admin/epeople",Division.METHOD_POST,"primary administrative eperson");
+    	Division deleted = body.addInteractiveDivision("epeople-confirm-delete",contextPath+"/admin/epeople",Division.METHOD_POST,"alert alert-danger");
     	deleted.setHead(T_confirm_head);
     	deleted.addPara(T_confirm_para);
     	

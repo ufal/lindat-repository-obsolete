@@ -68,6 +68,8 @@ import org.dspace.storage.rdbms.TableRowIterator;
  * to do this, but it isn't strictly necessary. (say public List
  * getStateEPeople( WorkflowItem wi, int state ) could return people affected by
  * the item's current state.
+ *
+ * modified for LINDAT/CLARIN
  */
 public class WorkflowManager
 {
@@ -111,7 +113,7 @@ public class WorkflowManager
     private static Map<Integer, Boolean> noEMail = new HashMap<Integer, Boolean>();
 
     /** log4j logger */
-    private static Logger log = Logger.getLogger(WorkflowManager.class);
+    private static Logger log = cz.cuni.mff.ufal.Logger.getLogger(WorkflowManager.class);
 
     /**
      * Translate symbolic name of workflow state into number.
@@ -248,6 +250,39 @@ public class WorkflowManager
 
         TableRowIterator tri = DatabaseManager
                 .queryTable(c, "workflowitem", myquery, e.getID());
+
+        try
+        {
+            while (tri.hasNext())
+            {
+                mylist.add(new WorkflowItem(c, tri.next()));
+            }
+        }
+        finally
+        {
+            if (tri != null)
+            {
+                tri.close();
+            }
+        }
+        
+        return mylist;
+    }
+        
+    /**
+     * getAllPooledTasks() returns a List of all WorkflowItems that could be claimed
+     *
+     * @param c Context
+     */
+    public static List<WorkflowItem> getAllPooledTasks(Context c) throws SQLException
+    {
+        ArrayList<WorkflowItem> mylist = new ArrayList<WorkflowItem>();
+
+        String myquery = "SELECT distinct workflowitem.* FROM workflowitem, TaskListItem" +
+                " WHERE tasklistitem.workflow_id=workflowitem.workflow_id order by workflow_id";
+
+        TableRowIterator tri = DatabaseManager
+                .queryTable(c, "workflowitem", myquery);
 
         try
         {
@@ -749,8 +784,8 @@ public class WorkflowManager
         }
         catch (MessagingException e)
         {
-            log.warn(LogManager.getHeader(c, "notifyOfArchive",
-                    "cannot email user" + " item_id=" + i.getID()));
+            log.error(LogManager.getHeader(c, "notifyOfArchive",
+                    "cannot email user" + " item_id=" + i.getID()), e);
         }
     }
 
@@ -830,11 +865,7 @@ public class WorkflowManager
         String usersName = getEPersonName(e);
 
         // Here's what happened
-        String provDescription = "Rejected by " + usersName + ", reason: "
-                + rejection_message + " on " + now + " (GMT) ";
-
-        // Add to item as a DC field
-        myitem.addDC("description", "provenance", "en", provDescription);
+        myitem.store_provenance_info("Rejected reason: " + rejection_message, e);
         myitem.update();
 
         // convert into personal workspace
@@ -908,8 +939,8 @@ public class WorkflowManager
         }
         catch (MessagingException e)
         {
-            log.warn(LogManager.getHeader(c, "notifyOfCuration", "cannot email users" + 
-                                          " of workflow_item_id" + wi.getID()));
+            log.error(LogManager.getHeader(c, "notifyOfCuration", "cannot email users" + 
+                                          " of workflow_item_id" + wi.getID()), e);
         }
     }
 
@@ -977,9 +1008,9 @@ public class WorkflowManager
             {
                 String gid = (mygroup != null) ?
                              String.valueOf(mygroup.getID()) : "none";
-                log.warn(LogManager.getHeader(c, "notifyGroupofTask",
+                log.error(LogManager.getHeader(c, "notifyGroupofTask",
                         "cannot email user" + " group_id" + gid
-                                + " workflow_item_id" + wi.getID()));
+                                + " workflow_item_id" + wi.getID()), e);
             }
         }
     }
@@ -1017,17 +1048,17 @@ public class WorkflowManager
         catch (RuntimeException re)
         {
             // log this email error
-            log.warn(LogManager.getHeader(c, "notify_of_reject",
+            log.error(LogManager.getHeader(c, "notify_of_reject",
                     "cannot email user" + " eperson_id" + e.getID()
                             + " eperson_email" + e.getEmail()
-                            + " workflow_item_id" + wi.getID()));
+                            + " workflow_item_id" + wi.getID()), re);
 
             throw re;
         }
         catch (Exception ex)
         {
             // log this email error
-            log.warn(LogManager.getHeader(c, "notify_of_reject",
+            log.error(LogManager.getHeader(c, "notify_of_reject",
                     "cannot email user" + " eperson_id" + e.getID()
                             + " eperson_email" + e.getEmail()
                             + " workflow_item_id" + wi.getID()));
@@ -1098,14 +1129,7 @@ public class WorkflowManager
         String now = DCDate.getCurrent().toString();
 
         // Here's what happened
-        String provDescription = "Approved for entry into archive by "
-                + usersName + " on " + now + " (GMT) ";
-
-        // add bitstream descriptions (name, size, checksums)
-        provDescription += InstallItem.getBitstreamProvenanceMessage(item);
-
-        // Add to item as a DC field
-        item.addDC("description", "provenance", "en", provDescription);
+        item.store_provenance_info("Approved for entry into archive", e);
         item.update();
     }
 
@@ -1116,27 +1140,16 @@ public class WorkflowManager
         // get date
         DCDate now = DCDate.getCurrent();
 
-        // Create provenance description
-        String provmessage = "";
-
         if (myitem.getSubmitter() != null)
         {
-            provmessage = "Submitted by " + myitem.getSubmitter().getFullName()
-                    + " (" + myitem.getSubmitter().getEmail() + ") on "
-                    + now.toString() + "\n";
+            myitem.store_provenance_info("Submitted", myitem.getSubmitter());
         }
         else
         // null submitter
         {
-            provmessage = "Submitted by unknown (probably automated) on"
-                    + now.toString() + "\n";
+            myitem.store_provenance_info("Submitted (probably automated) ", myitem.getSubmitter());
         }
 
-        // add sizes and checksums of bitstreams
-        provmessage += InstallItem.getBitstreamProvenanceMessage(myitem);
-
-        // Add message to the DC
-        myitem.addDC("description", "provenance", "en", provmessage);
         myitem.update();
     }
 }

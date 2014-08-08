@@ -231,6 +231,7 @@
           add enablePositionIncrements=true in both the index and query
           analyzers to leave a 'gap' for more accurate phrase queries.
         -->
+	<filter class="solr.ASCIIFoldingFilterFactory"/>
         <filter class="solr.StopFilterFactory"
                 ignoreCase="true"
                 words="stopwords.txt"
@@ -243,6 +244,7 @@
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+	<filter class="solr.ASCIIFoldingFilterFactory"/>
         <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
         <filter class="solr.StopFilterFactory"
                 ignoreCase="true"
@@ -279,12 +281,14 @@
     <fieldType name="textgen" class="solr.TextField" positionIncrementGap="100">
       <analyzer type="index">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+	<filter class="solr.ASCIIFoldingFilterFactory"/>
         <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" enablePositionIncrements="true" />
         <filter class="solr.WordDelimiterFilterFactory" generateWordParts="1" generateNumberParts="1" catenateWords="1" catenateNumbers="1" catenateAll="0" splitOnCaseChange="0"/>
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+	<filter class="solr.ASCIIFoldingFilterFactory"/>
         <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
         <filter class="solr.StopFilterFactory"
                 ignoreCase="true"
@@ -303,6 +307,7 @@
     <fieldType name="text_rev" class="solr.TextField" positionIncrementGap="100">
       <analyzer type="index">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+	<filter class="solr.ASCIIFoldingFilterFactory"/>
         <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" enablePositionIncrements="true" />
         <filter class="solr.WordDelimiterFilterFactory" generateWordParts="1" generateNumberParts="1" catenateWords="1" catenateNumbers="1" catenateAll="0" splitOnCaseChange="0"/>
         <filter class="solr.LowerCaseFilterFactory"/>
@@ -311,6 +316,7 @@
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+	<filter class="solr.ASCIIFoldingFilterFactory"/>
         <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
         <filter class="solr.StopFilterFactory"
                 ignoreCase="true"
@@ -429,11 +435,11 @@
             <tokenizer class="solr.KeywordTokenizerFactory"/>
 
             <!--Lower cases our values-->
-            <filter class="solr.LowerCaseFilterFactory" />
+            <!-- do not do this as we are using typeahead and we need real values <filter class="solr.LowerCaseFilterFactory" /> -->
             <!--Discards common words.-->
             <filter class="solr.StopFilterFactory" />
             <!-- The TrimFilter removes any leading or trailing whitespace -->
-            <filter class="solr.TrimFilterFactory" />
+            <filter class="solr.TrimFilterFactory" />            
         </analyzer>
     </fieldType>
 
@@ -445,6 +451,17 @@
             <!--<filter class="solr.LowerCaseFilterFactory" />-->
         </analyzer>
     </fieldType>
+    
+    <fieldType name="keywordFilter" class="solr.TextField" sortMissingLast="true" omitNorms="true">
+        <analyzer>
+            <!--Treats the entire field as a single token, regardless of its content-->
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+
+            <filter class="solr.LowerCaseFilterFactory" />
+            <filter class="solr.TrimFilterFactory" />
+        </analyzer>
+    </fieldType>
+    
  </types>
 
 
@@ -511,6 +528,7 @@
 
      <!--Dynamic field used for sidebar filters-->
      <dynamicField name="*_filter" type="dspaceFilter" indexed="true" stored="true" multiValued="true" omitNorms="true" />
+     <dynamicField name="*_keyword" type="keywordFilter" indexed="true" stored="true" multiValued="true" omitNorms="true" />
 
 
      <dynamicField name="*_sort" type="lowerCaseSort" indexed="true" stored="true" multiValued="false" omitNorms="true"/>
@@ -573,7 +591,22 @@
         is added to the index.  It's used either to index the same field differently,
         or to add multiple fields to the same field for easier/faster searching.  -->
 
-   <copyField source="*" dest="text"/>
+   <copyField source="fulltext" dest="text"/>
+   <copyField source="handle" dest="text"/>
+   <copyField source="dc.publisher" dest="text"/>
+   <copyField source="dc.description" dest="text"/>
+   <copyField source="dc.description" dest="text"/>
+   <copyField source="dc.title*" dest="text"/>
+   <copyField source="dc.title*" dest="text"/>
+   <copyField source="dc.contributor.author" dest="text"/>
+   <copyField source="dc.contributor.other" dest="text"/>
+   <copyField source="dc.source*" dest="text"/>
+   <copyField source="dc.date*" dest="text"/>
+   <copyField source="dc.language*" dest="text"/>
+   <copyField source="dc.identifier*" dest="text"/>
+   <copyField source="dc.type" dest="text"/>
+   <copyField source="dc.subject*" dest="text"/>
+   <copyField source="dc.subject*" dest="text"/>
 
    <!-- Above, multiple source fields are copied to the [text] field.
 	  Another way to map multiple source fields to the same

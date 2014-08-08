@@ -10,10 +10,12 @@
 <!--
     Templates to cover the forms and forms fields.
 
-    Author: art.lowel at atmire.com
-    Author: lieven.droogmans at atmire.com
-    Author: ben at atmire.com
-    Author: Alexey Maslov
+	based on work by:
+    art.lowel at atmire.com
+    lieven.droogmans at atmire.com
+    ben at atmire.com
+    Alexey Maslov
+    modified for LINDAT/CLARIN
 
 -->
 
@@ -827,6 +829,7 @@
         <xsl:choose>
             <!-- TODO: this has changed drammatically (see form3.xml) -->
                         <xsl:when test="@type= 'select'">
+                        
                                 <select>
                                     <xsl:call-template name="fieldAttributes"/>
                                     <xsl:apply-templates/>
@@ -835,6 +838,7 @@
             <xsl:when test="@type= 'textarea'">
                                 <textarea>
                                     <xsl:call-template name="fieldAttributes"/>
+		  		    <xsl:attribute name="onkeydown">event.cancelBubble=true;</xsl:attribute>
 
                                     <!--
                                         if the cols and rows attributes are not defined we need to call
@@ -949,6 +953,13 @@
                             with the value 'submit'. No reset buttons for now...
                     -->
                     <xsl:otherwise>
+                                  <!-- ufal 
+                                    adding ISO 639-3 support
+                                    -->
+                                    <xsl:if test="@n = 'dc_language_iso'">
+                                        <script type="text/javascript" src="{$theme-path}/lib/js/languages.js">&#160;</script>
+                                        <br />
+                                    </xsl:if>
                         <input>
                             <xsl:call-template name="fieldAttributes"/>
                             <xsl:if test="@type='button'">
@@ -1005,6 +1016,13 @@
                             </xsl:call-template>
                           </xsl:when>
                         </xsl:choose>
+                        <!-- UFAL - dragNdrop support if specified 
+                             for a file input button
+                        -->
+                        <xsl:call-template name="dragNdrop"/>
+
+
+
                     </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
@@ -1013,7 +1031,6 @@
     <xsl:template name="fieldAttributes">
         <xsl:call-template name="standardAttributes">
             <xsl:with-param name="class">
-                <xsl:text>ds-</xsl:text><xsl:value-of select="@type"/><xsl:text>-field </xsl:text>
                 <xsl:if test="dri:error">
                     <xsl:text>error </xsl:text>
                 </xsl:if>

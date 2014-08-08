@@ -42,16 +42,19 @@ import java.util.*;
  * and allows for the admin to either delete them or send
  * them back to the submitter
  *
- * @author Bram De Schouwer (bram.deschouwer at dot com)
- * @author Kevin Van de Velde (kevin at atmire dot com)
- * @author Ben Bosman (ben at atmire dot com)
- * @author Mark Diggory (markd at atmire dot com)
+ * based on class by:
+ * Bram De Schouwer (bram.deschouwer at dot com)
+ * Kevin Van de Velde (kevin at atmire dot com)
+ * Ben Bosman (ben at atmire dot com)
+ * Mark Diggory (markd at atmire dot com)
+ * modified for LINDAT/CLARIN
  */
 public class WorkflowOverviewTransformer extends AbstractDSpaceTransformer {
 
 
     private static final Logger log = Logger.getLogger(WorkflowOverviewTransformer.class);
     private static final int[] RESULTS_PER_PAGE_PROGRESSION = {5, 10, 20, 40, 60, 80, 100};
+    private static final int RESULTS_PER_PAGE_MAX = 100;
 
 
     private static final Message T_dspace_home =
@@ -211,7 +214,8 @@ public class WorkflowOverviewTransformer extends AbstractDSpaceTransformer {
 
     protected int getParameterRpp() {
         try {
-            return Integer.parseInt(ObjectModelHelper.getRequest(objectModel).getParameter("rpp"));
+        	int rpp = Integer.parseInt(ObjectModelHelper.getRequest(objectModel).getParameter("rpp"));         			
+            return rpp<=RESULTS_PER_PAGE_MAX?rpp:RESULTS_PER_PAGE_MAX;
         }
         catch (Exception e) {
             return 10;

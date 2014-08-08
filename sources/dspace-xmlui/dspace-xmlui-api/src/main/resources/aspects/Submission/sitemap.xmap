@@ -23,12 +23,16 @@
       <map:transformer name="Submissions" src="org.dspace.app.xmlui.aspect.submission.Submissions"/>
       
       <map:transformer name="StepTransformer" src="org.dspace.app.xmlui.aspect.submission.StepTransformer"/>
-      
-      <map:transformer name="SelectCollectionStep" src="org.dspace.app.xmlui.aspect.submission.submit.SelectCollectionStep"/>
+
+      <!-- <UFAL> -->
+      <!-- <map:transformer name="SelectCollectionStep" src="org.dspace.app.xmlui.aspect.submission.submit.SelectCollectionStep"/> -->
+      <map:transformer name="SelectCollectionStep" src="cz.cuni.mff.ufal.dspace.app.xmlui.aspect.submission.submit.SelectCollectionStep"/>
+      <!-- </UFAL> -->
       <map:transformer name="ResumeStep" src="org.dspace.app.xmlui.aspect.submission.submit.ResumeStep"/>
       <map:transformer name="SaveOrRemoveStep" src="org.dspace.app.xmlui.aspect.submission.submit.SaveOrRemoveStep"/>
       <map:transformer name="RemovedStep" src="org.dspace.app.xmlui.aspect.submission.submit.RemovedStep"/>
       <map:transformer name="CompletedStep" src="org.dspace.app.xmlui.aspect.submission.submit.CompletedStep"/>
+      <map:transformer name="ControlledVocabularyTransformer" src="org.dspace.app.xmlui.aspect.submission.ControlledVocabularyTransformer"/>
     </map:transformers>
     
     <map:selectors>
@@ -43,6 +47,7 @@
     
     <map:actions>
       <map:action name="RemoveSubmissionsAction" src="org.dspace.app.xmlui.aspect.submission.submit.RemoveSubmissionsAction"/>
+      <map:action name="AddNewVersionAction" src="cz.cuni.mff.ufal.dspace.app.xmlui.aspect.submission.submit.AddNewVersionAction"/>
     </map:actions>
     
   </map:components>
@@ -83,7 +88,10 @@
           <!-- Start a new submission to specific collection -->
           <map:match pattern="handle/*/*/submit">
             <map:call function="doSubmission">
-              <map:parameter name="handle" value="{1}/{2}"/>
+              <!--
+              Commented out to enforce the "select collection" step
+               <map:parameter name="handle" value="{1}/{2}"/>
+               -->
             </map:call>
           </map:match>
           
@@ -138,8 +146,12 @@
 
             <map:match type="request" pattern="submit_submissions_remove">
               <map:act type="RemoveSubmissionsAction"/>
+          </map:match>
+
+            <map:match type="request" pattern="submit_submissions_add_new_version">
+              <map:act type="AddNewVersionAction"/>
             </map:match>
-             
+              
             <map:transform type="Submissions"/>
           </map:match>
           
@@ -233,13 +245,19 @@
           <!-- javascript libraries and utils for choice/authority-control -->
           <map:match type="regexp" pattern="(^submit)|(^handle/.*/submit)|(^handle/.*/workflow)">
             <map:transform type="IncludePageMeta">
-              <map:parameter name="javascript.static#1" value="static/js/scriptaculous/prototype.js"/>
-              <map:parameter name="javascript.static#2" value="static/js/scriptaculous/effects.js"/>
-              <map:parameter name="javascript.static#3" value="static/js/scriptaculous/builder.js"/>
-              <map:parameter name="javascript.static#4" value="static/js/scriptaculous/controls.js"/>
-              <map:parameter name="javascript.static#5" value="static/js/choice-support.js"/>
+              <map:parameter name="javascript.static#1" value="loadJQuery.js"/>
+              <map:parameter name="javascript.static#2" value="static/js/vocabulary-support.js"/>
+              <map:parameter name="javascript.static#3" value="static/js/scriptaculous/prototype.js"/>
+              <map:parameter name="javascript.static#4" value="static/js/scriptaculous/effects.js"/>
+              <map:parameter name="javascript.static#5" value="static/js/scriptaculous/builder.js"/>
+              <map:parameter name="javascript.static#6" value="static/js/scriptaculous/controls.js"/>
+              <map:parameter name="javascript.static#7" value="static/js/choice-support.js"/>
             </map:transform>
           </map:match>
+
+            <map:match pattern="controlled-vocabulary-dialog">
+                <map:transform type="ControlledVocabularyTransformer"/>
+            </map:match>
 
           <map:serialize type="xml"/>
           

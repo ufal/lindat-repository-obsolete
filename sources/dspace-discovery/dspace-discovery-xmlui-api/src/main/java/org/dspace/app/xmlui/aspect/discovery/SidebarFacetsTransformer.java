@@ -19,6 +19,7 @@ import org.dspace.app.xmlui.utils.HandleUtil;
 import org.dspace.app.xmlui.utils.UIException;
 import org.dspace.app.xmlui.wing.Message;
 import org.dspace.app.xmlui.wing.WingException;
+import org.dspace.app.xmlui.wing.element.Item;
 import org.dspace.app.xmlui.wing.element.List;
 import org.dspace.app.xmlui.wing.element.Options;
 import org.dspace.authorize.AuthorizeException;
@@ -44,9 +45,12 @@ import java.util.regex.Pattern;
 /**
  * Renders the side bar filters in discovery
  *
- * @author Kevin Van de Velde (kevin at atmire dot com)
- * @author Mark Diggory (markd at atmire dot com)
- * @author Ben Bosman (ben at atmire dot com)
+ * based on class by:
+ * Kevin Van de Velde (kevin at atmire dot com)
+ * Mark Diggory (markd at atmire dot com)
+ * Ben Bosman (ben at atmire dot com)
+ *
+ * modified for LINDAT/CLARIN
  */
 public class SidebarFacetsTransformer extends AbstractDSpaceTransformer implements CacheableProcessingComponent {
 
@@ -233,20 +237,23 @@ public class SidebarFacetsTransformer extends AbstractDSpaceTransformer implemen
                                 String displayedValue = value.getDisplayedValue();
                                 String filterQuery = value.getAsFilterQuery();
 
-                                if (fqs.contains(filterQuery)) {
-                                    filterValsList.addItem(Math.random() + "", "selected").addContent(displayedValue + " (" + value.getCount() + ")");
-                                } else {
-                                    String paramsQuery = retrieveParameters(request);
-
-                                    filterValsList.addItem().addXref(
-                                            contextPath +
-                                                    (dso == null ? "" : "/handle/" + dso.getHandle()) +
-                                                    "/discover?" +
-                                                    paramsQuery +
-                                                    "fq=" +
-                                                    URLEncoder.encode(filterQuery, "UTF-8"),
-                                            displayedValue + " (" + value.getCount() + ")"
-                                    );
+                                // add discovery filter only if it can narrow down the search
+                                if(value.getCount() < queryResults.getTotalSearchResults()) {
+	                                if (fqs.contains(filterQuery)) {
+	                                    filterValsList.addItem(Math.random() + "", "selected").addContent(displayedValue + " (" + value.getCount() + ")");
+	                                } else {
+	                                    String paramsQuery = retrieveParameters(request);
+	
+		                                    filterValsList.addItem().addXref(
+		                                            contextPath +
+		                                                    (dso == null ? "" : "/handle/" + dso.getHandle()) +
+		                                                    "/discover?" +
+		                                                    paramsQuery +
+		                                                    "fq=" +
+		                                                    URLEncoder.encode(filterQuery, "UTF-8"),
+		                                            displayedValue + " (" + value.getCount() + ")"
+		                                    );
+	                                }
                                 }
                             }
                             //Show a view more url should there be more values, unless we have a date
@@ -276,6 +283,12 @@ public class SidebarFacetsTransformer extends AbstractDSpaceTransformer implemen
                 if(key != null && !"page".equals(key) && !key.startsWith("submit")){
                     String[] vals = request.getParameterValues(key);
                     for(String paramValue : vals){
+                        try {
+                            // UFAL #407
+                            paramValue = URLEncoder.encode(paramValue, "UTF-8");
+                        }catch( IOException e ) {
+                            // leave it as it is...
+                        }
                         result.append(key).append("=").append(paramValue);
                         result.append("&");
                     }
@@ -472,9 +485,15 @@ public class SidebarFacetsTransformer extends AbstractDSpaceTransformer implemen
 
             String type = request.getParameter("filtertype");
             String value = request.getParameter("filter");
+            String operator = request.getParameter("operator");
+            
+            if(operator==null || operator.isEmpty()) {
+            	operator = "contains";
+            }
+
 
             if(value != null && !value.equals("")){
-                allFilterQueries.add(getSearchService().toFilterQuery(context, (type.equals("*") ? "" : type), value).getFilterQuery());
+                allFilterQueries.add(getSearchService().toFilterQuery(context, (type.equals("*") ? "" : type), operator, value).getFilterQuery());
             }
 
             //Add all the previous filters also
@@ -527,3 +546,4 @@ public class SidebarFacetsTransformer extends AbstractDSpaceTransformer implemen
         super.recycle();
     }
 }
+

@@ -23,6 +23,7 @@ import org.apache.cocoon.environment.Request;
 import org.apache.cocoon.environment.http.HttpEnvironment;
 import org.apache.cocoon.util.HashUtil;
 import org.apache.excalibur.source.SourceValidity;
+import org.apache.log4j.Logger;
 import org.dspace.app.xmlui.cocoon.AbstractDSpaceTransformer;
 import org.dspace.app.xmlui.utils.DSpaceValidity;
 import org.dspace.app.xmlui.utils.HandleUtil;
@@ -53,10 +54,16 @@ import org.dspace.app.sfx.SFXFileReader;
 /**
  * Display a single item.
  *
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class ItemViewer extends AbstractDSpaceTransformer implements CacheableProcessingComponent
 {
+	
+	
+	private static final Logger log = Logger.getLogger(ItemViewer.class);
+    
+	
     /** Language strings */
     private static final Message T_dspace_home =
         message("xmlui.general.dspace_home");
@@ -263,7 +270,7 @@ public class ItemViewer extends AbstractDSpaceTransformer implements CacheablePr
 
         // Add Withdrawn Message if it is
         if(item.isWithdrawn()){
-            Division div = division.addDivision("notice", "notice");
+            Division div = division.addDivision("notice", "alert");
             Para p = div.addPara();
             p.addContent(T_withdrawn);
             //Set proper response. Return "404 Not Found"
@@ -286,6 +293,11 @@ public class ItemViewer extends AbstractDSpaceTransformer implements CacheablePr
                     + "?show=full";
             showfullPara.addXref(link).addContent(T_show_full);
         }
+        
+     // <UFAL>
+        cz.cuni.mff.ufal.DSpaceXmluiApi.app_xmlui_aspect_artifactbrowser_ItemViewer(log, context, item, division );
+     // </UFAL>
+        
 
         ReferenceSet referenceSet;
         if (showFullItem(objectModel))

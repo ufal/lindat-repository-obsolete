@@ -10,14 +10,15 @@
    <parent>
       <groupId>org.dspace</groupId>
       <artifactId>dspace-lni</artifactId>
-      <version>1.8.4-SNAPSHOT</version>
+      <version>1.8.2</version>
       <relativePath>..</relativePath>
    </parent>
 
-   <properties>
-        <!-- This is the path to the root [dspace-src] directory. -->
-        <root.basedir>${basedir}/../..</root.basedir>
-   </properties>
+   <scm>
+      <connection>scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2</connection>
+      <developerConnection>scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2</developerConnection>
+      <url>http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</url>
+   </scm>
 
    <dependencies>
       <dependency>

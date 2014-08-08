@@ -21,7 +21,8 @@ import org.dspace.eperson.Group;
 
 /**
  * Confirmation step for the deletion a collection's role
- * @author Alexey Maslov
+ * based on class by Alexey Maslov
+ * modified for LINDAT/CLARIN
  */
 public class DeleteCollectionRoleConfirm extends AbstractDSpaceTransformer   
 {
@@ -55,7 +56,7 @@ public class DeleteCollectionRoleConfirm extends AbstractDSpaceTransformer
 		
 		
 		// DIVISION: main
-	    Division main = body.addInteractiveDivision("collection-role-delete",contextPath+"/admin/collection",Division.METHOD_POST,"primary administrative collection");
+	    Division main = body.addInteractiveDivision("collection-role-delete",contextPath+"/admin/collection",Division.METHOD_POST,"alert alert-danger");
 	    main.setHead(T_main_head.parameterize(role));
 	    // Different help message for the default read group to enforce its non-retroactive nature
 	    if ("DEFAULT_READ".equals(role))

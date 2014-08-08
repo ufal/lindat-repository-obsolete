@@ -4,20 +4,15 @@
 	<packaging>jar</packaging>
 	<groupId>org.dspace</groupId>
 	<artifactId>dspace-discovery-solr</artifactId>
-	<version>1.8.4-SNAPSHOT</version>
+	<version>1.8.2</version>
     <name>DSpace Discovery :: Discovery Solr Implementation</name>
 
     <parent>
         <groupId>org.dspace</groupId>
         <artifactId>dspace-discovery</artifactId>
-        <version>1.8.4-SNAPSHOT</version>
+        <version>1.8.2</version>
       <relativePath>..</relativePath>
    </parent>
-
-   <properties>
-        <!-- This is the path to the root [dspace-src] directory. -->
-        <root.basedir>${basedir}/../..</root.basedir>
-   </properties>
 
     <dependencies>
         <dependency>
@@ -34,7 +29,7 @@
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-            <version>3.3.0</version>
+            <version>${solr.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -48,7 +43,23 @@
             <artifactId>commons-io</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+        </dependency>
 
     </dependencies>
 
+	<!--
+       The Subversion repository location is used by Continuum to update
+       against when changes have occured, this spawns a new build cycle
+       and releases snapshots into the snapshot repository below.
+    -->
+    <scm>
+        <connection>scm:svn:http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</connection>
+        <developerConnection>
+            scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2
+        </developerConnection>
+        <url>http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</url>
+    </scm>
 </project>

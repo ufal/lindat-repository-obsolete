@@ -35,7 +35,8 @@ import org.dspace.core.ConfigurationManager;
  * supply the value stored in the database if its sibling display value gets
  * selected from a choice list.
  *
- * @author  Brian S. Hughes
+ * based on class by  Brian S. Hughes
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 
@@ -68,6 +69,7 @@ public class DCInputsReader
      * definition file
      */
     private Map<String, List<List<Map<String, String>>>> formDefns  = null;
+    private Map<String, List<List<Map<String, String>>>> formDefnsExtra  = null;
 
     /**
      * Reference to the value-pairs map, computed from the forms definition file
@@ -107,6 +109,7 @@ public class DCInputsReader
     {
         whichForms = new HashMap<String, String>();
         formDefns  = new HashMap<String, List<List<Map<String, String>>>>();
+        formDefnsExtra  = new HashMap<String, List<List<Map<String, String>>>>();
         valuePairs = new HashMap<String, List<String>>();
 
         String uri = "file:" + new File(fileName).getAbsolutePath();
@@ -121,7 +124,8 @@ public class DCInputsReader
                 DocumentBuilder db = factory.newDocumentBuilder();
                 Document doc = db.parse(uri);
                 doNodes(doc);
-                checkValues();
+                checkValues(formDefns);
+                checkValues(formDefnsExtra);
         }
         catch (FactoryConfigurationError fe)
         {
@@ -180,6 +184,32 @@ public class DCInputsReader
         return lastInputSet;
     }
     
+
+    public DCInputSet getInputsExtra(String collectionHandle)
+                throws DCInputsReaderException
+    {
+        String formName = whichForms.get(collectionHandle);
+        if (formName == null) {
+            formName = whichForms.get(DEFAULT_COLLECTION);
+        }
+        if (formName == null) {
+            throw new DCInputsReaderException("No extra form designated as default");
+        }
+
+        // cache miss - construct new DCInputSet
+        List<List<Map<String, String>>> pages = formDefnsExtra.get(formName);
+        if ( pages == null ) {
+            throw new DCInputsReaderException("Missing the extra " + formName  + " form");
+        }
+        // no cache
+        return new DCInputSet(formName, new Vector( pages ), valuePairs);
+    }
+
+    public Map<String, List<List<Map<String, String>>>>
+    getInputsExtraDefinitions() {
+      return formDefnsExtra;
+    }
+
     /**
      * Return the number of pages the inputs span for a desginated collection
      * @param  collectionHandle   collection's unique Handle
@@ -224,8 +254,12 @@ public class DCInputsReader
                 }
                 else if (tagName.equals("form-definitions"))
                 {
-                        processDefinition(nd);
+                        processDefinition(nd, formDefns);
                         foundDefs = true;
+                }
+                else if (tagName.equals("form-definitions-extra"))
+                {
+                        processDefinition(nd, formDefnsExtra);
                 }
                 else if (tagName.equals("form-value-pairs"))
                 {
@@ -286,8 +320,10 @@ public class DCInputsReader
      * subsection is formed: <page number="#"> ...fields... </page> Each field
      * is formed from: dc-element, dc-qualifier, label, hint, input-type name,
      * required text, and repeatable flag.
+     *
+     * @todo UFAL/jmisutka check for duplicities in forms-definition-extra
      */
-    private void processDefinition(Node e)
+    private void processDefinition(Node e, Map<String, List<List<Map<String, String>>>> formDefns)
         throws SAXException, DCInputsReaderException
     {
         int numForms = 0;
@@ -333,11 +369,10 @@ public class DCInputsReader
                                                         Map<String, String> field = new HashMap<String, String>();
                                                         page.add(field);
                                                         processPageParts(formName, pgNum, nfld, field);
-                                                        String error = checkForDups(formName, field, pages);
-                                                        if (error != null)
-                                                        {
-                                                                throw new SAXException(error);
-                                                        }
+
+                                                        // we omit the duplicate validation, allowing multiple fields definition for 
+                                                        // the same metadata and different visibility/type-bind
+
                                                 }
                                         }
                                 } // ignore any child that is not a 'page'
@@ -576,7 +611,7 @@ public class DCInputsReader
      * Throws DCInputsReaderException if detects a missing value-pair.
      */
 
-    private void checkValues()
+    private void checkValues(Map<String, List<List<Map<String, String>>>> formDefns)
                 throws DCInputsReaderException
     {
         // Step through every field of every page of every form
@@ -605,18 +640,10 @@ public class DCInputsReader
                                                 throw new DCInputsReaderException(errString);
                                         }
                                 }
-                                // if visibility restricted, make sure field is not required
-                                String visibility = fld.get("visibility");
-                                if (visibility != null && visibility.length() > 0 )
-                                {
-                                        String required = fld.get("required");
-                                        if (required != null && required.length() > 0)
-                                        {
-                                                String errString = "Field '" + fld.get("label") +
-                                                                        "' is required but invisible";
-                                                throw new DCInputsReaderException(errString);
-                                        }
-                                }
+                    
+                    			// we omit the "required" and "visibility" validation, provided this must be checked in the processing class
+                    			// only when it makes sense (if the field isn't visible means that it is not applicable, therefore it can't be required)
+
                         }
                 }
         }

@@ -26,6 +26,8 @@ import org.dspace.core.Utils;
 import org.dspace.storage.rdbms.DatabaseManager;
 import org.dspace.storage.rdbms.TableRow;
 
+import cz.cuni.mff.ufal.DSpaceApi;
+
 import edu.sdsc.grid.io.FileFactory;
 import edu.sdsc.grid.io.GeneralFile;
 import edu.sdsc.grid.io.GeneralFileOutputStream;
@@ -59,7 +61,8 @@ import edu.sdsc.grid.io.srb.SRBFileSystem;
  * It would be worth re-considering a Listener pattern if another package needs to 
  * be notified of BitstreamStorageManager actions.</p> 
  *
- * @author Peter Breton, Robert Tansley, David Little, Nathan Sarr
+ * based on class by Peter Breton, Robert Tansley, David Little, Nathan Sarr
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class BitstreamStorageManager
@@ -107,10 +110,11 @@ public class BitstreamStorageManager
 	 * This prefix string marks registered bitstreams in internal_id
 	 */
 	private static final String REGISTERED_FLAG = "-R";
-
+	
     /* Read in the asset stores from the config. */
     static
     {
+    	DSpaceApi.load_dspace();
         List<Object> stores = new ArrayList<Object>();
 
 		// 'assetstore.dir' is always store number 0
@@ -853,7 +857,7 @@ public class BitstreamStorageManager
 	 *            The internal_id
 	 * @return The path based on the id without leading or trailing separators
 	 */
-	private static String getIntermediatePath(String iInternalId) {
+	public static String getIntermediatePath(String iInternalId) {
 		StringBuffer buf = new StringBuffer();
 		for (int i = 0; i < directoryLevels; i++) {
 			int digits = i * digitsPerLevel;
@@ -866,5 +870,7 @@ public class BitstreamStorageManager
 		buf.append(File.separator);
 		return buf.toString();
 	}
+	
+	
 
 }

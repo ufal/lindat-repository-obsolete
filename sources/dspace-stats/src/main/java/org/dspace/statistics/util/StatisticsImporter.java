@@ -11,7 +11,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.*;
@@ -43,7 +43,7 @@ public class StatisticsImporter
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     /** Solr server connection */
-    private static CommonsHttpSolrServer solr;
+    private static HttpSolrServer solr;
 
     /** GEOIP lookup service */
     private static LookupService geoipLookup;
@@ -468,7 +468,7 @@ public class StatisticsImporter
         {
             System.out.println("Writing to solr server at: " + sserver);
         }
-		solr = new CommonsHttpSolrServer(sserver);
+		solr = new HttpSolrServer(sserver);
 
 		metadataStorageInfo = SolrLogger.getMetadataStorageInfo();
         String dbfile = ConfigurationManager.getProperty("solr-statistics", "dbfile");

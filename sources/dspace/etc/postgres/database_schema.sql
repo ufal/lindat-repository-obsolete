@@ -1,9 +1,9 @@
 --
 -- database_schema.sql
 --
--- Version: $Revision$
+-- Version: $Revision: 6574 $
 --
--- Date:    $Date$
+-- Date:    $Date: 2011-08-19 03:10:34 -0500 (Fri, 19 Aug 2011) $
 --
 -- Copyright (c) 2002-2009, The DSpace Foundation.  All rights reserved.
 --
@@ -172,8 +172,11 @@ CREATE TABLE EPerson
   last_active         TIMESTAMP,
   sub_frequency       INTEGER,
   phone               VARCHAR(32),
-  netid               VARCHAR(64),
-  language            VARCHAR(64)
+  netid               VARCHAR(256),
+  language            VARCHAR(64),
+  welcome_info        VARCHAR(30),
+  last_login          VARCHAR(30),
+  can_edit_submission_metadata BOOL
 );
 
 -- index by email
@@ -295,7 +298,7 @@ CREATE TABLE MetadataFieldRegistry
 (
   metadata_field_id   INTEGER PRIMARY KEY DEFAULT NEXTVAL('metadatafieldregistry_seq'),
   metadata_schema_id  INTEGER NOT NULL REFERENCES MetadataSchemaRegistry(metadata_schema_id),
-  element             VARCHAR(64),
+  element             VARCHAR(128),
   qualifier           VARCHAR(64),
   scope_note          TEXT
 );
@@ -468,7 +471,8 @@ CREATE TABLE Handle
   handle_id        INTEGER PRIMARY KEY,
   handle           VARCHAR(256) UNIQUE,
   resource_type_id INTEGER,
-  resource_id      INTEGER
+  resource_id      INTEGER,
+  url              VARCHAR(2048)
 );
 
 -- index by handle, commonly looked up

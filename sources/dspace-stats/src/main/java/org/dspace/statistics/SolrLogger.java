@@ -7,12 +7,25 @@
  */
 package org.dspace.statistics;
 
-import com.Ostermiller.util.CSVParser;
-import com.Ostermiller.util.CSVPrinter;
-import com.maxmind.geoip.Location;
-import com.maxmind.geoip.LookupService;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import java.io.*;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -21,7 +34,7 @@ import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest;
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
 import org.apache.solr.client.solrj.response.FacetField;
@@ -31,8 +44,13 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.MapSolrParams;
-import org.dspace.content.*;
+import org.dspace.content.Bitstream;
+import org.dspace.content.Bundle;
 import org.dspace.content.Collection;
+import org.dspace.content.Community;
+import org.dspace.content.DCValue;
+import org.dspace.content.DSpaceObject;
+import org.dspace.content.Item;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
@@ -41,27 +59,28 @@ import org.dspace.statistics.util.DnsLookup;
 import org.dspace.statistics.util.LocationUtils;
 import org.dspace.statistics.util.SpiderDetector;
 
-import javax.servlet.http.HttpServletRequest;
-import java.net.URLEncoder;
-import java.sql.SQLException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import com.Ostermiller.util.CSVParser;
+import com.Ostermiller.util.CSVPrinter;
+import com.maxmind.geoip.Location;
+import com.maxmind.geoip.LookupService;
 
 /**
  * Static holder for a HttpSolrClient connection pool to issue
  * usage logging events to Solr from DSpace libraries, and some static query
  * composers.
  * 
- * @author ben at atmire.com
- * @author kevinvandevelde at atmire.com
- * @author mdiggory at atmire.com
+ * based on class by:
+ * Kevin Van de Velde (kevin at atmire dot com)
+ * Mark Diggory (markd at atmire dot com)
+ * Ben Bosman (ben at atmire dot com)
+ *
+ * modified for LINDAT/CLARIN
  */
 public class SolrLogger
 {
     private static final Logger log = Logger.getLogger(SolrLogger.class);
 	
-    private static final CommonsHttpSolrServer solr;
+    private static final HttpSolrServer solr;
 
     public static final String DATE_FORMAT_8601 = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
@@ -79,13 +98,13 @@ public class SolrLogger
         log.info("solr-statistics.server:" + ConfigurationManager.getProperty("solr-statistics", "server"));
         log.info("solr-statistics.dbfile:" + ConfigurationManager.getProperty("solr-statistics", "dbfile"));
     	
-        CommonsHttpSolrServer server = null;
+        HttpSolrServer server = null;
         
         if (ConfigurationManager.getProperty("solr-statistics", "server") != null)
         {
             try
             {
-                server = new CommonsHttpSolrServer(ConfigurationManager.getProperty("solr-statistics", "server"));
+                server = new HttpSolrServer(ConfigurationManager.getProperty("solr-statistics", "server"));
                 SolrQuery solrQuery = new SolrQuery()
                         .setQuery("type:2 AND id:1");
                 server.query(solrQuery);
@@ -214,7 +233,7 @@ public class SolrLogger
             }
             catch (Exception e)
             {
-    			log.error("Failed DNS Lookup for IP:" + ip);
+                log.warn("Failed DNS Lookup for IP:" + ip);
                 log.debug(e.getMessage(),e);
     		}
             
@@ -477,37 +496,58 @@ public class SolrLogger
         }
     }
 
+    public static void markRobotsByIP() 
+    { 
+        try { 
+            for(String ip : SpiderDetector.getSpiderIpAddresses()){ 
+                /* Result Process to alter record to be identified as a bot */ 
+                // Changed to using Impl block below 
+                ResultProcessor processor = new ResultProcessorDeleteAddImpl(); 
 
-    public static void markRobotsByIP()
-    {
-        for(String ip : SpiderDetector.getSpiderIpAddresses()){
-
-            try {
-
-                /* Result Process to alter record to be identified as a bot */
-                ResultProcessor processor = new ResultProcessor(){
-                    public void process(SolrDocument doc) throws IOException, SolrServerException {
-                        doc.removeFields("isBot");
-                        doc.addField("isBot", true);
-                        SolrInputDocument newInput = ClientUtils.toSolrInputDocument(doc);
-                        solr.add(newInput);
-                        log.info("Marked " + doc.getFieldValue("ip") + " as bot");
-                    }
-                };
-
-                /* query for ip, exclude results previously set as bots. */
-                processor.execute("ip:"+ip+ "* AND -isBot:true");
-
-                solr.commit();
-
-            } catch (Exception e) {
-                log.error(e.getMessage(),e);
-            }
+                /* query for ip, exclude results previously set as bots. */ 
+                if (ip.matches("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+")) { 
+                    // Full 4 octet string, run as-is. 
+                    processor.execute("ip:" + ip + " AND -isBot:true"); 
+                } else if (ip.matches(".*\\.$")) { 
+                    // didn't match full-octet, but ends in period, we assume it was something like #.#.#. or #.#. 
+                    processor.execute("ip:" + ip + "* AND -isBot:true"); 
+                } else if (ip.matches(".*[0-9]$")) { 
+                    // ends with a number, and is not a full 4-octet as first entry, so we append .* 
+                    processor.execute("ip:" + ip + ".* AND -isBot:true"); 
+                } else { 
+                    log.error("Unexpected IP value: " + ip); 
+                } 
+            } 
+            solr.commit(); 
+        } catch (Exception e) { 
+                log.error(e.getMessage(),e); 
+        } 
+    } 
 
 
-        }
 
-    }
+    private static class ResultProcessorDeleteAddImpl extends ResultProcessor { 
+
+        public ResultProcessorDeleteAddImpl() { 
+        } 
+
+        public void process(SolrDocument doc) throws IOException, SolrServerException { 
+            doc.removeFields("isBot"); 
+            doc.addField("isBot", true); 
+            SolrInputDocument newInput = ClientUtils.toSolrInputDocument(doc); 
+            Integer type = (Integer) doc.getFieldValue("type"); 
+            Integer id = (Integer) doc.getFieldValue("id"); 
+            String ip = (String) doc.getFieldValue("ip"); 
+
+            String time = DateFormatUtils.formatUTC((Date)doc.getFieldValue("time"), SolrLogger.DATE_FORMAT_8601); 
+
+            //Uniquely remove previous entry. Should be safe to assume only one request to a specified resource by a single user per millisecond. 
+            solr.deleteByQuery("type:" + type + " AND id:" + id + " AND ip:" + ip + " AND time:[" + time + " TO " + time +"]"); 
+
+            solr.add(newInput); 
+            log.info("Marked " + doc.getFieldValue("ip") + " as bot"); 
+        } 
+    } 
 
     public static void markRobotByUserAgent(String agent){
         try {
@@ -1105,7 +1145,7 @@ public class SolrLogger
                 ContentStreamUpdateRequest contentStreamUpdateRequest = new ContentStreamUpdateRequest("/update/csv");
                 contentStreamUpdateRequest.setParam("stream.contentType", "text/plain;charset=utf-8");
                 contentStreamUpdateRequest.setAction(AbstractUpdateRequest.ACTION.COMMIT, true, true);
-                contentStreamUpdateRequest.addFile(tempCsv);
+                contentStreamUpdateRequest.addFile(tempCsv, "text/plain;charset=utf-8");
 
                 solr.request(contentStreamUpdateRequest);
             }

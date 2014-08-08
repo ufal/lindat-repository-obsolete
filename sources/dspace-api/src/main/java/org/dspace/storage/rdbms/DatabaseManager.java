@@ -7,11 +7,7 @@
  */
 package org.dspace.storage.rdbms;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
@@ -46,8 +42,8 @@ import org.dspace.core.Context;
 /**
  * Executes SQL queries.
  * 
- * @author Peter Breton
- * @author Jim Downing
+ * based on class by Peter Breton and Jim Downing
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class DatabaseManager
@@ -1111,14 +1107,22 @@ public class DatabaseManager
                             row.setColumn(name, (int) longValue);
                         }
                         else
-                        {
-                            row.setColumn(name, longValue);
+                        { 
+                          row.setColumn(name, longValue);
                         }
                     }
                     else
-                    {
-                        row.setColumn(name, results.getInt(i));
-                    }
+                        { // Not Oracle
+                               if (jdbctype == Types.INTEGER)
+                               {
+                                  row.setColumn(name, results.getInt(i));
+                               }
+                               else // NUMERIC or DECIMAL
+                               {
+                                 row.setColumn(name, results.getLong(i));
+                                 // FIXME should be BigDecimal if TableRow supported that
+                               }
+                        }
                     break;
 
                 case Types.DECIMAL:
@@ -1914,4 +1918,49 @@ public class DatabaseManager
 
         System.out.println("Connected successfully!\n");
     }
+
+    public static void applyOffsetAndLimit(StringBuffer query, List<Serializable> params, int offset, int limit){
+        if(!isOracle()){
+            offsetAndLimitPostgresQuery(query,params,offset,limit);
+        }else{
+            offsetAndLimitOracleQuery(query,params,offset,limit);
+        }
+    }
+
+    private static void offsetAndLimitPostgresQuery(StringBuffer query , List<Serializable> params, int offset, int limit){
+        query.append(" OFFSET ? LIMIT ?");
+        params.add(offset);
+        params.add(limit);
+    }
+
+    private static void offsetAndLimitOracleQuery(StringBuffer query , List<Serializable> params, int offset, int limit)
+    {
+        // prepare the LIMIT clause
+        if (limit > 0 || offset > 0)
+        {
+            query.insert(0, "SELECT /*+ FIRST_ROWS(n) */ rec.*, ROWNUM rnum  FROM (");
+            query.append(") ");
+        }
+
+        if (limit > 0)
+        {
+            query.append("rec WHERE rownum<=? ");
+            if (offset > 0)
+            {
+                params.add(Integer.valueOf(limit + offset));
+            }
+            else
+            {
+                params.add(Integer.valueOf(limit));
+            }
+        }
+
+        if (offset > 0)
+        {
+            query.insert(0, "SELECT * FROM (");
+            query.append(") WHERE rnum>?");
+            params.add(Integer.valueOf(offset));
+        }
+    }
+
 }

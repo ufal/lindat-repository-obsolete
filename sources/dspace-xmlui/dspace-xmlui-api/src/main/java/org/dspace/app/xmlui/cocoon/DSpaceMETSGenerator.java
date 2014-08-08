@@ -73,7 +73,8 @@ import org.xml.sax.SAXException;
  * is provided then the logical structType will be rendered, otherwise none will. The default operation is to
  * render all structure types.
  * 
- * @author scott phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class DSpaceMETSGenerator extends AbstractGenerator
 {
@@ -163,7 +164,7 @@ public class DSpaceMETSGenerator extends AbstractGenerator
                         // all non-repository types need integer IDs
                         if ("repository".equals(type))
                         {
-                                if (HandleManager.getPrefix().equals(strid))
+                                if (HandleManager.isSupportedPrefix(strid))
                                 {
                                     adapter = new RepositoryAdapter(context, contextPath);
                                 }

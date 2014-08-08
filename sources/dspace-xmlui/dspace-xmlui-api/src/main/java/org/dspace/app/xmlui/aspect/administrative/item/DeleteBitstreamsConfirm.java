@@ -27,7 +27,8 @@ import org.dspace.content.BitstreamFormat;
 /**
  * Present the user with a list of not-yet-but-soon-to-be-deleted-bitstreams.
  * 
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class DeleteBitstreamsConfirm extends AbstractDSpaceTransformer   
 {
@@ -79,7 +80,7 @@ public class DeleteBitstreamsConfirm extends AbstractDSpaceTransformer
 		}
 
 		// DIVISION: bitstream-confirm-delete
-		Division deleted = body.addInteractiveDivision("bitstreams-confirm-delete",contextPath+"/admin/item",Division.METHOD_POST,"primary administrative item");
+		Division deleted = body.addInteractiveDivision("bitstreams-confirm-delete",contextPath+"/admin/item",Division.METHOD_POST,"alert alert-danger");
 		deleted.setHead(T_head1);
 		deleted.addPara(T_para1);
 

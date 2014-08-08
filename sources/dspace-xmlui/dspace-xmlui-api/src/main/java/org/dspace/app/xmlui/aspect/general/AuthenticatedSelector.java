@@ -11,12 +11,22 @@ import java.util.Map;
 
 import org.apache.avalon.framework.logger.AbstractLogEnabled;
 import org.apache.avalon.framework.parameters.Parameters;
+import org.apache.cocoon.environment.ObjectModelHelper;
+import org.apache.cocoon.environment.Request;
 import org.apache.cocoon.selection.Selector;
 import org.apache.log4j.Logger;
 import org.dspace.app.xmlui.utils.ContextUtil;
+import org.dspace.app.xmlui.utils.HandleUtil;
 import org.dspace.authorize.AuthorizeManager;
+import org.dspace.content.Bitstream;
+import org.dspace.content.Bundle;
+import org.dspace.content.DSpaceObject;
+import org.dspace.content.Item;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
+
+import cz.cuni.mff.ufal.DSpaceApi;
+import cz.cuni.mff.ufal.lindat.utilities.interfaces.IFunctionalities;
 
 /**
  * This simple selector operates on the authenticated DSpace user and selects
@@ -42,7 +52,8 @@ import org.dspace.eperson.EPerson;
  * Remember an administrator is also an eperson so if you need to check for
  * administrators distinct from epersons that select must come first.
  * 
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 
 public class AuthenticatedSelector extends AbstractLogEnabled implements
@@ -55,18 +66,41 @@ public class AuthenticatedSelector extends AbstractLogEnabled implements
     public static final String EPERSON = "eperson";
 
     public static final String ADMINISTRATOR = "administrator";
-
+    
     /**
      * Determine if the authenticated eperson matches the given expression.
      */
-    public boolean select(String expression, Map objectModel,
-            Parameters parameters)
+    public boolean select(String expression, Map objectModel, Parameters parameters)
     {
-        try
-        {
+        try {
             Context context = ContextUtil.obtainContext(objectModel);
-
             EPerson eperson = context.getCurrentUser();
+            
+            /** UFAL: first check the dtoken */
+            Request request = ObjectModelHelper.getRequest(objectModel);
+            String dtoken = request.getParameter("dtoken");
+            if(dtoken!=null && !dtoken.isEmpty()) {            
+	            IFunctionalities manager = DSpaceApi.getFunctionalityManager();
+	            manager.openSession();
+	            boolean tokenVerified = true;
+                DSpaceObject dso = HandleUtil.obtainHandle(objectModel);
+                if (dso instanceof Item) { // should be an item
+                	Item item = (Item) dso;
+        			Bundle[] originals = item.getBundles("ORIGINAL");
+        			for (Bundle original : originals) {
+        				for(Bitstream bitstream : original.getBitstreams()) { // all bitstream should have the same and valid token
+        					tokenVerified = manager.verifyToken(bitstream.getID(), dtoken);
+        					if(!tokenVerified) break;
+        				}
+        			}                	
+                }
+	            manager.closeSession();
+	            
+	            if(tokenVerified) {
+	            	return true;
+	            }
+            }            
+            /** UFAL: dtoken checking done */
 
             if (eperson == null)
             {

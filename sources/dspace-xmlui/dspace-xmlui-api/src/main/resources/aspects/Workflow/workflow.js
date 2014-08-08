@@ -13,12 +13,14 @@ importClass(Packages.org.apache.cocoon.environment.http.HttpEnvironment);
 importClass(Packages.org.apache.cocoon.servlet.multipart.Part);
 
 importClass(Packages.org.dspace.handle.HandleManager);
+importClass(Packages.org.dspace.content.Item);
 importClass(Packages.org.dspace.core.Constants);
 importClass(Packages.org.dspace.workflow.WorkflowItem);
 importClass(Packages.org.dspace.workflow.WorkflowManager);
 importClass(Packages.org.dspace.content.WorkspaceItem);
 importClass(Packages.org.dspace.authorize.AuthorizeManager);
 
+importClass(Packages.cz.cuni.mff.ufal.dspace.app.xmlui.aspect.workflow.FlowWorkflowUtils);
 importClass(Packages.org.dspace.app.xmlui.utils.ContextUtil);
 importClass(Packages.org.dspace.app.xmlui.cocoon.HttpServletRequestCocoonWrapper);
 importClass(Packages.org.dspace.app.xmlui.aspect.workflow.FlowUtils);
@@ -90,6 +92,30 @@ function sendPageAndWait(uri,bizData)
     cocoon.sendPageAndWait(uri,bizData);
 }
 
+/*
+ * UFAL - Move this item to another collection
+ */
+function doMoveWorkflowItem(handle, workflowID)
+{
+    sendPageAndWait("workflow/item/move", {"handle": handle, "workflowID": workflowID});
+
+    if (cocoon.request.get("submit_cancel"))
+    {
+        return null;
+    }
+    else if (cocoon.request.get("submit_move"))
+    {
+        var collectionID = cocoon.request.get("collectionID");
+        if (!collectionID)
+        {
+            throw "Unable to find collection, no collection id supplied.";
+        }                       
+
+        return FlowWorkflowUtils.processMoveWorkflowItem(getDSContext(), workflowID, collectionID);
+    }    
+}
+
+
 /**
  * Send the given page and DO NOT wait for the flow to be continued. Execution will
  * proceed as normal. Use this method to add a flow=true parameter. This allows the
@@ -122,8 +148,8 @@ function doWorkflow()
     }
 
     // Get the collection handle for this item.
-    var handle = WorkflowItem.find(getDSContext(), workflowID).getCollection().getHandle();
-
+    var handle = WorkflowItem.find(getDSContext(), workflowID).getCollection().getHandle();    
+    var rawWorkflowID = workflowID;
     // Specify that we are working with workflows.
     //(specify "W" for workflow item, for FlowUtils.findSubmission())
     workflowID = "W"+workflowID;
@@ -189,7 +215,37 @@ function doWorkflow()
             getDSContext().complete();
             cocoon.exit();
         }
+        else if (cocoon.request.get("submit_curate"))
+        {
 
+            var contextPath = cocoon.request.getContextPath();
+            cocoon.redirectTo(contextPath+"/admin/curate?handle="+handle+"&workflowID="+workflowID, true);
+            getDSContext().complete();
+            cocoon.exit();
+        }
+        else if (cocoon.request.get("submit_move"))
+        {
+            // UFAL - Move this workflow item to another collection
+            var reclaimed = doMoveWorkflowItem(handle, rawWorkflowID);
+
+            if (reclaimed == null) {
+                // cancelled
+            }
+            else if (reclaimed) {
+                handle = WorkflowItem.find(getDSContext(), rawWorkflowID).getCollection().getHandle();
+                var contextPath = cocoon.request.getContextPath();
+                cocoon.redirectTo(contextPath+"/handle/"+handle+"/workflow?workflowID="+rawWorkflowID,true);
+                getDSContext().complete();
+                cocoon.exit();
+            }
+            else {
+                var contextPath = cocoon.request.getContextPath();
+                cocoon.redirectTo(contextPath+"/submissions",true);
+                getDSContext().complete();
+                cocoon.exit();
+            }
+        }
+ 
     } while (1==1)
 
 

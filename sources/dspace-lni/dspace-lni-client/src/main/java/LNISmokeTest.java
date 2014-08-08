@@ -52,7 +52,7 @@ import org.jdom.output.XMLOutputter;
  * http://user:passwd@mydsapce.edu/dspace-lni/DSpaceLNI \ -f 123.45/67
  * 
  * @author Larry Stone
- * @version $Revision$
+ * @version $Revision: 5845 $
  */
 public class LNISmokeTest
 {

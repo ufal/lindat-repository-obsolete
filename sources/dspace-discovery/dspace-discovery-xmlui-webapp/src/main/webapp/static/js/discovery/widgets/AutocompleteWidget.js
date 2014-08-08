@@ -33,7 +33,7 @@ AjaxSolr.AutocompleteWidget = AjaxSolr.AbstractFacetWidget.extend({
           return facet.text;
         }
       }).result(function(e, facet) {
-          $(this).val(facet.value);
+          $(this).val("\"" + facet.value+"\"");
 //        self.requestSent = true;
 //        if (self.manager.store.addByValue('fq', facet.field + ':' + facet.value)) {
 //          self.manager.doRequest(0);

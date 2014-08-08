@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.dspace.app.util.*;
 import org.dspace.app.xmlui.utils.UIException;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.authorize.AuthorizeManager;
 import org.dspace.content.Collection;
 import org.dspace.content.Item;
 import org.dspace.content.WorkspaceItem;
@@ -35,10 +36,12 @@ import java.util.List;
  * together in a meaningful order but all actually processing
  * is done through these various processes.
  *
- * @author Bram De Schouwer (bram.deschouwer at dot com)
- * @author Kevin Van de Velde (kevin at atmire dot com)
- * @author Ben Bosman (ben at atmire dot com)
- * @author Mark Diggory (markd at atmire dot com)
+ * based on class by: 
+ * Bram De Schouwer (bram.deschouwer at dot com)
+ * Kevin Van de Velde (kevin at atmire dot com)
+ * Ben Bosman (ben at atmire dot com)
+ * Mark Diggory (markd at atmire dot com)
+ * modified for LINDAT/CLARIN
  */
 
 public class FlowUtils {
@@ -144,6 +147,9 @@ public class FlowUtils {
      */
     public static void authorizeWorkflowItem(Context context, String workflowItemId) throws AuthorizeException, SQLException {
         WorkflowItem workflowItem = WorkflowItem.find(context, Integer.parseInt(workflowItemId.substring(1)));
+        if(AuthorizeManager.isAdmin(context)) {
+            return;
+        }
         if((workflowItem.getState() == WorkflowManager.WFSTATE_STEP1 ||
                 workflowItem.getState() == WorkflowManager.WFSTATE_STEP2 ||
                 workflowItem.getState() == WorkflowManager.WFSTATE_STEP3) && workflowItem.getOwner().getID() != context.getCurrentUser().getID()){

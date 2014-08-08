@@ -45,3 +45,4 @@ public class DiscoveryRecentSubmissionsConfiguration {
         this.type = type;
     }
 }
+

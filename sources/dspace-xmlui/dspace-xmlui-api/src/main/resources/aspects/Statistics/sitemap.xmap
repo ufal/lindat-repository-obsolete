@@ -12,6 +12,7 @@
 	<map:components>
 		<map:transformers>
 			<map:transformer name="StatisticsTransformer" src="org.dspace.app.xmlui.aspect.statistics.StatisticsTransformer"/>
+			<map:transformer name="GAStatisticsTransformer" src="cz.cuni.mff.ufal.dspace.app.xmlui.aspect.statistics.GAStatisticsTransformer"/>
 			<map:transformer name="Navigation" src="org.dspace.app.xmlui.aspect.statistics.Navigation"/>
             <map:transformer name="RestrictedItem" src="org.dspace.app.xmlui.aspect.artifactbrowser.RestrictedItem"/>
         </map:transformers>
@@ -31,6 +32,7 @@
 
             <!--Make sure that the home page also receives statistics-->
             <map:match pattern="">
+            	<map:transform type="StatisticsTransformer"/>
                 <map:match type="StatisticsAuthorizedMatcher" pattern="READ">
                     <map:transform type="Navigation"/>
                 </map:match>
@@ -40,6 +42,13 @@
             <map:match pattern="statistics-home">
                 <map:match type="StatisticsAuthorizedMatcher" pattern="READ">
                     <map:transform type="StatisticsTransformer"/>
+                </map:match>
+            </map:match>
+
+            <!--GA page statistics-->
+            <map:match pattern="statistics-google">
+                <map:match type="StatisticsAuthorizedMatcher" pattern="READ">
+                    <map:transform type="GAStatisticsTransformer"/>
                 </map:match>
             </map:match>
 
@@ -72,6 +81,30 @@
                     </map:select>
                 </map:match>
             </map:match>
+
+            <!--Match google statistics-->
+            <map:match pattern="handle/*/*/statistics-google">
+                <map:match type="StatisticsAuthorizedMatcher" pattern="READ">
+                    <map:transform type="GAStatisticsTransformer"/>
+                </map:match>
+
+                <map:match type="StatisticsAuthorizedMatcher" pattern="!READ">
+                    <map:select type="AuthenticatedSelector">
+                            <map:when test="eperson">
+                                    <map:transform type="RestrictedItem"/>
+                                    <map:serialize/>
+                            </map:when>
+                            <map:otherwise>
+                                    <map:act type="StartAuthentication">
+                                            <map:parameter name="header" value="xmlui.ArtifactBrowser.RestrictedItem.auth_header"/>
+                                            <map:parameter name="message" value="xmlui.ArtifactBrowser.RestrictedItem.auth_message"/>
+                                    </map:act>
+                                    <map:serialize/>
+                            </map:otherwise>
+                    </map:select>
+                </map:match>
+            </map:match>
+
 
 
 			<map:serialize type="xml"/>

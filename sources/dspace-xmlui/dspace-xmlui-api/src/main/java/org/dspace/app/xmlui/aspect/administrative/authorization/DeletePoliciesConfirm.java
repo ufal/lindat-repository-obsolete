@@ -22,7 +22,8 @@ import org.dspace.app.xmlui.wing.element.Table;
 import org.dspace.authorize.ResourcePolicy;
 
 /**
- * @author Alexey Maslov
+ * based on class by Alexey Maslov
+ * modified for LINDAT/CLARIN
  */
 public class DeletePoliciesConfirm extends AbstractDSpaceTransformer   
 {	
@@ -78,7 +79,7 @@ public class DeletePoliciesConfirm extends AbstractDSpaceTransformer
 		}
  
 		// DIVISION: policies-confirm-delete
-    	Division deleted = body.addInteractiveDivision("policies-confirm-delete",contextPath+"/admin/authorize",Division.METHOD_POST,"primary administrative authorization");
+    	Division deleted = body.addInteractiveDivision("policies-confirm-delete",contextPath+"/admin/authorize",Division.METHOD_POST,"alert alert-danger");
     	deleted.setHead(T_confirm_head);
     	deleted.addPara(T_confirm_para);
     	

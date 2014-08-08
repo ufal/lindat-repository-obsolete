@@ -8,6 +8,11 @@
 package org.dspace.content;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
@@ -16,6 +21,7 @@ import org.dspace.eperson.Group;
 
 /**
  * Abstract base class for DSpace objects
+ * modified for LINDAT/CLARIN
  */
 public abstract class DSpaceObject
 {
@@ -32,11 +38,12 @@ public abstract class DSpaceObject
     }
 
     /**
-     * Add a string to the cache of event details.  Automatically
-     * separates entries with a comma.
-     * Subclass can just start calling addDetails, since it creates
-     * the cache if it needs to.
-     * @param d detail string to add.
+     * Add a string to the cache of event details. Automatically separates
+     * entries with a comma. Subclass can just start calling addDetails, since
+     * it creates the cache if it needs to.
+     * 
+     * @param d
+     *            detail string to add.
      */
     protected void addDetails(String d)
     {
@@ -75,43 +82,53 @@ public abstract class DSpaceObject
     /**
      * Get the Handle of the object. This may return <code>null</code>
      * 
-     * @return Handle of the object, or <code>null</code> if it doesn't have
-     *         one
+     * @return Handle of the object, or <code>null</code> if it doesn't have one
      */
     public abstract String getHandle();
 
     /**
-     * Get a proper name for the object. This may return <code>null</code>.
-     * Name should be suitable for display in a user interface.
-     *
-     * @return Name for the object, or <code>null</code> if it doesn't have
-     *         one
+     * Get a proper name for the object. This may return <code>null</code>. Name
+     * should be suitable for display in a user interface.
+     * 
+     * @return Name for the object, or <code>null</code> if it doesn't have one
      */
     public abstract String getName();
 
     /**
-     * Generic find for when the precise type of a DSO is not known, just the
-     * a pair of type number and database ID.
-     *
-     * @param context - the context
-     * @param type - type number
-     * @param id - id within table of type'd objects
+     * Generic find for when the precise type of a DSO is not known, just the a
+     * pair of type number and database ID.
+     * 
+     * @param context
+     *            - the context
+     * @param type
+     *            - type number
+     * @param id
+     *            - id within table of type'd objects
      * @return the object found, or null if it does not exist.
-     * @throws SQLException only upon failure accessing the database.
+     * @throws SQLException
+     *             only upon failure accessing the database.
      */
     public static DSpaceObject find(Context context, int type, int id)
-        throws SQLException
+            throws SQLException
     {
         switch (type)
         {
-            case Constants.BITSTREAM : return Bitstream.find(context, id);
-            case Constants.BUNDLE    : return Bundle.find(context, id);
-            case Constants.ITEM      : return Item.find(context, id);
-            case Constants.COLLECTION: return Collection.find(context, id);
-            case Constants.COMMUNITY : return Community.find(context, id);
-            case Constants.GROUP     : return Group.find(context, id);
-            case Constants.EPERSON   : return EPerson.find(context, id);
-            case Constants.SITE      : return Site.find(context, id);
+        case Constants.BITSTREAM:
+            return Bitstream.find(context, id);
+        case Constants.BUNDLE:
+            return Bundle.find(context, id);
+        case Constants.ITEM:
+            return Item.find(context, id);
+        case Constants.COLLECTION:
+            return Collection.find(context, id);
+        case Constants.COMMUNITY:
+            return Community.find(context, id);
+        case Constants.GROUP:
+            return Group.find(context, id);
+        case Constants.EPERSON:
+            return EPerson.find(context, id);
+        case Constants.SITE:
+            return Site.find(context, id);
         }
         return null;
     }
@@ -140,7 +157,8 @@ public abstract class DSpaceObject
     {
         if (action == Constants.ADMIN)
         {
-            throw new IllegalArgumentException("Illegal call to the DSpaceObject.getAdminObject method");
+            throw new IllegalArgumentException(
+                    "Illegal call to the DSpaceObject.getAdminObject method");
         }
         return this;
     }
@@ -153,12 +171,59 @@ public abstract class DSpaceObject
      * current one, where allowed ADMIN actions imply allowed ADMIN actions on
      * the object self.
      * 
-     * @return the dspace object that "own" the current object in
-     *         the hierarchy
+     * @return the dspace object that "own" the current object in the hierarchy
      * @throws SQLException
      */
     public DSpaceObject getParentObject() throws SQLException
     {
         return null;
+    }
+
+    /**
+     * 
+     * Returns the principal community for given object
+     * 
+     * @return Returns the principal community of the object or null if not defined/applicable 
+     * @throws SQLException
+     */
+    public Community getPrincipalCommunity() throws SQLException
+    {
+        Community principalCommunity = null;
+        int type = getType();
+        if (type == Constants.COMMUNITY)
+        {
+            principalCommunity = (Community) this;
+        }
+        else
+        {
+            Collection collection = null;            
+
+            if (type == Constants.COLLECTION)
+            {
+                collection = (Collection) this;
+            }
+            else if (type == Constants.ITEM)
+            {
+                collection = ((Item) this).getOwningCollection();
+            }
+
+            if (collection != null)                
+            {
+                Community[] communities = collection.getCommunities();
+                if(communities.length > 0)
+                {
+                    Arrays.sort(communities, new Comparator<Community>()                        
+                    {
+                        public int compare(Community c1, Community c2)
+                        {
+                            return c2.getID() - c2.getID();
+                        }
+                    });
+                    principalCommunity = communities[0];
+                }
+            }
+        }
+        return principalCommunity;
+
     }
 }

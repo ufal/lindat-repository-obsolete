@@ -40,7 +40,8 @@ import org.dspace.xmlworkflow.XmlWorkflowManager;
  * @see org.dspace.app.util.SubmissionStepConfig
  * @see org.dspace.submit.AbstractProcessingStep
  * 
- * @author Tim Donohue
+ * based on class by Tim Donohue
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class CompleteStep extends AbstractProcessingStep
@@ -87,13 +88,17 @@ public class CompleteStep extends AbstractProcessingStep
         {
             if(ConfigurationManager.getProperty("workflow","workflow.framework").equals("xmlworkflow")){
                 try{
+                	log.info ( "GOT BEFORE WORKFLOWMANAGER START" ) ;
                     XmlWorkflowManager.start(context, (WorkspaceItem) subInfo.getSubmissionItem());
+                    log.info ( "GOT AFTER WORKFLOWMANAGER STOP" ) ;
                 }catch (Exception e){
                     log.error(LogManager.getHeader(context, "Error while starting xml workflow", "Item id: " + subInfo.getSubmissionItem().getItem().getID()), e);
                     throw new ServletException(e);
                 }
             }else{
+            	log.info ( "GOT BEFORE WORKFLOWMANAGER START" ) ;
                 WorkflowManager.start(context, (WorkspaceItem) subInfo.getSubmissionItem());
+                log.info ( "GOT AFTER WORKFLOWMANAGER STOP" ) ;
             }
             success = true;
         }
@@ -105,12 +110,11 @@ public class CompleteStep extends AbstractProcessingStep
         finally
         {
         // commit changes to database
-            if (success)
-            {
-                context.commit();
+            if (success) {
+            	context.commit();
             }
-            else
-            {
+            else {
+                log.debug("doProcessing.CompleteStep.java: Commit was unsuccessful");
                 context.getDBConnection().rollback();
             }
         }

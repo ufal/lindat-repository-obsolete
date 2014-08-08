@@ -25,7 +25,8 @@ import org.dspace.content.MetadataSchema;
 /**
  * Prompt the user to determin if they really want to delete the displayed schemas.
  * 
- * @author Scott phillips
+ * @author  * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class DeleteMetadataSchemaConfirm extends AbstractDSpaceTransformer   
 {
@@ -80,7 +81,7 @@ public class DeleteMetadataSchemaConfirm extends AbstractDSpaceTransformer
 		}
  
 		// DIVISION: metadata-schema-confirm-delete
-    	Division deleted = body.addInteractiveDivision("metadata-schema-confirm-delete",contextPath+"/admin/metadata-registry",Division.METHOD_POST,"primary administrative metadata-registry");
+    	Division deleted = body.addInteractiveDivision("metadata-schema-confirm-delete",contextPath+"/admin/metadata-registry",Division.METHOD_POST,"alert alert-danger");
     	deleted.setHead(T_head);
     	deleted.addPara(T_para1);
     	Para warning = deleted.addPara();

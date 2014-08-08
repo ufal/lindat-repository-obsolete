@@ -35,6 +35,8 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
@@ -46,9 +48,12 @@ import java.util.List;
  * <p/>
  * See the implementors SimpleSearch.
  *
- * @author Kevin Van de Velde (kevin at atmire dot com)
- * @author Mark Diggory (markd at atmire dot com)
- * @author Ben Bosman (ben at atmire dot com)
+ * based on class by:
+ * Kevin Van de Velde (kevin at atmire dot com)
+ * Mark Diggory (markd at atmire dot com)
+ * Ben Bosman (ben at atmire dot com)
+ *
+ * modified for LINDAT/CLARIN
  */
 public abstract class AbstractSearch extends AbstractDSpaceTransformer implements CacheableProcessingComponent{
 
@@ -106,6 +111,7 @@ public abstract class AbstractSearch extends AbstractDSpaceTransformer implement
      * The options for results per page
      */
     private static final int[] RESULTS_PER_PAGE_PROGRESSION = {5, 10, 20, 40, 60, 80, 100};
+    private static final int RESULTS_PER_PAGE_MAX = 100;
 
     /**
      * Cached validity object
@@ -254,11 +260,13 @@ public abstract class AbstractSearch extends AbstractDSpaceTransformer implement
             int itemsTotal = (int) queryResults.getTotalSearchResults();
             int firstItemIndex = (int) this.queryResults.getStart() + 1;
             int lastItemIndex = (int) this.queryResults.getStart() + queryResults.getDspaceObjects().size();
+            
+            results.setHead(T_head1_none.parameterize(firstItemIndex,lastItemIndex, itemsTotal));
 
             //if (itemsTotal < lastItemIndex)
             //    lastItemIndex = itemsTotal;
             int currentPage = this.queryResults.getStart() / this.queryResults.getMaxResults() + 1;
-            int pagesTotal = (int) ((this.queryResults.getTotalSearchResults() - 1) / this.queryResults.getMaxResults()) + 1;
+            int pagesTotal = (int) Math.ceil((double)this.queryResults.getTotalSearchResults() / this.queryResults.getMaxResults());
             Map<String, String> parameters = new HashMap<String, String>();
             parameters.put("page", "{pageNum}");
             String pageURLMask = generateURL(parameters);
@@ -267,7 +275,7 @@ public abstract class AbstractSearch extends AbstractDSpaceTransformer implement
             if(fqs != null) {
                 StringBuilder maskBuilder = new StringBuilder(pageURLMask);
                 for (String fq : fqs) {
-                    maskBuilder.append("&fq=").append(fq);
+                    maskBuilder.append("&fq=").append(URLEncoder.encode(fq, "UTF8"));
                 }
 
                 pageURLMask = maskBuilder.toString();
@@ -309,6 +317,7 @@ public abstract class AbstractSearch extends AbstractDSpaceTransformer implement
             }
 
         } else {
+	    results.setHead("No items found");
             results.addPara(T_no_results);
         }
         //}// Empty query
@@ -579,7 +588,8 @@ public abstract class AbstractSearch extends AbstractDSpaceTransformer implement
 
     protected int getParameterRpp() {
         try {
-            return Integer.parseInt(ObjectModelHelper.getRequest(objectModel).getParameter("rpp"));
+        	int rpp = Integer.parseInt(ObjectModelHelper.getRequest(objectModel).getParameter("rpp"));
+            return rpp<=RESULTS_PER_PAGE_MAX?rpp:RESULTS_PER_PAGE_MAX;
         }
         catch (Exception e) {
             return 10;
@@ -656,93 +666,81 @@ public abstract class AbstractSearch extends AbstractDSpaceTransformer implement
     }
 
 
-    protected void buildSearchControls(Division div)
+    protected void buildSearchControls(Division div) 
             throws WingException, SQLException {
 
-        org.dspace.app.xmlui.wing.element.List controlsList = div.addList("search-controls", org.dspace.app.xmlui.wing.element.List.TYPE_FORM);
-
-
-        controlsList.setHead(T_sort_head);
-        //Table controlsTable = div.addTable("search-controls", 1, 4);
-
-        org.dspace.app.xmlui.wing.element.Item controlsItem = controlsList.addItem();
-        // Create a control for the number of records to display
-        controlsItem.addContent(T_rpp);
-        Select rppSelect = controlsItem.addSelect("rpp");
-        for (int i : RESULTS_PER_PAGE_PROGRESSION) {
-            rppSelect.addOption((i == getParameterRpp()), i, Integer.toString(i));
-        }
-
-        /*
-        Cell groupCell = controlsRow.addCell();
-        try {
-            // Create a drop down of the different sort columns available
-            groupCell.addContent(T_group_by);
-            Select groupSelect = groupCell.addSelect("group_by");
-            groupSelect.addOption(false, "none", T_group_by_none);
-
-            
-            String[] groups = {"publication_grp"};
-            for (String group : groups) {
-                groupSelect.addOption(group.equals(getParameterGroup()), group,
-                        message("xmlui.ArtifactBrowser.AbstractSearch.group_by." + group));
-            }
-
-        }
-        catch (Exception se) {
-            throw new WingException("Unable to get group options", se);
-        }
-        */
-        
-        // Create a drop down of the different sort columns available
-        controlsItem.addContent(T_sort_by);
-        Select sortSelect = controlsItem.addSelect("sort_by");
-        sortSelect.addOption(false, "score", T_sort_by_relevance);
 
         DSpaceObject dso = HandleUtil.obtainHandle(objectModel);
         DiscoveryConfiguration discoveryConfiguration = SearchUtils.getDiscoveryConfiguration(dso);
 
-        DiscoverySortConfiguration searchSortConfiguration = discoveryConfiguration.getSearchSortConfiguration();
-        if(searchSortConfiguration != null){
-            for (DiscoverySortFieldConfiguration sortFieldConfiguration : searchSortConfiguration.getSortFields()) {
-                String sortField = SearchUtils.getSearchService().toSortFieldIndex(sortFieldConfiguration.getMetadataField(), sortFieldConfiguration.getType());
+        Division searchControlsGear = div.addDivision("masked-page-control").addDivision("search-controls-gear", "controls-gear-wrapper");
 
-                String currentSort = getParameterSortBy();
-                sortSelect.addOption((sortField.equals(currentSort) || sortFieldConfiguration.equals(searchSortConfiguration.getDefaultSort())), sortField,
-                        message("xmlui.ArtifactBrowser.AbstractSearch.sort_by." + sortField));
+
+        /**  
+         * Add sort by options, the gear will be rendered by a combination fo javascript & css
+         */
+        String currentSort = getParameterSortBy();
+        org.dspace.app.xmlui.wing.element.List sortList = searchControlsGear.addList("sort-options", org.dspace.app.xmlui.wing.element.List.TYPE_SIMPLE, "gear-selection");
+        sortList.addItem("sort-head", "gear-head first").addContent(T_sort_by);
+        DiscoverySortConfiguration searchSortConfiguration = discoveryConfiguration.getSearchSortConfiguration();
+
+        org.dspace.app.xmlui.wing.element.List sortOptions = sortList.addList("sort-selections");
+        boolean selected = ("score".equals(currentSort) || (currentSort == null && searchSortConfiguration.getDefaultSort() == null));
+        
+        final String[] fqs = getParameterFilterQueries();
+        final StringBuilder filterQueryBuilder = new StringBuilder();
+        if(fqs != null) {
+            for (String fq : fqs) {
+                try {
+					filterQueryBuilder.append("&fq=").append(URLEncoder.encode(fq, "UTF8"));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
             }
         }
+        final String filterQuery = filterQueryBuilder.toString();
+        
+        Map<String, String> parameters = new HashMap<String, String>();
+        parameters.put("sort_by", "score");
+        parameters.put("order", searchSortConfiguration.getDefaultSortOrder().toString());
+        sortOptions.addItem(null, null).addXref(generateURL(parameters)+filterQuery, T_sort_by_relevance,"gear-option" + (selected ? " gear-option-selected" : ""));
 
-        // Create a control to changing ascending / descending order
-        controlsItem.addContent(T_order);
-        Select orderSelect = controlsItem.addSelect("order");
+        if(searchSortConfiguration.getSortFields() != null)
+        {    
+            for (DiscoverySortFieldConfiguration sortFieldConfiguration : searchSortConfiguration.getSortFields())
+            {    
+                String sortField = SearchUtils.getSearchService().toSortFieldIndex(sortFieldConfiguration.getMetadataField(), sortFieldConfiguration.getType());
 
-        String parameterOrder = getParameterOrder();
-        if(parameterOrder == null && searchSortConfiguration != null) {
-            parameterOrder = searchSortConfiguration.getDefaultSortOrder().toString();
-        }
-        orderSelect.addOption(SortOption.ASCENDING.equalsIgnoreCase(parameterOrder), SortOption.ASCENDING, T_order_asc);
-        orderSelect.addOption(SortOption.DESCENDING.equalsIgnoreCase(parameterOrder), SortOption.DESCENDING, T_order_desc);
+                boolean selectedAsc = ((sortField.equals(currentSort) && "asc".equals(getParameterOrder())) || (sortFieldConfiguration.equals(searchSortConfiguration.getDefaultSort())) && DiscoverySortConfiguration.SORT_ORDER.asc.equals(searchSortConfiguration.getDefaultSortOrder()));
+                boolean selectedDesc= ((sortField.equals(currentSort) && "desc".equals(getParameterOrder())) || (sortFieldConfiguration.equals(searchSortConfiguration.getDefaultSort())) && DiscoverySortConfiguration.SORT_ORDER.desc.equals(searchSortConfiguration.getDefaultSortOrder()));
+                
+                    parameters = new HashMap<String, String>();
+                    parameters.put("sort_by", sortField);
+                    parameters.put("order", DiscoverySortConfiguration.SORT_ORDER.asc.toString());                    
+                
+                sortOptions.addItem(null,null).addXref(generateURL(parameters)+filterQuery, message("xmlui.Discovery.AbstractSearch.sort_by." + sortField + "_asc"), "gear-option" + (selectedAsc ? " gear-option-selected" : ""));
+                
+                    parameters.put("order", DiscoverySortConfiguration.SORT_ORDER.desc.toString());                      
 
-        controlsItem.addButton("submit_sort").setValue(T_sort_button);
+                sortOptions.addItem(null, null).addXref(generateURL(parameters)+filterQuery, message("xmlui.Discovery.AbstractSearch.sort_by." + sortField + "_desc"), "gear-option" + (selectedDesc ? " gear-option-selected" : ""));
+                
+                
+            }    
+        }    
 
-        // Create a control for the number of authors per item to display
-        // FIXME This is currently disabled, as the supporting functionality
-        // is not currently present in xmlui
-        //if (isItemBrowse(info))
-        //{
-        //    controlsForm.addContent(T_etal);
-        //    Select etalSelect = controlsForm.addSelect(BrowseParams.ETAL);
-        //
-        //    etalSelect.addOption((info.getEtAl() < 0), 0, T_etal_all);
-        //    etalSelect.addOption(1 == info.getEtAl(), 1, Integer.toString(1));
-        //
-        //    for (int i = 5; i <= 50; i += 5)
-        //    {
-        //        etalSelect.addOption(i == info.getEtAl(), i, Integer.toString(i));
-        //    }
-        //}
-    }
+        //Add the rows per page
+        sortList.addItem("rpp-head", "gear-head").addContent(T_rpp);
+        org.dspace.app.xmlui.wing.element.List rppOptions = sortList.addList("rpp-selections");
+        for (int i : RESULTS_PER_PAGE_PROGRESSION)
+        {    
+        	parameters = new HashMap<String, String>();
+        	int currentRpp = getParameterRpp();
+           	int currentPage = getParameterPage();
+    		parameters.put("page", 1+"");
+        	parameters.put("rpp", Integer.toString(i));
+            rppOptions.addItem(null, null).addXref(generateURL(parameters)+filterQuery, Integer.toString(i), "gear-option" + (i == getParameterRpp() ? " gear-option-selected" : ""));
+        }    
+    }    
 
     /**
      * Determine the current scope. This may be derived from the current url
@@ -815,3 +813,5 @@ public abstract class AbstractSearch extends AbstractDSpaceTransformer implement
                 + countCollections + "," + countItems + ")"));
     }
 }
+
+

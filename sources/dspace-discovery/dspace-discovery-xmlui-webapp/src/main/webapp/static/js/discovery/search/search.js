@@ -40,7 +40,7 @@ var defaultFacets = new Array();
         Manager.init();
 
         query = $('input#aspect_discovery_SimpleSearch_field_query').val();
-        if(query == '')
+        if(query == null || query == '')
             query = '*:*';
 
         Manager.store.addByValue('q', query);

@@ -40,7 +40,8 @@ import org.xml.sax.SAXException;
  * <P>
  * <code>RegistryLoader -dc dc-types.xml</code>
  * 
- * @author Robert Tansley
+ * based on class by Robert Tansley
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class RegistryLoader
@@ -214,15 +215,26 @@ public class RegistryLoader
         NodeList typeNodes = XPathAPI.selectNodeList(document,
                 "/dspace-dc-types/dc-type");
 
+        int skipped = 0;
+        
         // Add each one as a new field to the schema
         for (int i = 0; i < typeNodes.getLength(); i++)
         {
             Node n = typeNodes.item(i);
-            loadDCType(context, n);
+            try{
+            	loadDCType(context, n);
+            } catch(NonUniqueMetadataException e) {
+            	log.error(e.getMessage());
+            	skipped++;
+            }
         }
 
         log.info(LogManager.getHeader(context, "load_dublin_core_types",
-                "number_loaded=" + typeNodes.getLength()));
+                "number_loaded=" + (typeNodes.getLength()-skipped)));
+
+        log.info(LogManager.getHeader(context, "load_dublin_core_types",
+                "number_skipped=" + (skipped)));
+
     }
 
     /**

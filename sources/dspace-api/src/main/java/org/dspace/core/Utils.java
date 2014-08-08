@@ -26,13 +26,14 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
-import com.coverity.security.Escape;
+
 import org.apache.log4j.Logger;
 
 /**
  * Utility functions for DSpace.
  * 
- * @author Peter Breton
+ * based on class by Peter Breton
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public final class Utils
@@ -280,8 +281,21 @@ public final class Utils
      */
     public static String addEntities(String value)
     {
+        if (value==null || value.length() == 0)
+        {
+            return value;
+        }
+        
+        value = value.replaceAll("&", "&amp;");
+        value = value.replaceAll("\"", "&quot;");
 
-        return Escape.html(value);
+        // actually, &apos; is an XML entity, not in HTML.
+        // that's why it's commented out.
+        // value = value.replaceAll("'", "&apos;");
+        value = value.replaceAll("<", "&lt;");
+        value = value.replaceAll(">", "&gt;");
+
+        return value;
     }
 
     /**

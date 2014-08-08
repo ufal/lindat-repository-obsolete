@@ -27,15 +27,17 @@ import org.dspace.authorize.AuthorizeManager;
 import org.dspace.authorize.ResourcePolicy;
 import org.dspace.browse.BrowseException;
 import org.dspace.browse.IndexBrowse;
+import org.dspace.content.authority.ChoiceAuthorityManager;
+import org.dspace.content.authority.Choices;
+import org.dspace.content.authority.MetadataAuthorityManager;
+import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.core.LogManager;
-import org.dspace.content.authority.Choices;
-import org.dspace.content.authority.ChoiceAuthorityManager;
-import org.dspace.content.authority.MetadataAuthorityManager;
-import org.dspace.event.Event;
+import org.dspace.embargo.EmbargoManager;
 import org.dspace.eperson.EPerson;
 import org.dspace.eperson.Group;
+import org.dspace.event.Event;
 import org.dspace.handle.HandleManager;
 import org.dspace.storage.rdbms.DatabaseManager;
 import org.dspace.storage.rdbms.TableRow;
@@ -51,12 +53,16 @@ import org.dspace.storage.rdbms.TableRowIterator;
  * Creating, adding or removing bundles or bitstreams has immediate effect in
  * the database.
  *
- * @author Robert Tansley
- * @author Martin Hald
+ * based on class by Robert Tansley and Martin Hald
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
+@SuppressWarnings("deprecation")
 public class Item extends DSpaceObject
 {
+	
+	public static final String metadata_isreplacedby = "dc.relation.isreplacedby";
+	
     /**
      * Wild card for Dublin Core metadata qualifiers/languages
      */
@@ -458,7 +464,7 @@ public class Item extends DSpaceObject
      *            no country code are returned.
      * @return metadata fields that match the parameters
      */
-    public DCValue[] getMetadata(String schema, String element, String qualifier,
+	public DCValue[] getMetadata(String schema, String element, String qualifier,
             String lang)
     {
         // Build up list of matching values
@@ -1395,6 +1401,20 @@ public class Item extends DSpaceObject
 
         return bitstreamList.toArray(new Bitstream[bitstreamList.size()]);
     }
+    
+    public long getTotalSize() throws SQLException 
+    {
+        long size = 0;
+        Bundle[] bunds = getBundles();
+        for (int i = 0; i < bunds.length; i++)
+        {
+            Bitstream[] bitstreams = bunds[i].getBitstreams();
+            for (int j = 0; j < bitstreams.length; ++j) {
+                size += bitstreams[j].getSize();
+            }
+        }
+        return size;
+    }
 
     /**
      * Remove just the DSpace license from an item This is useful to update the
@@ -1476,14 +1496,14 @@ public class Item extends DSpaceObject
     {
         // Check authorisation
         // only do write authorization if user is not an editor
-        if (!canEdit())
+        if (!canEdit() && !canEditMetadata())
         {
             AuthorizeManager.authorizeAction(ourContext, this, Constants.WRITE);
         }
 
         log.info(LogManager.getHeader(ourContext, "update_item", "item_id="
                 + getID()));
-
+        
         // Set sequence IDs for bitstreams in item
         int sequence = 0;
         Bundle[] bunds = getBundles();
@@ -1520,6 +1540,23 @@ public class Item extends DSpaceObject
                 }
             }
         }
+        
+        /* Add local.has.files metadata */
+        boolean hasFiles = false;
+        Bundle[] origs = getBundles("ORIGINAL");
+        for(Bundle orig : origs) {
+        	if(orig.getBitstreams().length > 0) {
+        		hasFiles = true;
+        		break;
+        	}
+        }
+        clearMetadata("local", "has", "files", Item.ANY);
+        if(hasFiles) {
+        	addMetadata("local", "has", "files", Item.ANY, "yes");
+        } else {
+        	addMetadata("local", "has", "files", Item.ANY, "no");
+        }
+        ///////////////////////////////////
 
         // Map counting number of values for each element/qualifier.
         // Keys are Strings: "element" or "element.qualifier"
@@ -1750,6 +1787,12 @@ public class Item extends DSpaceObject
     }
 
     private transient MetadataField[] allMetadataFields = null;
+    
+    // if we update dc scheme during the life of Item (e.g., harvesting) we need
+    // to reset this field
+    public void reset_metadata_fields() {
+        allMetadataFields = null;
+    }
     private MetadataField getMetadataField(DCValue dcv) throws SQLException, AuthorizeException
     {
         if (allMetadataFields == null)
@@ -1812,9 +1855,8 @@ public class Item extends DSpaceObject
         // Build some provenance data while we're at it.
         StringBuilder prov = new StringBuilder();
 
-        prov.append("Item withdrawn by ").append(e.getFullName()).append(" (")
-                .append(e.getEmail()).append(") on ").append(timestamp).append("\n")
-                .append("Item was in collections:\n");
+        prov.append("Item withdrawn by ").append(get_provenance_header(e));
+        prov.append("Item was in collections:\n");
 
         Collection[] colls = getCollections();
 
@@ -1829,9 +1871,8 @@ public class Item extends DSpaceObject
         // in_archive flag is now false
         itemRow.setColumn("in_archive", false);
 
-        prov.append(InstallItem.getBitstreamProvenanceMessage(this));
-
-        addDC("description", "provenance", "en", prov.toString());
+        // add bitstream info and store the change in metadata
+        store_provenance_info(prov);
 
         // Update item in DB
         update();
@@ -1860,8 +1901,6 @@ public class Item extends DSpaceObject
         // check authorization
         AuthorizeUtil.authorizeReinstateItem(ourContext, this);
 
-        String timestamp = DCDate.getCurrent().toString();
-
         // Check permission. User must have ADD on all collections.
         // Build some provenance data while we're at it.
         Collection[] colls = getCollections();
@@ -1870,9 +1909,8 @@ public class Item extends DSpaceObject
         // bitstream checksums
         EPerson e = ourContext.getCurrentUser();
         StringBuilder prov = new StringBuilder();
-        prov.append("Item reinstated by ").append(e.getFullName()).append(" (")
-                .append(e.getEmail()).append(") on ").append(timestamp).append("\n")
-                .append("Item was in collections:\n");
+        prov.append("Item reinstated by ").append(get_provenance_header(e));
+        prov.append("Item was in collections:\n");
 
         for (int i = 0; i < colls.length; i++)
         {
@@ -1885,11 +1923,8 @@ public class Item extends DSpaceObject
         // in_archive flag is now true
         itemRow.setColumn("in_archive", true);
 
-        // Add suitable provenance - includes user, date, collections +
-        // bitstream checksums
-        prov.append(InstallItem.getBitstreamProvenanceMessage(this));
-
-        addDC("description", "provenance", "en", prov.toString());
+        // add bitstream info and store the change in metadata
+        store_provenance_info( prov );
 
         // Update item in DB
         update();
@@ -1920,7 +1955,7 @@ public class Item extends DSpaceObject
      * @throws AuthorizeException
      * @throws IOException
      */
-    void delete() throws SQLException, AuthorizeException, IOException
+    public void delete() throws SQLException, AuthorizeException, IOException
     {
         // Check authorisation here. If we don't, it may happen that we remove the
         // metadata but when getting to the point of removing the bundles we get an exception
@@ -2404,6 +2439,31 @@ public class Item extends DSpaceObject
         return false;
     }
     
+	public boolean canEditMetadata() throws java.sql.SQLException {
+		boolean ownersCanEditCollection = false;
+		// get from config editable collections names/id
+		String editableCollections = ConfigurationManager.getProperty("lr", "lr.allow.edit.metadata");
+		if (editableCollections != null) {
+			SEARCH: for (String ec : editableCollections.split(",")) {
+				ec = ec.trim();
+				for (Collection col : this.getCollections()) {
+					ownersCanEditCollection = Integer.toString(col.getID())
+							.equals(ec) || col.getName().equals(ec);
+					if (ownersCanEditCollection) {
+						break SEARCH;
+					}
+				}
+			}
+		}
+
+		EPerson e = this.ourContext.getCurrentUser();
+		boolean canEditOwn = e != null && e.canEditSubmissionMetadata();
+		boolean isOwner = this.getSubmitter().equals(e);
+		boolean epersonIsReviewer = this.getOwningCollection().epersonIsReviewer();
+
+        return (((ownersCanEditCollection || canEditOwn) && isOwner) || epersonIsReviewer);
+	}
+
     public String getName()
     {
         DCValue t[] = getMetadata("dc", "title", null, Item.ANY);
@@ -2424,7 +2484,13 @@ public class Item extends DSpaceObject
      *
      */
     public static ItemIterator findByMetadataField(Context context,
-               String schema, String element, String qualifier, String value)
+            String schema, String element, String qualifier, String value)
+       throws SQLException, AuthorizeException, IOException {
+    	return findByMetadataField(context, schema, element, qualifier, value, true);
+    }
+
+    public static ItemIterator findByMetadataField(Context context,
+               String schema, String element, String qualifier, String value, boolean in_archive_only)
           throws SQLException, AuthorizeException, IOException
     {
         MetadataSchema mds = MetadataSchema.find(context, schema);
@@ -2439,8 +2505,11 @@ public class Item extends DSpaceObject
                     "No such metadata field: schema=" + schema + ", element=" + element + ", qualifier=" + qualifier);
         }
         
-        String query = "SELECT item.* FROM metadatavalue,item WHERE item.in_archive='1' "+
-                       "AND item.item_id = metadatavalue.item_id AND metadata_field_id = ?";
+        String query = "SELECT item.* FROM metadatavalue,item WHERE "+
+                       "item.item_id = metadatavalue.item_id AND metadata_field_id = ?";
+        if ( in_archive_only ) {
+        	query += " AND item.in_archive='1'";
+        }
         TableRowIterator rows = null;
         if (Item.ANY.equals(value))
         {
@@ -2453,6 +2522,43 @@ public class Item extends DSpaceObject
         }
         return new ItemIterator(context, rows);
      }
+    
+    
+    /** 
+     * Get embargo date. 
+     * @throws Exception 
+     */
+    public DCDate getEmbargo() throws Exception 
+    {
+    	try {
+			return EmbargoManager.getEmbargoDate(ourContext, this);
+		} catch (Exception e) {
+			if ( e instanceof IllegalArgumentException ) {
+				throw e;
+			}
+			log.error(String.format("Could not get embargo date for item [%s].", getHandle()));
+		}
+    	return null;
+    }
+    
+    
+    public boolean isReplacedBy()
+    {
+    	return getMetadata(metadata_isreplacedby).length > 0;
+    }
+
+    public List<String> getReplacedBy()
+    {
+    	List<String> ret = new ArrayList<String>();
+    	DCValue[] vals = getMetadata(metadata_isreplacedby);
+    	for ( int i = 0; i < vals.length; ++i ) {
+    		DCValue dc = vals[i];
+    		ret.add( dc.value );
+    	}
+    	return ret;
+    }
+    
+    //
     
     public DSpaceObject getAdminObject(int action) throws SQLException
     {
@@ -2671,7 +2777,7 @@ public class Item extends DSpaceObject
 
                             if (field == null)
                             {
-                                log.error("Loading item - cannot find metadata field " + fieldID);
+                                log.error(String.format("Loading item - cannot find metadata field [%d] for item [%d]", fieldID, itemId));
                             }
                             else
                             {
@@ -2730,4 +2836,49 @@ public class Item extends DSpaceObject
             return null;
         }
     }
+    
+    //
+    //
+    //
+    public String get_provenance_header(EPerson e) 
+    {
+        final String timestamp = DCDate.getCurrent().toString();
+        return new StringBuilder()
+        .append(e != null ? e.getFullName() : "null")
+        .append(" (")
+        .append(e != null ? e.getEmail() : "null")
+        .append(") on ")
+        .append(timestamp).append("\n").toString();
+    }
+    
+    public void store_provenance_info(StringBuilder sb) throws SQLException
+    {
+        // Add suitable provenance - includes user, date, collections +
+        // bitstream checksums
+        sb.append(InstallItem.getBitstreamProvenanceMessage(this));
+        addDC("description", "provenance", "en", sb.toString());
+    }
+
+    public void store_provenance_info(String header, EPerson e) throws SQLException
+    {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(header).append(" by ").append(get_provenance_header(e));
+        store_provenance_info(sb);
+    }
+
+	public boolean isHidden() {
+		DCValue[] dcvs = this.getMetadata("local.hidden");
+		if(dcvs != null && dcvs.length == 1 && dcvs[0].value.equalsIgnoreCase("hidden")){
+			return true;
+		}
+		return false;
+	}
+
+	public boolean hasOwnMetadata() {
+		DCValue[] dcvs = this.getMetadata("local.hasMetadata");
+		if(dcvs != null && dcvs.length == 1 && dcvs[0].value.equalsIgnoreCase("true")){
+			return true;
+		}
+		return false;
+	}
 }

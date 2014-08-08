@@ -29,7 +29,8 @@ import org.dspace.storage.rdbms.TableRowIterator;
 /**
  * Class representing an item in the process of being submitted by a user
  * 
- * @author Robert Tansley
+ * based on class by Robert Tansley
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 public class WorkspaceItem implements InProgressSubmission
@@ -248,6 +249,9 @@ public class WorkspaceItem implements InProgressSubmission
             }
         }
 
+
+        i.addMetadata("local", "branding", null, null, coll.getName());
+        
         i.update();
 
         // Create the workspace item row
@@ -266,6 +270,32 @@ public class WorkspaceItem implements InProgressSubmission
         WorkspaceItem wi = new WorkspaceItem(c, row);
 
         return wi;
+    }
+    
+    /**
+     * Creates a new workspace item based on a given item
+     * @param context DSpace context object
+     * @param item Item used a a template 
+     * @return New workspace item based on the given item
+     * @throws SQLException
+     * @throws AuthorizeException
+     * @throws IOException
+     */
+    public static WorkspaceItem createByItem(Context context, Item item) throws SQLException, AuthorizeException, IOException
+    {
+        Collection coll = item.getOwningCollection();               
+        WorkspaceItem workspaceItem = WorkspaceItem.create(context, coll, false);        
+        Item newItem = workspaceItem.getItem();
+        
+        DCValue[] md = item.getMetadata(Item.ANY, Item.ANY, Item.ANY, Item.ANY);
+        for (int n = 0; n < md.length; n++)
+        {            
+            newItem.addMetadata(md[n].schema, md[n].element, md[n].qualifier, md[n].language,
+                    md[n].value);
+        }
+        newItem.update();        
+        
+        return workspaceItem;
     }
 
     /**

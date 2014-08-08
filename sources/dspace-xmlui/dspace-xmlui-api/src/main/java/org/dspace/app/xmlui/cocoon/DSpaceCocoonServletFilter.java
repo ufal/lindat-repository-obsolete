@@ -9,6 +9,7 @@ package org.dspace.app.xmlui.cocoon;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -33,11 +34,13 @@ import org.dspace.harvest.OAIHarvester;
  * initializes DSpace / XML UI configuration parameters, and 2) it will preform inturrupted 
  * request resumption.
  * 
- * @author scott philips
+ * based on class by scott philips
+ * modified for LINDAT/CLARIN
  */
 public class DSpaceCocoonServletFilter implements Filter 
 {
-    private static final Logger LOG = Logger.getLogger(DSpaceCocoonServletFilter.class);
+    private static final Logger LOG = cz.cuni.mff.ufal.Logger.getLogger(
+    		DSpaceCocoonServletFilter.class);
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -268,14 +271,20 @@ public class DSpaceCocoonServletFilter implements Filter
                 {   // invoke the next filter
                     arg2.doFilter(realRequest, realResponse);
                 }
-
-        } catch (RuntimeException e) {
+    } catch (SocketException e) {
+            ContextUtil.abortContext(realRequest);
+            LOG.warn("Socket Error Occurred Processing Request - " + e.toString());
+    } catch (RuntimeException e) {
             ContextUtil.abortContext(realRequest);
             LOG.error("Serious Runtime Error Occurred Processing Request!", e);
             throw e;
 	} catch (Exception e) {
 	    ContextUtil.abortContext(realRequest);
+        if(e.getMessage().contains("ClientAbort")) {
+            LOG.warn("Client has aborted the connection." + e.getMessage());
+        } else {
             LOG.error("Serious Error Occurred Processing Request!", e);
+        }
 	} finally {
 	    // Close out the DSpace context no matter what.
 	    ContextUtil.completeContext(realRequest);

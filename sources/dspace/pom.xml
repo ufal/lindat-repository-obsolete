@@ -16,16 +16,25 @@
     <parent>
         <groupId>org.dspace</groupId>
         <artifactId>dspace-parent</artifactId>
-        <version>1.8.4-SNAPSHOT</version>
+        <version>1.8.2</version>
         <relativePath>..</relativePath>
     </parent>
+
+    <!--
+         The Subversion repository location is used by Continuum to update against
+         when changes have occured, this spawns a new build cycle and releases snapshots
+         into the snapshot repository below.
+    -->
+    <scm>
+        <connection>scm:svn:http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</connection>
+        <developerConnection>scm:svn:https://scm.dspace.org/svn/repo/tags/dspace-1.8.2</developerConnection>
+        <url>http://scm.dspace.org/svn/repo/tags/dspace-1.8.2</url>
+    </scm>
 
     <properties>
         <default.dspace.dir>/dspace</default.dspace.dir>
         <default.mail.server>smtp.example.com</default.mail.server>
         <default.solr.server>http://localhost:8080/solr</default.solr.server>
-		<!-- This is the path to the root [dspace-src] directory. -->
-        <root.basedir>${basedir}/..</root.basedir>
     </properties>
 
     <profiles>
@@ -188,6 +197,7 @@
                     <descriptors>
                         <descriptor>src/assemble/assembly.xml</descriptor>
                     </descriptors>
+                    <finalName>dspace</finalName>
                 </configuration>
                 <executions>
                     <execution>
@@ -202,7 +212,11 @@
     </build>
 
     <dependencies>
-        <dependency>
+	<dependency>
+            <groupId>cz.cuni.mff.ufal.lindat</groupId>
+            <artifactId>utilities</artifactId>
+        </dependency>
+	<dependency>
             <groupId>org.dspace</groupId>
             <artifactId>dspace-api</artifactId>
         </dependency>
@@ -245,6 +259,20 @@
               </exclusion>
             </exclusions> 
         </dependency>
+    	<!-- This dependency ensures DSpace OAI JAR is added to [dspace]/lib/,
+             so that the 'dspace oai' launcher.xml command works.  -->
+    	<dependency>
+            <groupId>org.dspace</groupId>
+            <artifactId>dspace-oai</artifactId>
+            <type>jar</type>
+            <classifier>classes</classifier>
+    	</dependency>
+        <!-- The Servlet API is also needed by the 'dspace oai' launcher.xml
+             command. -->
+    	<dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+    	</dependency>
     </dependencies>
 
 </project>

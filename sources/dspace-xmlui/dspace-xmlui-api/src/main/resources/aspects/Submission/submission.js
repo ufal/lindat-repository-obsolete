@@ -34,6 +34,8 @@ importClass(Packages.org.dspace.app.util.SubmissionInfo);
 
 importClass(Packages.org.dspace.submit.AbstractProcessingStep);
 
+importClass(org.dspace.content.Collection);
+
 /* Global variable which stores a comma-separated list of all fields 
  * which errored out during processing of the last step.
  */
@@ -157,6 +159,13 @@ function doSubmission()
            handle = cocoon.request.get("handle");
        
        var collectionSelected = false;
+       //ufal
+       //if only one collection don't bother with selection
+//       var collections = Collection.findAll(getDSContext());
+//       if(collections.length == 1){
+//           handle = collections[0].getHandle();
+//           collectionSelected = true;
+//       }
        do {
            if (handle != null)
            {
@@ -164,7 +173,7 @@ function doSubmission()
                
                // Check that the dso is a collection
                if (dso != null && dso.getType() == Constants.COLLECTION)
-               {
+               {                    
                    // Check that the user is able to submit
                    if (AuthorizeManager.authorizeActionBoolean(getDSContext(), dso, Constants.ADD))
                    {
@@ -179,9 +188,9 @@ function doSubmission()
                }
            }
            
-           sendPageAndWait("submit/selectCollectionStep", { "handle" : handle } );
+               sendPageAndWait("submit/selectCollectionStep", { "handle" : handle } );
        
-           handle = cocoon.request.get("handle");
+               handle = cocoon.request.get("handle");
                      
        } while (collectionSelected == false)
       
@@ -584,9 +593,10 @@ function loadFileUploadInfo()
 			
 			//save inputstream of file contents to request attribute
 			getHttpRequest().setAttribute(fileParam + "-inputstream", fileObject.getInputStream());
-		}	
-		
+		}			
     }
+    getHttpRequest().setAttribute("fileLocal", cocoon.request.getParameter("fileLocal"));
+    getHttpRequest().setAttribute("descriptionLocal", cocoon.request.getParameter("descriptionLocal"));
 }
 
 /**
@@ -734,3 +744,6 @@ function doWorkflowEditMetadata() {
         cocoon.exit();
     }
 }
+
+
+

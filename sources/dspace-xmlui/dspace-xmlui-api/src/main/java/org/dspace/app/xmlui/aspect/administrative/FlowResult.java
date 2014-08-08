@@ -39,7 +39,8 @@ import org.dspace.app.xmlui.wing.Message;
  * result. This should be used for things such as generated id's when objects are newly
  * created.
  * 
- * @author Scott Phillips
+ * based on class by Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 public class FlowResult {
 
@@ -121,8 +122,8 @@ public class FlowResult {
 	}
 	
 	/**
-	 * Get the notice outcome in string form, either success 
-	 * or failure. If the outcome is netural then null is returned.
+	 * Get the notice outcome in string form, either success, neutral 
+	 * or failure.
 	 */
 	public String getOutcome()
 	{
@@ -134,7 +135,8 @@ public class FlowResult {
 		{
 			return "failure";
 		}
-		return null;
+		//return null;
+		return "neutral"; //notice transformer expects "neutral"
 	}
 	
 	/**
