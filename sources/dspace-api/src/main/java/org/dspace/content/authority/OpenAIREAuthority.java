@@ -76,9 +76,10 @@ import org.w3c.dom.NodeList;
 public class OpenAIREAuthority implements ChoiceAuthority
 {
     private static Logger log = Logger.getLogger(OpenAIREAuthority.class);
-    private static final String FileProperty = "openaire.projects.filename";
-    private static final String MinimumChars = "openaire.projects.suggest.minchar";
-    private static final String MaxSuggests = "openaire.projects.suggest.max";
+    private static final String Module = "openaire";
+    private static final String FileProperty = "projects.filename";
+    private static final String MinimumChars = "projects.suggest.minchar";
+    private static final String MaxSuggests = "projects.suggest.max";
     private static final int MaxSuggestionLength = 66;
 
 	static {
@@ -100,7 +101,7 @@ public class OpenAIREAuthority implements ChoiceAuthority
 	private static void load () {
     	if (OpenAIREAuthority.pairs == null) {
     		OpenAIREAuthority.pairs = new ArrayList<Pair<String, String>>();
-    		String defsFile = ConfigurationManager.getProperty(OpenAIREAuthority.FileProperty);
+    		String defsFile = ConfigurationManager.getProperty(OpenAIREAuthority.Module, OpenAIREAuthority.FileProperty);
     		if (defsFile == null) OpenAIREAuthority.log.error("Configuration "+OpenAIREAuthority.FileProperty+" not found in dspace.cfg file.");
     		else {
     			try {
@@ -143,8 +144,8 @@ public class OpenAIREAuthority implements ChoiceAuthority
 	public Choices getMatches(String field, String text, int collection, int start,
 			int limit, String locale) {
 		OpenAIREAuthority.load();
-		int minChars = ConfigurationManager.getIntProperty(OpenAIREAuthority.MinimumChars, 4);
-		int maxSuggests = ConfigurationManager.getIntProperty(OpenAIREAuthority.MaxSuggests, 10);
+		int minChars = ConfigurationManager.getIntProperty(OpenAIREAuthority.Module, OpenAIREAuthority.MinimumChars, 4);
+		int maxSuggests = ConfigurationManager.getIntProperty(OpenAIREAuthority.Module, OpenAIREAuthority.MaxSuggests, 10);
 		
         List<Choice> result = new ArrayList<Choice>();
         int dflt = -1;
