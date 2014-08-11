@@ -219,6 +219,16 @@
           <hint>Enter the names of any sponsors and/or funding codes.</hint>
           <required></required>
         </field>
+        
+       <field>
+         <dc-schema>dc</dc-schema>
+         <dc-element>relation</dc-element>
+         <dc-qualifier></dc-qualifier>
+         <repeatable>false</repeatable>
+         <label>OpenAIRE Project Identifier</label>
+         <input-type>onebox</input-type>
+         <hint>Enter the search term (number, name or acronym) of the European project (EC / ERC) and click on the magnifying glass to select the project. &lt;a href=&quot;http://www.openaire.eu/open-access/open-access-in-fp7 &quot;&gt;More Information&lt;/a&gt;</hint>
+       </field>
 
       </page>
     </form>
