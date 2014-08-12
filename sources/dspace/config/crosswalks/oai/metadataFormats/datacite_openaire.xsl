@@ -107,8 +107,8 @@
 	   <xsl:variable name="funder" select="doc:metadata/doc:element[@name='dc']/doc:element[@name='relation']/doc:element/doc:field[@name='value']"/>
 	   <xsl:if test="starts-with($funder,'info:')">
 	       <contributors>
-	           <contributor contributorType="funder">
-	               <xsl:variable name="cont_name" select="xalan:tokenize($funder,'/')[2]"/>
+	           <contributor contributorType="Funder">
+	               <xsl:variable name="cont_name" select="xalan:tokenize($funder,'/')[3]"/>
 	               <xsl:choose>
 	               <xsl:when test="$cont_name='EC'">
 	                   <contributorName>European Commission</contributorName>
