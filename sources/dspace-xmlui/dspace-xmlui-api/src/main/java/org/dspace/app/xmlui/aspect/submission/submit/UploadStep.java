@@ -156,6 +156,7 @@ public class UploadStep extends AbstractSubmissionStep
     {
         super.addPageMeta(pageMeta);
         pageMeta.addMetadata("include-library", "dragNdrop");
+        pageMeta.addMetadata("include-library", "jquery-ui");
     }
 
     /**
