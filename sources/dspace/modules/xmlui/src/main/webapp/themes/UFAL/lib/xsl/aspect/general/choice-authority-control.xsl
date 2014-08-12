@@ -166,7 +166,7 @@
       </span>
       <!-- This is the anchor for autocomplete popup, div id="..._container" -->
       <!--  put it below input field, give ID to autocomplete below -->
-      <div class="autocomplete">
+      <div class="authority-autocomplete">
         <xsl:attribute name="id">
          <xsl:value-of select="concat(translate(@id,'.','_'),'_container')"/>
         </xsl:attribute>
