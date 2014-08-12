@@ -1181,7 +1181,7 @@
 		<xsl:if test="./text() or ./node()">
 			<div class="text-info" style="margin-bottom: 0px; margin-top: 5px;">
 			<i class="fa fa-info-circle fa-lg">&#160;</i>
-			<xsl:value-of disable-output-escaping="yes" select="."/>
+				<xsl:apply-templates />
 			</div>
 		</xsl:if>
 	</xsl:template>
