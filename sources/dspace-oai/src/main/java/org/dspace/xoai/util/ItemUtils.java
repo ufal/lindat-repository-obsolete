@@ -147,6 +147,10 @@ public class ItemUtils
         Element bundles = create("bundles");
         metadata.getElement().add(bundles);
 
+		IFunctionalities functionalityManager = cz.cuni.mff.ufal.DSpaceApi.getFunctionalityManager();
+		//indicate restricted bitstreams -> restricted access
+		boolean restricted = false;
+
         Bundle[] bs;
         try
         {
@@ -226,6 +230,18 @@ public class ItemUtils
                                     + ""));
                     bitstream.getField().add(
                     		createValue("id", bit.getID()+""));
+
+                    if(!restricted){
+                            List<LicenseDefinition> lds = functionalityManager.getLicenses(bit.getID());
+                            for(LicenseDefinition ld : lds){
+                                 if(ld.getRequiredInfo() != null && ld.getRequiredInfo().length() > 0){
+                                         restricted = true;
+                                 }
+                                 if(restricted){
+                                         break;
+                                 }
+                            }
+                    }
                 }
             }
         }
@@ -233,6 +249,8 @@ public class ItemUtils
         {
             e1.printStackTrace();
         }
+
+		functionalityManager.close();
         
 
         // Other info
@@ -246,19 +264,6 @@ public class ItemUtils
                 createValue("lastModifyDate", item
                         .getLastModified().toString()));
         
-		IFunctionalities functionalityManager = cz.cuni.mff.ufal.DSpaceApi.getFunctionalityManager();
-		boolean restricted = false;
-		List<LicenseDefinition> lds = functionalityManager.getLicenses(item.getID());
-		for(LicenseDefinition ld : lds){
-			if(ld.getRequiredInfo() != null && ld.getRequiredInfo().length() > 0){
-				restricted = true;
-			}
-			if(restricted){
-				break;
-			}
-		}
-		functionalityManager.close();
-		
 		if(restricted){
 			other.getField().add(createValue("restrictedAccess", "true"));
 		}
