@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!-- Created for LINDAT/CLARIN based on DIM2DataCite https://guidelines.openaire.eu/wiki/OpenAIRE_Guidelines:_For_Data_Archives -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-	xmlns:odc3="http://datacite.org/schema/kernel-3" xmlns:doc="http://www.lyncode.com/xoai"
-	exclude-result-prefixes="doc" version="1.0">
+	xmlns:doc="http://www.lyncode.com/xoai"
+    xmlns:xalan="http://xml.apache.org/xslt"
+	exclude-result-prefixes="doc xalan" version="1.0">
 	<xsl:output omit-xml-declaration="yes" method="xml" indent="yes" />
 
+    <!-- TODO implement Required & optional templates -->
 	<xsl:template match="/">
-		<oai_datacite xmlns="http://schema.datacite.org/oai/oai-1.0/"
-			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-			xsi:schemaLocation="http://schema.datacite.org/oai/oai-1.0/ http://schema.datacite.org/oai/oai-1.0/oai_datacite.xsd">
+		<oai_datacite>
 			<isReferenceQuality>true</isReferenceQuality>
 			<schemaVersion>3.0</schemaVersion>
 			<datacentreSymbol></datacentreSymbol>
 			<payload>
-				<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-					xsi:schemaLocation="http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd">
+				<resource>
 					<xsl:call-template name="Identifier_M" />
 					<xsl:call-template name="Creator_M" />
 					<xsl:call-template name="Title_M" />
@@ -26,7 +25,7 @@
 					<xsl:call-template name="Language_R" />
 					<xsl:call-template name="ResourceType_R" />
 					<xsl:call-template name="AlternateIdentifier_O" />
-					<xsl:call-template name="RelatedeIdentifier_MA" />
+					<xsl:call-template name="RelatedIdentifier_MA" />
 					<xsl:call-template name="Size_O" />
 					<xsl:call-template name="Format_O" />
 					<xsl:call-template name="Version_O" />
@@ -39,9 +38,9 @@
 	</xsl:template>
 
 	<xsl:template name="Identifier_M">
-		<identifier identifierType="URL">
+		<identifier identifierType="Handle">
 			<xsl:value-of
-				select="doc:metadata/doc:element[@name='dc']/doc:element[@name='identifier']/doc:element/doc:element/doc:field[@name='value']" />
+				select="substring-after(doc:metadata/doc:element[@name='dc']/doc:element[@name='identifier']/doc:element/doc:element/doc:field[@name='value'], 'http://hdl.handle.net/')" />
 		</identifier>
 	</xsl:template>
 
@@ -103,7 +102,26 @@
 	</xsl:template>
 
 	<xsl:template name="Subject_R" />
-	<xsl:template name="Contributor_MAO" />
+	
+	<xsl:template name="Contributor_MAO">
+	   <xsl:variable name="funder" select="doc:metadata/doc:element[@name='dc']/doc:element[@name='relation']/doc:element/doc:field[@name='value']"/>
+	   <xsl:if test="starts-with($funder,'info:')">
+	       <contributors>
+	           <contributor contributorType="funder">
+	               <xsl:variable name="cont_name" select="xalan:tokenize($funder,'/')[2]"/>
+	               <xsl:choose>
+	               <xsl:when test="$cont_name='EC'">
+	                   <contributorName>European Commission</contributorName>
+	               </xsl:when>
+	               <xsl:otherwise>
+	                   <contributorName><xsl:value-of select="$cont_name"/></contributorName>
+	               </xsl:otherwise>
+	               </xsl:choose>
+	               <nameIdentifier nameIdentifierScheme="info"><xsl:value-of select="$funder"/></nameIdentifier>
+	           </contributor>
+	       </contributors>
+	   </xsl:if>
+	</xsl:template>
 
 	<xsl:template name="Date_M">
 		<!-- Use “Issued” for the date the resource is published or distributed. 
@@ -122,12 +140,37 @@
 	<xsl:template name="Language_R" />
 	<xsl:template name="ResourceType_R" />
 	<xsl:template name="AlternateIdentifier_O" />
-	<xsl:template name="RelatedeIdentifier_MA" />
+	<!-- TODO Related identifiers in submission? -->
+	<xsl:template name="RelatedIdentifier_MA" />
 	<xsl:template name="Size_O" />
 	<xsl:template name="Format_O" />
 	<xsl:template name="Version_O" />
-	<xsl:template name="Rights_MA" />
-	<xsl:template name="Description_MA" />
+
+	<xsl:template name="Rights_MA">
+	   <rightsList>
+	   <xsl:choose>
+	       <!-- TODO embargoedAccess -->
+	       <xsl:when test="/doc:metadata/doc:element[@name='others']/doc:field[@name='restrictedAccess']/text()='true'">
+	           <rights rightsURI="info:eu-repo/semantics/restrictedAccess"/>
+	       </xsl:when>
+	       <xsl:otherwise>
+	           <rights rightsURI="info:eu-repo/semantics/openAccess"/>
+	       </xsl:otherwise>
+	   </xsl:choose>
+	   <xsl:for-each select="doc:metadata/doc:element[@name='dc']/doc:element[@name='rights']/doc:element[@name='uri']/doc:element/doc:field[@name='value']">
+	           <rights><xsl:attribute name="rightsURI"><xsl:value-of select="."/></xsl:attribute></rights>
+	   </xsl:for-each>
+	   </rightsList>
+
+	</xsl:template>
+
+	<xsl:template name="Description_MA">
+	   <descriptions>
+	       <!-- "Abstract" is to a degree what we keep in dc.description -->
+	       <description descriptionType="Abstract"><xsl:value-of select="doc:metadata/doc:element[@name='dc']/doc:element[@name='description']/doc:element/doc:field[@name='value']"/></description>
+	   </descriptions>
+	</xsl:template>
+	
 	<xsl:template name="GeoLocation_R" />
 
 	<xsl:template name="_process_creators">

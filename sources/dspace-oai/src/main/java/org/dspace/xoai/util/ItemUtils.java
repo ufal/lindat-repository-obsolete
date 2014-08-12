@@ -10,6 +10,10 @@ package org.dspace.xoai.util;
 import com.lyncode.xoai.dataprovider.xml.xoai.Element;
 import com.lyncode.xoai.dataprovider.xml.xoai.Metadata;
 import com.lyncode.xoai.util.Base64Utils;
+
+import cz.cuni.mff.ufal.lindat.utilities.hibernate.LicenseDefinition;
+import cz.cuni.mff.ufal.lindat.utilities.interfaces.IFunctionalities;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
@@ -241,6 +245,25 @@ public class ItemUtils
         other.getField().add(
                 createValue("lastModifyDate", item
                         .getLastModified().toString()));
+        
+		IFunctionalities functionalityManager = cz.cuni.mff.ufal.DSpaceApi.getFunctionalityManager();
+		boolean restricted = false;
+		List<LicenseDefinition> lds = functionalityManager.getLicenses(item.getID());
+		for(LicenseDefinition ld : lds){
+			if(ld.getRequiredInfo() != null && ld.getRequiredInfo().length() > 0){
+				restricted = true;
+			}
+			if(restricted){
+				break;
+			}
+		}
+		functionalityManager.close();
+		
+		if(restricted){
+			other.getField().add(createValue("restrictedAccess", "true"));
+		}
+        
+        
         try{
 			other.getField().add(
 					createValue("owningCollection", item.getOwningCollection()

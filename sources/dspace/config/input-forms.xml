@@ -219,7 +219,9 @@
           <hint>Enter the names of any sponsors and/or funding codes.</hint>
           <required></required>
         </field>
+       </page>
         
+       <page number="3"> 
        <field>
          <dc-schema>dc</dc-schema>
          <dc-element>relation</dc-element>
