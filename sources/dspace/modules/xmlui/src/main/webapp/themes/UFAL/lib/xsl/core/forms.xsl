@@ -89,6 +89,10 @@
 					</div>
 				</xsl:otherwise>
 			</xsl:choose>
+			<!-- UFAL - openaire more info link -->
+			<xsl:if test="./dri:field[@id='aspect.submission.StepTransformer.field.dc_relation']">
+				<a href="https://www.openaire.eu/open-access-info/open-access-in-fp7-seventh-research-framework-programme">More Information</a>
+			</xsl:if>
 		</li>
 	</xsl:template>
 
