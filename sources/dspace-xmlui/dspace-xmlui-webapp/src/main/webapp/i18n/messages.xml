@@ -671,6 +671,7 @@
     <message key="xmlui.Submission.submit.progressbar.initial-questions">Initial Questions</message>
     <message key="xmlui.Submission.submit.progressbar.describe">Item Type</message>
     <message key="xmlui.Submission.submit.progressbar.describe2">Describe</message>
+    <message key="xmlui.Submission.submit.progressbar.describe3">OpenAIRE</message>
     <message key="xmlui.Submission.submit.progressbar.upload">Upload</message>
     <message key="xmlui.Submission.submit.progressbar.additional">Details</message>
     <message key="xmlui.Submission.submit.progressbar.additional2">Note</message>

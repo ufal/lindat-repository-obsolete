@@ -229,7 +229,7 @@
          <repeatable>false</repeatable>
          <label>OpenAIRE Project Identifier</label>
          <input-type>onebox</input-type>
-         <hint>Enter the search term (number, name or acronym) of the European project (EC / ERC) and click on the magnifying glass to select the project. &lt;a href=&quot;http://www.openaire.eu/open-access/open-access-in-fp7 &quot;&gt;More Information&lt;/a&gt;</hint>
+         <hint>Start typing the number, name or acronym of the European project (EC / ERC) and select the project from suggestions.</hint>
        </field>
 
       </page>
