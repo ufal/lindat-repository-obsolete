@@ -2,12 +2,8 @@
 package cz.cuni.mff.ufal.curation;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.log4j.Logger;
 import org.dspace.content.DCValue;
@@ -16,79 +12,177 @@ import org.dspace.core.ConfigurationManager;
 import org.dspace.ctask.general.BasicLinkChecker;
 import org.dspace.curate.Curator;
 
-import cz.cuni.mff.ufal.AllCertsTrustManager;
 import cz.cuni.mff.ufal.DSpaceApi;
 
 @SuppressWarnings("deprecation")
-public class ItemHandleChecker extends BasicLinkChecker {
-	
+public class ItemHandleChecker extends BasicLinkChecker
+{
+
     // The log4j logger for this class
     private static Logger log = Logger.getLogger(Curator.class);
 
-	
-	private Item currentItem = null;
-	
-	@Override
-	protected List<String> getURLs(Item item) {
-		// get the handle URL associated with Item
-        DCValue[] handles = item.getMetadata("dc", "identifier", "uri", Item.ANY);
+    private Item currentItem = null;
+
+    @Override
+    protected List<String> getURLs(Item item)
+    {
+        // get the handle URL associated with Item
+        DCValue[] handles = item.getMetadata("dc", "identifier", "uri",
+                Item.ANY);
         ArrayList<String> theURLs = new ArrayList<String>();
-        for (DCValue url : handles) {
-        	theURLs.add(url.value);
+        for (DCValue url : handles)
+        {
+            theURLs.add(url.value);
         }
         currentItem = item;
         return theURLs;
-	}
+    }
 
-	@Override
-	protected int getResponseStatus(String url) {
+    /**
+     * Check the URL and perform appropriate reporting
+     * 
+     * @param url
+     *            The URL to check
+     * @return If the URL was OK or not
+     */
+    protected boolean checkURL(String url, StringBuilder results)
+    {
+        // Link check the URL
+        ResponseStatus responseStatus = new ResponseStatus(0);
+
+        // should we ignore it
+        if (isIgnoredURL(url))
+        {
+            responseStatus.setCode(-1);
+            checked_results.put(url, responseStatus);
+        }
+
+        // have we already processed it
+        if (checked_results.containsKey(url))
+        {
+            responseStatus = checked_results.get(url);
+        }
+        else
+        {
+            responseStatus = getResponseStatus(url);
+            responseStatus = fixHandleURL(url, responseStatus);
+            checked_results.put(url, responseStatus);
+        }
+
+        return processResult(url, responseStatus, results);
+    }
+
+    /**
+     * Tries to fix handle URL if needed and allowed
+     * 
+     * @param url
+     * @param responseStatus
+     * @return
+     */
+    protected ResponseStatus fixHandleURL(String url,
+            ResponseStatus responseStatus)
+    {
+        ResponseStatus newResponseStatus = new ResponseStatus(responseStatus);
         try
         {
-            URL theURL = new URL(url);
-            HttpURLConnection connection = (HttpURLConnection)theURL.openConnection();
-            if(theURL.getProtocol().equals("https")) {
-            	HttpsURLConnection.setDefaultHostnameVerifier(AllCertsTrustManager.getHostNHostnameVerifier());
-            	((HttpsURLConnection)connection).setSSLSocketFactory(AllCertsTrustManager.getSocketFactory());
-            }
-            int code = connection.getResponseCode();
-            connection.disconnect();
-            
-            if(code >= 300 && code < 400) {
-            	String redirectionURL = connection.getHeaderField("Location");            	
-            	String handle = currentItem.getHandle();
-            	if(handle != null) {
-            		if(url.endsWith(handle) && redirectionURL.endsWith(handle)) {
-            			code = getResponseStatus(redirectionURL);
-            		} else {
-            			//if the redirection URL is wrong try to correct it
-            			String doCorreciton = ConfigurationManager.getProperty("lr", "lr.curation.handle.correction");
-            			if(Boolean.parseBoolean(doCorreciton)) {
-            				//only attempt correction if pid url endswith handle but redirection url does not
-            				if(url.endsWith(handle) && !redirectionURL.endsWith(handle)) {
-            					log.info("Trying to correct PID " + handle);
-            					DSpaceApi.handle_HandleManager_registerFinalHandleURL(log, handle);
-            					//check the URL again
-            					code = getResponseStatus(url);
-            					return code;
-            				}
-            			}
-            			throw new IOException("Invalid Redirection : " + url + " to " + redirectionURL);
-            		}
-            	} else {
-            		throw new IOException("Item handle not found");
-            	}
-            }            
-            connection.disconnect();
-            
-            return code;
+            if (responseStatus.isRedirection())
+            {
 
-        } catch (IOException ioe)
+                String handle = currentItem.getHandle();
+
+                if (handle == null)
+                {
+                    throw new RuntimeException("Item handle not found");
+                }
+
+                if (isHandleURL(url))
+                {
+                    if (url.endsWith(handle))
+                    {
+                        // if handle URL has proper handle
+                        if (!responseStatus.getRedirectionURL()
+                                .endsWith(handle))
+                        {
+                            // if the redirection URL is wrong try to correct it
+                            // only attempt correction if pid url ends with
+                            // handle but redirection url does not
+                            if (isCorrectionAllowed())
+                            {
+                                correctHandle(handle);
+                                newResponseStatus = super
+                                        .getResponseStatus(url);
+                            }
+                            else
+                            {
+                                throw new RuntimeException(
+                                        "Correction needed for invalid redirection : "
+                                                + url
+                                                + " to "
+                                                + responseStatus
+                                                        .getRedirectionURL());
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        throw new RuntimeException(
+                                "Invalid dc.identifier.uri : " + url
+                                        + " not pointing to handle " + handle);
+                    }
+                }
+                else
+                {
+                    throw new RuntimeException(
+                            "Invalid format of dc.identifier.uri : " + url);
+                }
+            }
+        }
+        catch (IOException ioe)
         {
             // Must be a bad URL
             log.error("Bad link: " + ioe.getMessage());
-            return 0;
+            newResponseStatus.setCode(0);
+            return newResponseStatus;
         }
-	}
+        catch (RuntimeException re)
+        {
+            // Must be a bad URL
+            log.error(String.format("Error while checking link [%s]: [%s]",
+                    url, re.getMessage()));
+            newResponseStatus.setCode(0);
+            return newResponseStatus;
+        }
+
+        return newResponseStatus;
+
+    }
+
+    /**
+     * Checks whether correction of handles during checking dc.identifier.uri is
+     * allowed
+     * 
+     * @return
+     */
+    private boolean isCorrectionAllowed()
+    {
+        boolean res = false;
+        String doCorrection = ConfigurationManager.getProperty("lr",
+                "lr.curation.handle.correction");
+        res = Boolean.parseBoolean(doCorrection);
+        return res;
+    }
+
+    /**
+     * Performs registration of the current item URL in handle system
+     * 
+     * @param handle
+     *            Handle of the item
+     */
+    private void correctHandle(String handle) throws IOException
+    {
+        log.info("Trying to correct PID " + handle);
+        DSpaceApi.handle_HandleManager_registerFinalHandleURL(log, handle);
+    }
 
 }
-
