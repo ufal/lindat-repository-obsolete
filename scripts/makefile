@@ -309,7 +309,7 @@ check_lindat_common:
 	@test -d $(DIR_LINDAT_COMMON_THEME)/.git || git clone $(URL_LINDAT_COMMON_GIT) $(DIR_LINDAT_COMMON_THEME)
 
 update_lindat_common: check_lindat_common
-	cd $(DIR_LINDAT_COMMON_THEME) && git checkout $(LINDAT_COMMON_THEME_BRANCH) && git pull
+	cd $(DIR_LINDAT_COMMON_THEME) && git checkout -f $(LINDAT_COMMON_THEME_BRANCH) && git pull
 
 
 #======================================================
