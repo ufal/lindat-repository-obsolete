@@ -23,9 +23,9 @@ import org.dspace.app.xmlui.wing.element.Hidden;
 import org.dspace.app.xmlui.wing.element.Item;
 import org.dspace.app.xmlui.wing.element.List;
 import org.dspace.app.xmlui.wing.element.PageMeta;
-import org.dspace.app.xmlui.wing.element.Select;
 import org.dspace.app.xmlui.wing.element.Text;
 import org.dspace.core.Constants;
+import org.springframework.util.StringUtils;
 
 import cz.cuni.mff.ufal.dspace.content.Handle;
 
@@ -138,10 +138,10 @@ public class EditHandleForm extends AbstractDSpaceTransformer
             url = request.getParameter("url");
             
             String resourceTypeIDParam = request.getParameter("resource_type_id");        
-            resourceTypeID = resourceTypeIDParam == null ? -1 : Integer.valueOf(resourceTypeIDParam);
+            resourceTypeID = StringUtils.isEmpty(resourceTypeIDParam) ? -1 : Integer.valueOf(resourceTypeIDParam);
             
             String resourceIDParam = request.getParameter("resource_id");
-            resourceID = resourceIDParam == null ? -1 : Integer.valueOf(resourceIDParam);
+            resourceID = StringUtils.isEmpty(resourceIDParam) ? -1 : Integer.valueOf(resourceIDParam);
             
             archiveOldHandle = (request.getParameter("archive_old_handle") == null)  ? false : true;
         }              
