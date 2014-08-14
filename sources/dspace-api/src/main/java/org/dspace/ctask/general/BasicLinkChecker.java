@@ -13,8 +13,10 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -43,11 +45,11 @@ import cz.cuni.mff.ufal.AllCertsTrustManager;
 public class BasicLinkChecker extends AbstractCurationTask
 {
 
-    protected static final String LINK_CHECKER_USER_AGENT = "DSpace Link Checker";
+    protected static final String LINK_CHECKER_USER_AGENT = "DSpace Link Validator";
 
-    protected static final int LINK_CHECKER_CONNECT_TIMEOUT = 200;
+    protected static final int LINK_CHECKER_CONNECT_TIMEOUT = 1000;
 
-    protected static final int LINK_CHECKER_READ_TIMEOUT = 500;
+    protected static final int LINK_CHECKER_READ_TIMEOUT = 3000;
 
     // The status of the link checking of this item
     protected int status = Curator.CURATE_UNSET;
@@ -320,37 +322,36 @@ public class BasicLinkChecker extends AbstractCurationTask
     {
         String level;
         boolean res;
-        if (responseStatus.isRedirection())
-        {
-            level = "WARNING";
-            res = true;
-        }
-        else
-        {
-            int httpStatus = responseStatus.getCode();
 
-            if (((httpStatus >= 200) && (httpStatus < 300))
-                    || httpStatus == 401)
-            {
-                level = "OK";
-                res = true;
-            }
-            else if (httpStatus == -1)
-            {
-                level = "IGNORED";
-                res = false;
-            }
-            else if (httpStatus == -2)
-            {
-                level = "TIMEOUT";
-                res = false;
-            }
-            else
-            {
-                level = "FAILED";
-                res = false;
-            }
-        }
+		int httpStatus = responseStatus.isRedirection() ? responseStatus.getRedirectionCode() : responseStatus.getCode();
+
+		if (((httpStatus >= 200) && (httpStatus < 300))
+				|| httpStatus == 401)
+		{
+			level = "OK";
+			res = true;
+		}
+		else if (httpStatus == -1)
+		{
+			level = "IGNORED";
+			res = false;
+		}
+		else if (httpStatus == -2)
+		{
+			level = "TIMEOUT";
+			res = false;
+		}
+		else if (httpStatus == -3)
+		{
+			level = "REDIRECTION LOOP";
+			res = false;
+		}
+		else
+		{
+			level = "FAILED";
+			res = false;
+		}
+
         results.append(formatResult(level, url, responseStatus));
         return res;
     }
@@ -420,12 +421,26 @@ public class BasicLinkChecker extends AbstractCurationTask
             int code = connection.getResponseCode();
             responseStatus.setCode(code);
 
-            if (responseStatus.isRedirection())
-            {
-                String redirectionURL = connection.getHeaderField("Location");
-                responseStatus.setRedirectionURL(redirectionURL);
+	    boolean redirect = responseStatus.isRedirection();
 
+            Set<String> redirections = new HashSet<String>();
+
+            while(redirect)
+	    {
+                String redirectionURL = connection.getHeaderField("Location");
+
+	        if (redirections.contains(redirectionURL))
+        	{
+            		responseStatus.setCode(-3);
+			break;
+        	}
+
+                redirections.add(redirectionURL);
+
+                responseStatus.setRedirectionURL(redirectionURL);
+                
                 ResponseStatus redirectionResponseStatus = getResponseStatus(redirectionURL);
+                redirect = redirectionResponseStatus.isRedirection();
 
                 if (isHandleURL(url))
                 {
