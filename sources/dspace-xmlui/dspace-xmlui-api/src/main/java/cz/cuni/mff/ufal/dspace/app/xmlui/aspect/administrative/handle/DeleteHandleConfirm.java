@@ -111,12 +111,28 @@ public class DeleteHandleConfirm extends AbstractDSpaceTransformer
 		hhead.addCellContent(T_resource_id);
             	
 		Row hrow = htable.addRow(null, Row.ROLE_DATA, null);
-		String resolvedURL = HandleManager.resolveToURL(context, h.getHandle());		
-		hrow.addCell().addXref(HandleManager.getCanonicalForm(h.getHandle()), h.getHandle(),
-				"target_blank");
-		hrow.addCell().addContent(h.isInternalResource() ? T_yes : T_no);
-		hrow.addCell().addXref(resolvedURL, resolvedURL, "target_blank");
-		
+
+        if (h.getHandle() != null && !h.getHandle().isEmpty())
+        {
+            hrow.addCell().addXref(
+                    HandleManager.getCanonicalForm(h.getHandle()),
+                    h.getHandle(), "target_blank");
+        }
+        else
+        {
+            hrow.addCell().addContent(h.getHandle());
+        }
+        hrow.addCell().addContent(h.isInternalResource() ? T_yes : T_no);
+        if (h.getHandle() != null && !h.getHandle().isEmpty())
+        {
+            String resolvedURL = HandleManager.resolveToURL(context,
+                    h.getHandle());
+            hrow.addCell().addXref(resolvedURL, resolvedURL, "target_blank");
+        }
+        else
+        {
+            hrow.addCell().addContent(h.getHandle());
+        }
 		String resourceType = "";
 		if(h.getResourceTypeID() >= 0) {
 			resourceType = Constants.typeText[h.getResourceTypeID()];			
