@@ -368,18 +368,21 @@ function updateInformation(eperson)
 	var lastName = cocoon.request.getParameter("last_name");
 	var firstName = cocoon.request.getParameter("first_name");
 	var phone = cocoon.request.getParameter("phone");
-        var language = cocoon.request.getParameter("language");
+    var language = cocoon.request.getParameter("language");
+    var registering = cocoon.request.getParameter("registering");
+	var oldFirstName = eperson.getFirstName();
+	var oldLastName = eperson.getLastName();
 
-    // first check that each parameter is filled in before seting anything.	
+    // first check that each parameter is filled in before setting anything.
 	var idx = 0;
 	var errors = new Array();
 	
-	if (firstName == null || firstName.equals(""))
+	if ((registering || !stringsEqual(firstName, oldFirstName)) && stringsEqual(firstName, ""))
     {
         errors[idx++] = "first_name";
     }
     
-    if (lastName == null || lastName.equals(""))
+    if ((registering || !stringsEqual(lastName, oldLastName)) && stringsEqual(lastName, ""))
 	{
 	    errors[idx++] = "last_name";
 	}
@@ -394,13 +397,31 @@ function updateInformation(eperson)
 	eperson.setLastName(lastName);
 	
 	eperson.setMetadata("phone", phone);
-        eperson.setLanguage(language);
+    eperson.setLanguage(language);
 	eperson.update();
 	
     return new Array();
 }
-  
-  
+
+/**
+ * Helper function to check if two strings are equal
+ * treating null as empty string
+ *
+ * @param s1 First string
+ * @param s2 Second string
+ * @returns True is the strings equal, false otherwise
+ */
+function stringsEqual(s1, s2)
+{
+	var res = false;
+	if(((s1 == null || s1.equals("")) && (s2 == null || s2.equals(""))) ||
+		(s1 != null && s2 != null && s1.equals(s2)))
+	{
+		res = true;
+	}
+	return res;
+}
+
   
 /**
  * Update the eperson's password if it meets the minimum password
