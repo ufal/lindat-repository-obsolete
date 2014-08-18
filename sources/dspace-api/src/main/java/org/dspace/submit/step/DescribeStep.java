@@ -256,6 +256,9 @@ public class DescribeStep extends AbstractProcessingStep
                         + element, schema + "_" + element + "_qualifier");
                 List<String> vals = getRepeatedParameter(request, schema + "_"
                         + element, schema + "_" + element + "_value");
+                
+                Set<String> uniqueValues = new HashSet<String>();
+                
                 for (int z = 0; z < vals.size(); z++)
                 {
                     String thisQual = quals.get(z);
@@ -264,9 +267,12 @@ public class DescribeStep extends AbstractProcessingStep
                         thisQual = null;
                     }
                     String thisVal = vals.get(z);
+                    if (!thisVal.equals("")) {
+                    	uniqueValues.add(thisValue);
+                    }
                     if (!buttonPressed.equals("submit_" + schema + "_"
                             + element + "_remove_" + z)
-                            && !thisVal.equals(""))
+                            && !thisVal.equals("") && !uniqueValues.contains(thisVal))
                     {
                         item.addMetadata(schema, element, thisQual, null,
                                 thisVal);
