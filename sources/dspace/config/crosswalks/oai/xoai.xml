@@ -30,60 +30,14 @@
             </Description>
 		</Context> 
 		
-		<!--
-			Driver Guidelines:
-		 
-			- http://www.driver-support.eu/documents/DRIVER_Guidelines_v2_Final_2008-11-13.pdf
-			
-			Page 57 - 58
-		 -->
-        <Context baseurl="driver" name="Driver Context">
-			<!-- Date format, field prefixes, etc are ensured by the transformer -->
-            <Transformer ref="driverTransformer"/>
-            <!-- The driver filter -->
-            <Filter ref="driverFilter"/>
-			<!-- Just an alias, if fact it returns all items within the driver context -->
-            <Set ref="driverSet"/>
-			<!-- Metadata Formats -->
-            <Format ref="oaidc"/>
-            <Format ref="mets"/>
-            <Format ref="didl"/>
-            <Description>
-                This contexts complies with Driver rules.
-            </Description>
-		</Context>
-		
-		<!-- 
-			OpenAIRE Guidelines 1.1:
-			
-			- http://www.openaire.eu/en/component/attachments/download/79%E2%8C%A9=en
-			
-			There is a limitation over the embargoedEndDate parameter:
-			
-			- Predefined DSpace fields don't allow to set this up with a default.
-		 -->
-        <Context baseurl="openaire" name="OpenAIRE Context">
-			<!-- Date format, field prefixes, etc are ensured by the transformer -->
-            <Transformer ref="openaireTransformer"/>
-            <!-- OpenAIRE filter -->
-            <Filter ref="openAireFilter"/>
-			<!-- Just an alias, if fact it returns all items within the driver context -->
-            <Set ref="openaireSet"/>
-			<!-- Metadata Formats -->
-            <Format ref="oaidc"/>
-            <Format ref="mets"/>
-            <Description>
-                This contexts complies with OpenAIRE rules.
-            </Description>
-		</Context>
-		
 		<Context baseurl="openaire_data" name="OpenAIRE data Context">
 		  <!-- <Transformer ref="openaireDataTransformer"/> -->
-		  <!-- <Filter ref="openAireDataFilter"/> -->
+		  <Filter ref="openAIREdata"/>
 		  <Set ref="openaireDataSet"/>
+		  <Format ref="oaidc"/>
 		  <Format ref="oai_datacite"/>
 		  <Description>
-		      This context test openaire data archive rules.
+		      This context exports items following the openaire data archive rules.
 		  </Description>
 		</Context>
 	</Contexts>
@@ -279,6 +233,12 @@
             <Definition>
                 <Custom ref="bitstreamAccessCondition"/>
             </Definition>
+		</Filter>
+		
+		<Filter id="openAIREdata">
+		  <Definition>
+		      <Custom ref="openaireRelationCondition"/>
+		  </Definition>
 		</Filter>
 
         <CustomCondition id="thesisDocumentTypeCondition">
