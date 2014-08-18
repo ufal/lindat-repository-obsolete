@@ -32,7 +32,7 @@
 		
 		<Context baseurl="openaire_data" name="OpenAIRE data Context">
 		  <!-- <Transformer ref="openaireDataTransformer"/> -->
-		  <Filter ref="openAIREdata"/>
+		  <Filter ref="openaireRelationCondition"/>
 		  <Set ref="openaireDataSet"/>
 		  <Format ref="oaidc"/>
 		  <Format ref="oai_datacite"/>
@@ -162,158 +162,18 @@
 	
 
 	<Filters>
-        <Filter id="driverFilter">
-            <Definition>
-                <And>
-                    <LeftCondition>
-                        <And>
-                            <LeftCondition>
-                                <Custom ref="titleExistsCondition"/>
-                            </LeftCondition>
-                            <RightCondition>
-                                <Custom ref="authorExistsCondition"/>
-                            </RightCondition>
-                        </And>
-                    </LeftCondition>
-                    <RightCondition>
-                        <And>
-                            <LeftCondition>
-                                <Custom ref="driverDocumentTypeCondition"/>
-                            </LeftCondition>
-                            <RightCondition>
-                                <And>
-                                    <LeftCondition>
-                                        <Custom ref="bitstreamAccessCondition"/>
-                                    </LeftCondition>
-                                    <RightCondition>
-                                        <Custom ref="driverAccessCondition"/>
-                                    </RightCondition>
-                                </And>
-                            </RightCondition>
-                        </And>
-                    </RightCondition>
-                </And>
-            </Definition>
-		</Filter>
-		
-        <Filter id="openAireFilter">
-            <Definition>
-                <And>
-                    <LeftCondition>
-                        <And>
-                            <LeftCondition>
-                                <Custom ref="titleExistsFilter"/>
-                            </LeftCondition>
-                            <RightCondition>
-                                <Custom ref="authorExistsFilter"/>
-                            </RightCondition>
-                        </And>
-                    </LeftCondition>
-                    <RightCondition>
-                        <And>
-                            <LeftCondition>
-                                <Custom ref="driverDocumentTypeFilter"/>
-                            </LeftCondition>
-                            <RightCondition>
-                                <Custom ref="openaireRelationFilter"/>
-                            </RightCondition>
-                        </And>
-                    </RightCondition>
-                </And>
-            </Definition>
-		</Filter>
-		
-        <Filter id="uketdDcFilter">
-            <Definition>
-                <Custom ref="thesisDocumentTypeCondition"/>
-            </Definition>
-		</Filter>
-
-        <Filter id="defaultFilter">
-            <Definition>
-                <Custom ref="bitstreamAccessCondition"/>
-            </Definition>
-		</Filter>
-		
-		<Filter id="openAIREdata">
-		  <Definition>
-		      <Custom ref="openaireRelationCondition"/>
-		  </Definition>
-		</Filter>
-
-        <CustomCondition id="thesisDocumentTypeCondition">
-			<Class>org.dspace.xoai.filter.DSpaceAtLeastOneMetadataFilter</Class>
-            <Configuration>
-                <string name="field">dc.type</string>
-                <string name="operator">contains</string>
-                <string name="value">Thesis</string>
-            </Configuration>
-        </CustomCondition>
-
-        <CustomCondition id="authorExistsCondition">
-            <Class>org.dspace.xoai.filter.DSpaceMetadataExistsFilter</Class>
-            <Configuration>
-                <string name="field">dc.contributor.author</string>
-            </Configuration>
-        </CustomCondition>
-
-        <CustomCondition id="titleExistsCondition">
-            <Class>org.dspace.xoai.filter.DSpaceMetadataExistsFilter</Class>
-            <Configuration>
-                <string name="field">dc.title</string>
-            </Configuration>
-        </CustomCondition>
-
-        <CustomCondition id="driverDocumentTypeCondition">
-			<Class>org.dspace.xoai.filter.DSpaceAtLeastOneMetadataFilter</Class>
-            <Configuration>
-                <string name="field">dc.type</string>
-                <string name="operator">ends_with</string>
-                <list name="values">
-                    <string>article</string>
-                    <string>bachelorThesis</string>
-                    <string>masterThesis</string>
-                    <string>doctoralThesis</string>
-                    <string>book</string>
-                    <string>bookPart</string>
-                    <string>review</string>
-                    <string>conferenceObject</string>
-                    <string>lecture</string>
-                    <string>workingPaper</string>
-                    <string>preprint</string>
-                    <string>report</string>
-                    <string>annotation</string>
-                    <string>contributionToPeriodical</string>
-                    <string>patent</string>
-                    <string>other</string>
-                </list>
-            </Configuration>
-        </CustomCondition>
-
-        <CustomCondition id="driverAccessCondition">
+        <Filter id="openaireRelationCondition">
             <Class>org.dspace.xoai.filter.DSpaceAtLeastOneMetadataFilter</Class>
-            <Configuration>
-                <string name="field">dc.rights</string>
-                <string name="operator">contains</string>
-                <list>
-                    <string>open access</string>
-                    <string>openAccess</string>
-                </list>
-            </Configuration>
-        </CustomCondition>
-
-        <CustomCondition id="bitstreamAccessCondition">
-            <Class>org.dspace.xoai.filter.DSpaceAuthorizationFilter</Class>
-        </CustomCondition>
-
-        <CustomCondition id="openaireRelationCondition">
-            <Class>org.dspace.xoai.filter.DSpaceAtLeastOneMetadataFilter</Class>
-            <Configuration>
-                <string name="field">dc.relation</string>
-                <string name="operator">starts_with</string>
-                <string name="value">info:eu-repo/grantAgreement/EC/FP</string>
-            </Configuration>
-        </CustomCondition>
+            <Parameter key="field">
+                <Value>dc.relation</Value>
+            </Parameter>
+            <Parameter key="operator">
+                <Value>starts_with</Value>
+            </Parameter>
+            <Parameter key="value">
+                <Value>info:eu-repo/grantAgreement/EC/FP</Value>
+            </Parameter>
+        </Filter>
 	</Filters>
 	
 	<Sets>
