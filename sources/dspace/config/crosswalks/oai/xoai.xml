@@ -32,7 +32,7 @@
 		
 		<Context baseurl="openaire_data" name="OpenAIRE data Context">
 		  <!-- <Transformer ref="openaireDataTransformer"/> -->
-		  <Filter ref="openaireRelationCondition"/>
+		  <Filter ref="openaireFilter"/>
 		  <Set ref="openaireDataSet"/>
 		  <Format ref="oaidc"/>
 		  <Format ref="oai_datacite"/>
@@ -162,18 +162,20 @@
 	
 
 	<Filters>
-        <Filter id="openaireRelationCondition">
-            <Class>org.dspace.xoai.filter.DSpaceAtLeastOneMetadataFilter</Class>
-            <Parameter key="field">
-                <Value>dc.relation</Value>
-            </Parameter>
-            <Parameter key="operator">
-                <Value>starts_with</Value>
-            </Parameter>
-            <Parameter key="value">
-                <Value>info:eu-repo/grantAgreement/EC/FP</Value>
-            </Parameter>
+        <Filter id="openaireFilter">
+            <Definition>
+                <Custom ref="openaireRelationCondition"/>
+            </Definition>
         </Filter>
+        
+        <CustomCondition id="openaireRelationCondition">
+            <Class>org.dspace.xoai.filter.DSpaceAtLeastOneMetadataFilter</Class>
+            <Configuration>
+                <string name="field">dc.relation</string>
+                <string name="operator">starts_with</string>
+                <string name="value">info:eu-repo/grantAgreement/EC/FP</string>
+            </Configuration>
+        </CustomCondition>
 	</Filters>
 	
 	<Sets>
