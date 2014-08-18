@@ -1,0 +1,12 @@
+/* select highlighted button */
+#lindat-services .lindat-header .nav a:hover,
+#lindat-services #lindat-tools-item a
+{
+    background-color: #cdac28;
+    color: #f2f2f2;
+}
+
+#lindat-services .lindat-header {
+    border-bottom-color: #cdac28;
+}
+

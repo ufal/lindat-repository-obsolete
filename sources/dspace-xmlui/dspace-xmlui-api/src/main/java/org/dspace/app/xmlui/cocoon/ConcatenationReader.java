@@ -4,6 +4,8 @@
  * tree and available online at
  *
  * http://www.dspace.org/license/
+ * 
+ * modified for LINDAT/CLARIN
  */
 package org.dspace.app.xmlui.cocoon;
 
@@ -27,6 +29,8 @@ import org.apache.avalon.framework.parameters.ParameterException;
 import org.apache.avalon.framework.parameters.Parameters;
 import org.apache.cocoon.ProcessingException;
 import org.apache.cocoon.ResourceNotFoundException;
+import org.apache.cocoon.environment.ObjectModelHelper;
+import org.apache.cocoon.environment.Request;
 import org.apache.cocoon.environment.SourceResolver;
 import org.apache.cocoon.reading.ResourceReader;
 import org.apache.excalibur.source.Source;
@@ -123,8 +127,8 @@ public class ConcatenationReader extends ResourceReader {
                 InputStream stream = source.getInputStream();
             } catch (IOException e) {
                 String uri = null != source ? source.getURI() : "null";
-                log.error(String.format("IOException in StreamEnumeration.nextElement when retrieving InputStream [%s]" +
-                        " of a Source; index = %d, inputSources.size = %d", uri, index, inputSources.size()), e);
+                log.error(String.format("IOException in ConcatenationReader.setup when retrieving InputStream [%s]" +
+                        " of a Source; index = %d, inputSources.size = %d; %s", uri, index, inputSources.size(), getRequestInfo(objectModel)));
                 throw new ResourceNotFoundException(uri);
             }
             index++;
@@ -147,6 +151,34 @@ public class ConcatenationReader extends ResourceReader {
         } catch (ParameterException e) {
             log.error("ParameterException in setup when retrieving parameter requestQueryString", e);
         }
+    }
+
+    /**
+     * Returns information about the referrer (remote IP address and referrer)
+     * 
+     * @return Information about the referrer
+     */
+    private String getRequestInfo(Map objectModel)
+    {
+        String referrer = null;
+        String ipAddress = null;
+        String requestURI = null;
+
+        Request request = ObjectModelHelper.getRequest(objectModel);
+
+        if (request != null)
+        {
+            referrer = request.getHeader("Referer"); // Misspelled header name
+            ipAddress = request.getRemoteAddr();
+            requestURI = request.getRequestURI();
+        }
+        referrer = referrer != null ? referrer : "?";
+
+        String requestInfo = String.format(
+                "request URI = %s, remote address = %s, referrer = %s",
+                requestURI, ipAddress, referrer);
+
+        return requestInfo;
     }
 
     /**
@@ -312,9 +344,10 @@ public class ConcatenationReader extends ResourceReader {
             } catch (IOException e) {
                 String uri = null != src ? src.getURI() : "null";
                 log.error(String.format("IOException in StreamEnumeration.nextElement when retrieving InputStream [%s]" +
-                                        " of a Source; index = %d, inputSources.size = %d", uri, index, inputSources.size()), e);
+                                        " of a Source; index = %d, inputSources.size = %d", uri, index, inputSources.size()));
                 return null;
             }
         }
     }
+        
 }

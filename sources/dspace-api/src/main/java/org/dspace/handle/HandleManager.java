@@ -795,10 +795,10 @@ public class HandleManager
      * 
      * @param context
      *            DSpace context
-     * @param oldPrefix
-     *            Old handle prefix
-     * @param newPrefix
-     *            New handle prefix
+     * @param oldHandle
+     *            Old handle
+     * @param newHandle
+     *            New handle
      * @param archiveOldHandle
      *            Flag indicating whether the old handle should be stored in
      *            Item metadata
@@ -808,6 +808,12 @@ public class HandleManager
             String newHandle, boolean archiveOldHandle) throws SQLException,
             AuthorizeException
     {
+        // Ignore invalid handles
+        if(oldHandle == null)
+        {
+            return;
+        }
+
         // Find handle
         Handle h = Handle.findByHandle(context, oldHandle);
 

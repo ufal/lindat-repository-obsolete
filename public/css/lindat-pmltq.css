@@ -1,0 +1,15 @@
+/* select highlighted button */
+#lindat-pmltq .lindat-header .nav a:hover,
+#lindat-pmltq #lindat-pmltq-item a
+{
+    background-color: #292E99;
+    color: #f0f0f0;
+}
+
+#lindat-pmltq #lindat-project-title span, #lindat-pmltq #lindat-project-title a:hover {
+    color: #292E99;
+}
+
+#lindat-pmltq .lindat-header {
+    border-bottom-color: #292E99;
+}
