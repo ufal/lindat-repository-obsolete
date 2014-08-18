@@ -94,7 +94,7 @@
 	</xsl:template>
 
 	<xsl:template name="PublicationYear_M">
-		<!-- TODO bit unclear what goes here if embargo see also Date_M -->
+		<!-- bit unclear what goes here if embargo, datacite suggests end of embargo year -->
 		<publicationYear>
 			<xsl:value-of
 				select="substring(doc:metadata/doc:element[@name='dc']/doc:element[@name='date']/doc:element[@name='issued']/doc:element/doc:field[@name='value'],1,4)" />
@@ -128,12 +128,29 @@
 			To indicate the end of an embargo period, use “Available”. To indicate the 
 			start of an embargo period, use “Accepted”. DataCite v3.0 further recommends 
 			use of “Created” and “Submitted”. -->
-		<!-- TODO implement embargoes and possibly other dates -->
+		<!-- TODO possibly other dates -->
 		<dates>
 			<date dateType="Issued">
 			<xsl:value-of
 				select="doc:metadata/doc:element[@name='dc']/doc:element[@name='date']/doc:element[@name='issued']/doc:element/doc:field[@name='value']" />
 			</date>
+            <!-- Technically start of embargo period -->
+            <date dateType="Accepted">
+                <xsl:value-of select="doc:metadata/doc:element[@name='dc']/doc:element[@name='date']/doc:element[@name='accessioned']/doc:element/doc:field[@name='value']"/>
+            </date>
+			<xsl:choose>
+			<xsl:when test="doc:metadata/doc:element[@name='dc']/doc:element[@name='date']/doc:element[@name='available']/doc:element/doc:field[@name='value']">
+			     <date dateType="Available">
+			         <xsl:value-of select="doc:metadata/doc:element[@name='dc']/doc:element[@name='date']/doc:element[@name='available']/doc:element/doc:field[@name='value']"/>
+                 </date>
+			</xsl:when>
+			<xsl:otherwise>
+			     <!-- empty available means embargo. item will be available on the embargo date -->
+			     <date dateType="Available">
+			         <xsl:value-of select="doc:metadata/doc:element[@name='local']/doc:element[@name='embargo']/doc:element[@name='termslift']/doc:element/doc:field[@name='value']"/>
+                 </date>
+			</xsl:otherwise>
+            </xsl:choose>
 		</dates>
 	</xsl:template>
 
@@ -149,7 +166,9 @@
 	<xsl:template name="Rights_MA">
 	   <rightsList>
 	   <xsl:choose>
-	       <!-- TODO embargoedAccess -->
+	       <xsl:when test="/doc:metadata/doc:element[@name='local']/doc:element[@name='embargo']/doc:element[@name='termslift']/doc:element/doc:field[@name='value']">
+	           <rights rightsURI="info:eu-repo/semantics/embargoedAccess" />
+	       </xsl:when>
 	       <xsl:when test="/doc:metadata/doc:element[@name='others']/doc:field[@name='restrictedAccess']/text()='true'">
 	           <rights rightsURI="info:eu-repo/semantics/restrictedAccess"/>
 	       </xsl:when>
