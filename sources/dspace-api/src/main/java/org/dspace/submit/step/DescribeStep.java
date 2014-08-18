@@ -13,6 +13,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -268,7 +270,7 @@ public class DescribeStep extends AbstractProcessingStep
                     }
                     String thisVal = vals.get(z);
                     if (!thisVal.equals("")) {
-                    	uniqueValues.add(thisValue);
+                    	uniqueValues.add(thisVal);
                     }
                     if (!buttonPressed.equals("submit_" + schema + "_"
                             + element + "_remove_" + z)
