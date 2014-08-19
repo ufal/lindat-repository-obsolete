@@ -2361,6 +2361,12 @@
   <message key="xmlui.ChoiceLookupTransformer.field.dc_contributor_author.title">LC Name Authority author lookup</message>
   <message key="xmlui.ChoiceLookupTransformer.field.dc_contributor_author.nonauthority">Local value "@1@" (not in Naming Authority)</message>
 
+  <!-- Choice Lookup - config for dc.relation field -->
+  <message key="xmlui.ChoiceLookupTransformer.field.dc_relation.help">OpenAIRE project identifier</message>
+  <message key="xmlui.ChoiceLookupTransformer.field.dc_relation.title">Look up project</message>
+  <!-- Params are: search-value -->
+  <message key="xmlui.ChoiceLookupTransformer.field.dc_relation.nonauthority">Non-authority value: @1@</message>
+
   <!-- jmisutka DragNDrop -->
   <message key="xmlui.UFAL.dragndrop.upload.button.text">Upload</message>
   <message key="xmlui.UFAL.dragndrop.upload.label">Drag 'n' drop to upload</message>
