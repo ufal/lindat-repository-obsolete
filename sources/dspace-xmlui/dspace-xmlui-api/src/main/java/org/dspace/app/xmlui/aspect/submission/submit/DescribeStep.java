@@ -176,6 +176,7 @@ public class DescribeStep extends AbstractSubmissionStep
             pageMeta.addMetadata("choice", "collection").addContent(String.valueOf(collectionID));
             pageMeta.addMetadata("include-library", "datepicker");
             pageMeta.addMetadata("include-library", "jquery-ui");
+            pageMeta.addMetadata("include-library", "authority-control");
 
 
             String jumpTo = submissionInfo.getJumpToField();
