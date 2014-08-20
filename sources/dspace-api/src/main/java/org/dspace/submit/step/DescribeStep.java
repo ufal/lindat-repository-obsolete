@@ -698,6 +698,14 @@ public class DescribeStep extends AbstractProcessingStep
         {
             vals = getRepeatedParameter(request, metadataField, metadataField);
             
+            // if someone adds strings to repeatable with ;, split them if specified 
+            //   in input-forms.xml
+            if ( repeatable_parse ) 
+            {
+                split_strings(vals);
+            }
+
+            // only unique values are allowed
             Set<String> uniqueValues = new HashSet<String>();
             List<String> uniqueVals = new LinkedList<String>();
             for ( int i=0; i < vals.size(); i++ ) {
@@ -707,14 +715,7 @@ public class DescribeStep extends AbstractProcessingStep
             	}
             }
             vals = uniqueVals;
-            
-            // if someone adds strings to repeatable with ;, split them if specified 
-            //   in input-forms.xml
-            if ( repeatable_parse ) 
-            {
-                split_strings(vals);
-            }
-            
+                        
             if (isAuthorityControlled)
             {
                 auths = getRepeatedParameter(request, metadataField, metadataField+"_authority");
