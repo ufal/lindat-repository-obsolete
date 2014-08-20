@@ -9,6 +9,7 @@ package org.dspace.submit.step;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -257,10 +258,8 @@ public class DescribeStep extends AbstractProcessingStep
                 List<String> quals = getRepeatedParameter(request, schema + "_"
                         + element, schema + "_" + element + "_qualifier");
                 List<String> vals = getRepeatedParameter(request, schema + "_"
-                        + element, schema + "_" + element + "_value");
-                
-                Set<String> uniqueValues = new HashSet<String>();
-                
+                        + element, schema + "_" + element + "_value");                
+         
                 for (int z = 0; z < vals.size(); z++)
                 {
                     String thisQual = quals.get(z);
@@ -269,12 +268,9 @@ public class DescribeStep extends AbstractProcessingStep
                         thisQual = null;
                     }
                     String thisVal = vals.get(z);
-                    if (!thisVal.equals("")) {
-                    	uniqueValues.add(thisVal);
-                    }
                     if (!buttonPressed.equals("submit_" + schema + "_"
                             + element + "_remove_" + z)
-                            && !thisVal.equals("") && !uniqueValues.contains(thisVal))
+                            && !thisVal.equals(""))
                     {
                         item.addMetadata(schema, element, thisQual, null,
                                 thisVal);
@@ -701,6 +697,16 @@ public class DescribeStep extends AbstractProcessingStep
         if (repeated)
         {
             vals = getRepeatedParameter(request, metadataField, metadataField);
+            
+            Set<String> uniqueValues = new HashSet<String>();
+            List<String> uniqueVals = new LinkedList<String>();
+            for ( int i=0; i < vals.size(); i++ ) {
+            	if (!uniqueValues.contains(vals.get(i))) {
+                	uniqueValues.add(vals.get(i));
+                	uniqueVals.add(vals.get(i));
+            	}
+            }
+            vals = uniqueVals;
             
             // if someone adds strings to repeatable with ;, split them if specified 
             //   in input-forms.xml
