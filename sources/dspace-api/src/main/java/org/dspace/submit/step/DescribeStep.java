@@ -704,7 +704,7 @@ public class DescribeStep extends AbstractProcessingStep
         List<String> confs = null;
         
         String mdString;
-        if (qualifier.equals("") || (qualifier == null)) {
+        if ((qualifier == null) || qualifier.equals("")) {
         	mdString = schema + "." + element;
         }
         else {
