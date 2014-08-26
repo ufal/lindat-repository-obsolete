@@ -349,7 +349,7 @@ public class HandlePlugin implements HandleStorage
         // all new handle would be given a unified prefix but all old handles would still be 
         // resolvable.
         try{
-	        if (ConfigurationManager.getBooleanProperty("lr", "lr.handle.plugin.checkNameAuthority", true))
+	        if (ConfigurationManager.getBooleanProperty("lr.handle.plugin.checkNameAuthority", true))
 	        {
 		        // First, construct a string representing the naming authority Handle
 		        // we'd expect.
