@@ -348,20 +348,24 @@ public class HandlePlugin implements HandleStorage
         // with their own prefixes and have the one instance handle both prefixes. In this case
         // all new handle would be given a unified prefix but all old handles would still be 
         // resolvable.
-        if (ConfigurationManager.getBooleanProperty("lr", "lr.handle.plugin.checkNameAuthority",true))
-        {
-	        // First, construct a string representing the naming authority Handle
-	        // we'd expect.
-	        String expected = "0.NA/" + HandleManager.getPrefix();
-	
-	        // Which authority does the request pertain to?
-	        String received = Util.decodeString(theHandle);
-	
-	        // Return true if they match
-	        return expected.equals(received);
-        }
-        else 
-        {
+        try{
+	        if (ConfigurationManager.getBooleanProperty("lr", "lr.handle.plugin.checkNameAuthority", true))
+	        {
+		        // First, construct a string representing the naming authority Handle
+		        // we'd expect.
+		        String expected = "0.NA/" + HandleManager.getPrefix();
+		
+		        // Which authority does the request pertain to?
+		        String received = Util.decodeString(theHandle);
+		
+		        // Return true if they match
+		        return expected.equals(received);
+	        }
+	        else 
+	        {
+	        	return true;
+	        }
+        }catch(NullPointerException e) {
         	return true;
         }
     }
@@ -428,3 +432,4 @@ public class HandlePlugin implements HandleStorage
         }
     }
 }
+
