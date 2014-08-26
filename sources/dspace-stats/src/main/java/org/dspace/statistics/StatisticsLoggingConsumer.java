@@ -31,6 +31,7 @@ import org.dspace.event.Event;
  *
  * @author kevinvandevelde at atmire.com
  * @author ben at atmrie.com
+ * modified for LINDAT/CLARIN
  */
 public class StatisticsLoggingConsumer implements Consumer
 {
@@ -65,7 +66,18 @@ public class StatisticsLoggingConsumer implements Consumer
         }
         else if (eventType == Event.MODIFY && dsoType == Constants.ITEM)
         {
+        	//XXX This consumer is probably not used
             // We have a modified item check for a withdraw/reinstate
+            String updateQuery = "id:" + dsoId + " AND type:"
+                    + dsoType;
+            List<String> storageFieldList = new ArrayList<String>();
+            List<List<Object>> storageValuesList = new ArrayList<List<Object>>();
+            storageFieldList.add("withdrawn");
+            List<Object> vals = new ArrayList<Object>();
+            vals.add(((Item)event.getSubject(ctx)).isWithdrawn());
+            storageValuesList.add(vals);
+            SolrLogger.update(updateQuery, "replace", storageFieldList,
+                    storageValuesList);
         }
         else if (eventType == Event.MODIFY_METADATA
                 && event.getSubjectType() == Constants.ITEM)

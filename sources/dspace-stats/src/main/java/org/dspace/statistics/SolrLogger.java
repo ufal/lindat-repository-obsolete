@@ -174,8 +174,19 @@ public class SolrLogger
      * @param request the current request context.
      * @param currentUser the current session's user.
      */
+    public static void post(DSpaceObject dspaceObject, HttpServletRequest request, EPerson currentUser){
+    	post(dspaceObject, request, currentUser, null);
+    }
+    /**
+     * Store a usage event into Solr.
+     * 
+     * @param dspaceObject the object used.
+     * @param request the current request context.
+     * @param currentUser the current session's user.
+     * @param context dso db connection
+     */
     public static void post(DSpaceObject dspaceObject, HttpServletRequest request,
-            EPerson currentUser)
+            EPerson currentUser, Context context)
     {
         if (solr == null || locationService == null)
         {
@@ -286,6 +297,9 @@ public class SolrLogger
                                 .toLowerCase());
                     }
                 }
+                
+                SolrLogger.reindexWithdrawn(context, " AND id:" + item.getID());
+                doc1.addField("withdrawn", item.isWithdrawn());
             }
 
             if(dspaceObject instanceof Bitstream)
@@ -931,6 +945,8 @@ public class SolrLogger
         // A filter is used instead of a regular query to improve
         // performance and ensure the search result ordering will
         // not be influenced
+        
+        solrQuery.addFilterQuery("-withdrawn:true");
 
         // Choose to filter by the Legacy spider IP list (may get too long to properly filter all IP's
         if(ConfigurationManager.getBooleanProperty("solr-statistics", "query.filter.spiderIp",false))
@@ -1184,5 +1200,62 @@ public class SolrLogger
 
         return result.toString();
     }
+
+    private static class WithdrawResultProcessor extends ResultProcessor { 
+
+    	Context context;
+        public WithdrawResultProcessor(Context context) {
+        	super();
+        	this.context = context;
+        } 
+
+        public void process(SolrDocument doc) throws IOException, SolrServerException { 
+            try{
+				Item item = Item.find(context,
+						(Integer) doc.getFieldValue("id"));
+				if(item == null){
+					log.error(String.format("Internal id %s is invalid.", doc.getFieldValue("id")));
+					return;
+				}
+				doc.removeFields("withdrawn");
+				doc.addField("withdrawn", item.isWithdrawn());
+            }catch(SQLException e){
+            	log.error(e);
+            }
+            SolrInputDocument newInput = ClientUtils.toSolrInputDocument(doc); 
+            Integer type = (Integer) doc.getFieldValue("type"); 
+            Integer id = (Integer) doc.getFieldValue("id"); 
+            String ip = (String) doc.getFieldValue("ip"); 
+
+            String time = DateFormatUtils.formatUTC((Date)doc.getFieldValue("time"), SolrLogger.DATE_FORMAT_8601); 
+
+            //Uniquely remove previous entry. Should be safe to assume only one request to a specified resource by a single user per millisecond. 
+            solr.deleteByQuery("type:" + type + " AND id:" + id + " AND ip:" + ip + " AND time:[" + time + " TO " + time +"]"); 
+
+            solr.add(newInput); 
+            //log.info("Marked " + doc.getFieldValue("ip") + " as bot"); 
+        } 
+    } 
+
+	public static void reindexWithdrawn(Context context, String extraQuery) {
+	       try {
+	    	   boolean ourContext = false;
+	    	   if(context == null){
+	    		   context = new Context();
+	    		   ourContext = true;
+	    	   }
+               ResultProcessor processor = new WithdrawResultProcessor(context);
+               String query = ("type:" + Constants.ITEM) + ((extraQuery != null && extraQuery.length()>0) ? (extraQuery) : "");
+               processor.execute(query);
+               if(ourContext){
+            	   //close the context only if we've created it
+            	   context.abort();
+               }
+               solr.commit();
+           } catch (Exception e) {
+               log.error(e.getMessage(),e);
+           }
+		
+	}
 }
 
