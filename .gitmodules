@@ -1,0 +1,3 @@
+[submodule "sources/lr-b2safe-dspace"]
+	path = sources/lr-b2safe-dspace
+	url = https://github.com/ufal/lr-b2safe-dspace.git

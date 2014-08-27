@@ -229,6 +229,20 @@
             </modules>
         </profile>
 
+
+        <!--
+           Builds lr-b2safe-dspace
+        -->
+	<profile>
+	  <id>lr-b2safe-dspace</id>
+	  <activation>
+	    <activeByDefault>true</activeByDefault>
+	  </activation>
+	  <modules>
+	    <module>lr-b2safe-dspace</module>
+	  </modules>
+	</profile>
+
         <!--
            Builds SWORD WAR for DSpace
         -->
@@ -315,6 +329,7 @@
             <module>dspace-sword</module>
             <module>dspace-swordv2</module>
             <module>dspace-sword-client</module>
+	    <module>lr-b2safe-dspace</module>
          </modules>
       </profile>
 
@@ -874,6 +889,11 @@
             <artifactId>slf4j-jdk14</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
+	<dependency>
+	  <groupId>cz.cuni.mff.ufal.dspace</groupId>
+	  <artifactId>b2safe-dspace</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
       </dependencies>
    </dependencyManagement>
 
