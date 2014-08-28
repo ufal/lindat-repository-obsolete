@@ -10,3 +10,8 @@ contact email:
 misutka at ufal.mff.cuni.cz
 
 
+* Note: clone the repository recursively
+> git clone --recursive https://github.com/ufal/lindat-repository.git
+
+* For already cloned repositories:
+> git submodule update --init --recursive
