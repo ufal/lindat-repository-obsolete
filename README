@@ -20,10 +20,3 @@ To be able to use `index.htm` and see the current `header.htm` and `footer.htm` 
 * PHP >= 5.4
 
         php -S 127.0.0.1:8000
-
-
-Note: clone the repository recursively
-git clone --recursive https://github.com/ufal/lindat-repository.git
-
-For already cloned repositories:
-git submodule update --init --recursive
