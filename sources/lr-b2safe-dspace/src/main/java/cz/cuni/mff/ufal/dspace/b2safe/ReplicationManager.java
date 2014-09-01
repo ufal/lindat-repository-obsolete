@@ -33,7 +33,7 @@ import org.dspace.handle.HandleManager;
 
 import _org.irods.jargon.core.connection.IRODSServerProperties;
 import _org.irods.jargon.core.connection.SettableJargonProperties;
-import cz.cuni.mff.ufal.b2safe.ReplicationSerice;
+import cz.cuni.mff.ufal.b2safe.ReplicationService;
 import cz.cuni.mff.ufal.b2safe.ReplicationServiceIRODSImpl;
 import cz.cuni.mff.ufal.dspace.b2safe.ReplicationManager.MANDATORY_METADATA;
 
@@ -59,7 +59,7 @@ public class ReplicationManager {
 	static final String NOTIFICATION_EMAIL = ConfigurationManager.getProperty("lr", "lr.replication.eudat.notification_email");
 	static final String WHO = ConfigurationManager.getProperty("dspace.url");
 	
-	static ReplicationSerice replicationService = null;
+	static ReplicationService replicationService = null;
 	
 	// mandatory from CINES: EUDAT_ROR, OTHER_From, OTHER_AckEmail
 	public enum MANDATORY_METADATA {
@@ -210,7 +210,7 @@ public class ReplicationManager {
 		return false;
 	}
 	
-	public static ReplicationSerice getReplicationSerice() {
+	public static ReplicationService getReplicationSerice() {
 		return replicationService;
 	}
 
