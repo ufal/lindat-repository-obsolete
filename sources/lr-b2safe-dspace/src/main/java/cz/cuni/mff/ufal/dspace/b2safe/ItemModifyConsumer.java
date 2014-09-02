@@ -11,13 +11,13 @@ package cz.cuni.mff.ufal.dspace.b2safe;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.dspace.content.Item;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.event.Consumer;
 import org.dspace.event.Event;
 
-/* Created for LINDAT/CLARIN */
 /**
  * Replicate if needed.
  * 
@@ -33,13 +33,25 @@ import org.dspace.event.Event;
  */
 public class ItemModifyConsumer implements Consumer {
 
+	Logger log = Logger.getLogger(ItemModifyConsumer.class);
+	
 	final private List<String> updatedHandles = new ArrayList<String>();
 
 	public void initialize() throws Exception {
-		ReplicationManager.initialize();
+		try {
+			ReplicationManager.initialize();
+		} catch(Exception e) {
+			log.error(e);
+		}
 	}
 
 	public void consume(Context context, Event event) throws Exception {
+		
+		// if not configured or not on don't do anything
+		if(!ReplicationManager.isInitialized() || !ReplicationManager.isReplicationOn()) {
+			return;
+		}
+		
 		int subjectType = event.getSubjectType();
 		int eventType = event.getEventType();
 
@@ -67,8 +79,8 @@ public class ItemModifyConsumer implements Consumer {
 
 						updatedHandles.add(handle);
 
-						if (ReplicationManager.isInitialized()
-								&& ReplicationManager.isReplicationOn()) {
+						// testing again just to be sure
+						if (ReplicationManager.isInitialized() && ReplicationManager.isReplicationOn()) {
 							// force overwrite
 							ReplicationManager.replicate(context, handle, item, true);
 						}
