@@ -82,6 +82,9 @@ public class DSpaceOAIDataProvider
     }
     
     
+    /*
+     * This is not an oai endpoint. It's here only to expose the metadata
+     */
     @RequestMapping("/requeststripped")
     public String contextAction (Model model, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         Context context = null;
@@ -107,7 +110,12 @@ public class DSpaceOAIDataProvider
             XmlOutputContext xmlOutContext = XmlOutputContext.emptyContext(out);
             xmlOutContext.getWriter().writeStartDocument();
             
-            oaipmh.getInfo().getGetRecord().getRecord().getMetadata().write(xmlOutContext);
+            //Try to obtain just the metadata, if that fails return "normal" response
+            try{
+            	oaipmh.getInfo().getGetRecord().getRecord().getMetadata().write(xmlOutContext);
+            }catch(Exception e){
+            	oaipmh.write(xmlOutContext);
+            }
 
             xmlOutContext.getWriter().writeEndDocument();
             xmlOutContext.getWriter().flush();
