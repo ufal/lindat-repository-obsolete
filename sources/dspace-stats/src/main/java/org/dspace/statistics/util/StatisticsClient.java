@@ -20,6 +20,7 @@ import java.net.URL;
  * Class to load intermediate statistics files into solr
  *
  * @author Stuart Lewis
+ * modified for LINDAT/CLARIN
  */
 public class StatisticsClient
 {
@@ -61,6 +62,7 @@ public class StatisticsClient
         options.addOption("o", "optimize", false, "Run maintenance on the SOLR index");
         options.addOption("b", "reindex-bitstreams", false, "Reindex the bitstreams to ensure we have the bundle name");
         options.addOption("r", "remove-deleted-bitstreams", false, "While indexing the bundle names remove the statistics about deleted bitstreams");
+        options.addOption("w", "withdrawn", false, "Update withdrawn flag in Solr");
         options.addOption("h", "help", false, "help");
 
 		CommandLine line = parser.parse(options, args);
@@ -94,6 +96,9 @@ public class StatisticsClient
         else if(line.hasOption('b'))
         {
             SolrLogger.reindexBitstreamHits(line.hasOption('r'));
+        }
+        else if(line.hasOption('w')){
+        	SolrLogger.reindexWithdrawn(null, null);
         }
         else
         {

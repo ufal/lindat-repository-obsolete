@@ -295,6 +295,7 @@
    <field name="userAgent" type="string" indexed="true" stored="true" required="false"/>
    <field name="isBot" type="boolean" indexed="true" stored="true" required="false"/>
    <field name="bundleName" type="string" indexed="true" stored="true" required="false" multiValued="true" />
+   <field name="withdrawn" type="boolean" indexed="true" stored="true" required="false"/>
 
  </fields>
 

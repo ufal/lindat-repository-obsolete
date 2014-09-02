@@ -42,6 +42,8 @@ import org.dspace.handle.HandleManager;
 import org.dspace.storage.rdbms.DatabaseManager;
 import org.dspace.storage.rdbms.TableRow;
 import org.dspace.storage.rdbms.TableRowIterator;
+import org.dspace.usage.UsageEvent;
+import org.dspace.utils.DSpace;
 
 /**
  * Class representing an item in DSpace.
@@ -266,8 +268,7 @@ public class Item extends DSpaceObject
                 try {
                                 handle = HandleManager.findHandle(this.ourContext, this);
                         } catch (SQLException e) {
-                                // TODO Auto-generated catch block
-                                //e.printStackTrace();
+                                log.error(String.format("Failed to find handle for item with id %s.",this.getID()), e);
                         }
         }
         return handle;
@@ -1878,6 +1879,12 @@ public class Item extends DSpaceObject
         update();
 
         ourContext.addEvent(new Event(Event.MODIFY, Constants.ITEM, getID(), "WITHDRAW"));
+        
+		new DSpace().getEventService().fireEvent(
+				new UsageEvent(UsageEvent.Action.WITHDRAW, new DSpace()
+						.getRequestService().getCurrentRequest()
+						.getHttpServletRequest(), ourContext, this));
+			
 
         // and all of our authorization policies
         // FIXME: not very "multiple-inclusion" friendly
@@ -1930,6 +1937,12 @@ public class Item extends DSpaceObject
         update();
 
         ourContext.addEvent(new Event(Event.MODIFY, Constants.ITEM, getID(), "REINSTATE"));
+
+		new DSpace().getEventService().fireEvent(
+				new UsageEvent(UsageEvent.Action.REINSTATE, new DSpace()
+						.getRequestService().getCurrentRequest()
+						.getHttpServletRequest(), ourContext, this));
+			
 
         // authorization policies
         if (colls.length > 0)
