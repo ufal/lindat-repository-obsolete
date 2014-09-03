@@ -13,7 +13,7 @@
           <include name="testVisitFirstWhatsNewItem" />
         </methods>
       </class>
-<!--      <class name="cz.cuni.mff.ufal.test.SearchTest">
+     <class name="cz.cuni.mff.ufal.test.SearchTest">
 	<methods>
 	  <include name="testBrowseByIssueDate" />
 	</methods>
@@ -22,7 +22,7 @@
         <methods>
           <include name="testLoginLocal" />
         </methods>
-      </class>      -->
+      </class>     
     </classes>  
   </test>
  
