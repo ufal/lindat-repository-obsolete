@@ -13,7 +13,7 @@
           <include name="testVisitFirstWhatsNewItem" />
         </methods>
       </class>
-      <class name="cz.cuni.mff.ufal.test.SearchTest">
+<!--      <class name="cz.cuni.mff.ufal.test.SearchTest">
 	<methods>
 	  <include name="testBrowseByIssueDate" />
 	</methods>
@@ -22,11 +22,11 @@
         <methods>
           <include name="testLoginLocal" />
         </methods>
-      </class>      
+      </class>      -->
     </classes>  
   </test>
  
-  <test name="Test Search with Login" preserve-order="true">
+<!--  <test name="Test Search with Login" preserve-order="true">
     <classes>
       <class name="cz.cuni.mff.ufal.test.LoginTest">
         <methods>
@@ -85,5 +85,5 @@
   		</class>
   	</classes>
   </test>
-
+-->
 </suite>
