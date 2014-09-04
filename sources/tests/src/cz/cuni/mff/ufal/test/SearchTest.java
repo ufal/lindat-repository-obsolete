@@ -1,6 +1,7 @@
 package cz.cuni.mff.ufal.test;
 
 import org.testng.AssertJUnit;
+import org.testng.Reporter;
 import org.testng.annotations.Test;
 
 public class SearchTest extends BaseTestCase {
@@ -12,7 +13,7 @@ public class SearchTest extends BaseTestCase {
 		selenium.click("//input[@value='Search']");
 		selenium.waitForPageToLoad("30000");
 		AssertJUnit.assertEquals(selenium.getTitle(), "Search");
-		String itemsString = selenium.getText("//div[@id='aspect_discovery_SimpleSearch_div_search-controls']/div/h4");
+		String itemsString = selenium.getText("//div[@id='aspect_discovery_SimpleSearch_div_search']//div[last()]/h4");
 		testNumberOfItems(itemsString);
 	}
 
@@ -63,6 +64,7 @@ public class SearchTest extends BaseTestCase {
 	
 	private void testNumberOfItems(String itemsString) {
 		String []numbers = itemsString.split("[A-Za-z ]+");
+		Reporter.log("Logu's itemstring: " + itemsString);
 		int totalPages = 0;
 		int pageSize = 0;
 		if(numbers.length==4) {
