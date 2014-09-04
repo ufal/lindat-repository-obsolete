@@ -2,6 +2,7 @@
 package cz.cuni.mff.ufal.test;
 
 import org.testng.AssertJUnit;
+import org.testng.Reporter;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
