@@ -33,7 +33,7 @@ public class SearchTest extends BaseTestCase {
 		selenium.type("query", "PDT");
 		selenium.click("css=input.btn-large");
 		selenium.waitForPageToLoad("30000");
-		String itemsString = selenium.getText("//div[@id='aspect_discovery_SimpleSearch_div_search-controls']/div/h4");		
+		String itemsString = selenium.getText("//div[@id='aspect_discovery_SimpleSearch_div_search']//div[last()]/h4");		
 		testNumberOfItems(itemsString);
 	}
 
@@ -64,7 +64,6 @@ public class SearchTest extends BaseTestCase {
 	
 	private void testNumberOfItems(String itemsString) {
 		String []numbers = itemsString.split("[A-Za-z ]+");
-		Reporter.log("Logu's itemstring: " + itemsString);
 		int totalPages = 0;
 		int pageSize = 0;
 		if(numbers.length==4) {
