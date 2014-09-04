@@ -46,7 +46,7 @@ public class SearchTest extends BaseTestCase {
 		selenium.waitForPageToLoad("30000");
 		selenium.click("//dl[@id='item-authors']/dd/span/a");
 		selenium.waitForPageToLoad("30000");
-		String itemsString = selenium.getText("//div[@id='aspect_artifactbrowser_ConfigurableBrowse_div_browse-by-author']/div/h3");
+		String itemsString = selenium.getText("//div[@id='aspect_artifactbrowser_ConfigurableBrowse_div_browse-by-dateissued-results']/div/h3");
 		testNumberOfItems(itemsString);
 	}
 	
@@ -73,7 +73,7 @@ public class SearchTest extends BaseTestCase {
 			totalPages = (int)Math.ceil((double)totalItems / pageSize);			
 		}
 		String lastPageNumber = "";
-		lastPageNumber = selenium.getText("//div[@class='pagination']/ul/li[@class='page-link' or @class='page-link active'][last()]/a");
+		lastPageNumber = selenium.getText("//div/ul[@class='pagination']/li[@class='page-link' or @class='page-link active'][last()]/a");
 		AssertJUnit.assertEquals(lastPageNumber, ""+totalPages);
 		int itemsOnCurrentPage = selenium.getXpathCount("//li[@class='item-box']").intValue();
 		AssertJUnit.assertEquals(pageSize, itemsOnCurrentPage);				
