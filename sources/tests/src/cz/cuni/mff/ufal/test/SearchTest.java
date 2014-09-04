@@ -47,7 +47,7 @@ public class SearchTest extends BaseTestCase {
 		selenium.waitForPageToLoad("30000");
 		selenium.click("//dl[@id='item-authors']/dd/span/a");
 		selenium.waitForPageToLoad("30000");
-		String itemsString = selenium.getText("//div[@id='aspect_artifactbrowser_ConfigurableBrowse_div_browse-by-dateissued-results']/div/h3");
+		String itemsString = selenium.getText("//div[@id='aspect_artifactbrowser_ConfigurableBrowse_div_browse-by-author-results']/h3");
 		testNumberOfItems(itemsString);
 	}
 	
