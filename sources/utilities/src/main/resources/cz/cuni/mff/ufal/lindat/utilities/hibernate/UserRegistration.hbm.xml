@@ -7,10 +7,10 @@
             <column name="eperson_id" not-null="true" unique="true" />
         </id>
 	<property name="email" type="string">
-            <column name="email" length="64" not-null="true" unique="true" />
+            <column name="email" length="256" not-null="true" unique="true" />
         </property>
         <property name="organization" type="string">
-            <column name="organization" length="64" not-null="true" />
+            <column name="organization" length="256" not-null="true" />
         </property>
         <property name="confirmation" type="boolean">
             <column name="confirmation" not-null="true" />
