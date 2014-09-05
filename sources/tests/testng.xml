@@ -44,7 +44,7 @@
     </classes>
   </test>
 
-<!-- 
+
   <test name="Test Search without Login" preserve-order="true">
     <classes>
       <class name="cz.cuni.mff.ufal.test.SearchTest">
@@ -56,6 +56,8 @@
       </class>      
     </classes>
   </test>
+  
+<!--   
 
   <test name="Test Item Submission with Admin" preserve-order="true">
     <parameter name="user" value="admin" />  
