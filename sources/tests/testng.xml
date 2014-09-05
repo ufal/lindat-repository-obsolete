@@ -57,7 +57,7 @@
     </classes>
   </test>
   
-<!--   
+
 
   <test name="Test Item Submission with Admin" preserve-order="true">
     <parameter name="user" value="admin" />  
@@ -70,11 +70,13 @@
       <class name="cz.cuni.mff.ufal.test.SubmissionTest">
         <methods>
           <include name="testSubmissionWithAdmin" />
-	  <include name="testFullSubmissionWithAdmin" />
+<!-- 	  <include name="testFullSubmissionWithAdmin" /> -->
         </methods>
       </class>
     </classes>
   </test>
+  
+  <!--   
 
   <test name="OAI Test" preserve-order="true">
   	<classes>

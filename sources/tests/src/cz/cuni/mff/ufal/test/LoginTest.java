@@ -61,10 +61,10 @@ public class LoginTest extends BaseTestCase {
 		selenium.waitForPageToLoad("30000");
 		for (int second = 0; second <= 10; second++) {
 			//if (second >= 60) AssertJUnit.fail("timeout");
-			try { if (selenium.isElementPresent("//div[@id=\"userbox\"]")) break; } catch (Exception e) {}
+			try { if (selenium.isElementPresent("//div[@id='userbox']")) break; } catch (Exception e) {}
 			Thread.sleep(1000);
 		}
-		AssertJUnit.assertEquals("Profile: " + userName, selenium.getText("//div[@id=\"userbox\"]/div[@class=\"badge\"]/a"));
+		AssertJUnit.assertEquals("Profile: " + userName, selenium.getText("//div[@id='userbox']/div[@class='badge']/a"));
 	}
 
 }
