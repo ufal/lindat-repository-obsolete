@@ -207,8 +207,8 @@ ALTER SEQUENCE license_resource_user_allowance_transaction_id_seq OWNED BY licen
 
 CREATE TABLE user_registration (
     eperson_id integer NOT NULL,
-    email character varying(64) NOT NULL,
-    organization character varying(64) NOT NULL,
+    email character varying(255) NOT NULL,
+    organization character varying(255) NOT NULL,
     confirmation boolean DEFAULT true NOT NULL
 );
 
