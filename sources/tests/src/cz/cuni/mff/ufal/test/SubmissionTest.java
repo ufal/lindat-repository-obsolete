@@ -22,11 +22,14 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.waitForPageToLoad("30000");
 
 		// select collection
-		selenium.click("id=community_1");
-		selenium.click("id=cz_cuni_mff_ufal_dspace_app_xmlui_aspect_submission_submit_SelectCollectionStep_field_submit");
+		String[] availableCommunities = {"community_1", "community_12", "community_11", "community_9", "community_10"};
+		int communityIndex = randGen.nextInt(availableCommunities.length);
+		
+		selenium.click("id='" + availableCommunities[communityIndex] + "'" );
+//		selenium.click("id=cz_cuni_mff_ufal_dspace_app_xmlui_aspect_submission_submit_SelectCollectionStep_field_submit");
 		selenium.waitForPageToLoad("30000");
 
-		// Step 2: Describe 
+/*		// Step 2: Describe 
 		// select dc.type (random)
 		int typeIndex = randGen.nextInt(DCTYPE_VALUES.length);
 		selenium.click("//a[@id='type_" + DCTYPE_VALUES[typeIndex] +   "']");
@@ -67,7 +70,7 @@ public class SubmissionTest extends BaseTestCase {
 		
 		
 		// Step 3: Upload 
-/*		selenium.type("id=aspect_submission_StepTransformer_field_file", prop.getProperty("lr.dspace.source.dir") + "/tests/test_upload.txt");
+		selenium.type("id=aspect_submission_StepTransformer_field_file", prop.getProperty("lr.dspace.source.dir") + "/tests/test_upload.txt");
 		for (int second = 0;; second++) {
 			if (second >= 60) AssertJUnit.fail("timeout");
 			try { if (selenium.isElementPresent("id=js-su-button")) break; } catch (Exception e) {}
@@ -81,7 +84,7 @@ public class SubmissionTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}				
 		selenium.click("id=js-ok-button");
-		selenium.waitForPageToLoad("30000");	*/			
+		selenium.waitForPageToLoad("30000");				
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
 		selenium.waitForPageToLoad("30000");		
 		
@@ -108,7 +111,7 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
 		selenium.waitForPageToLoad("30000");
 		
-		AssertJUnit.assertTrue(selenium.isTextPresent("Your submission will now go through the review process for this collection."));	
+		AssertJUnit.assertTrue(selenium.isTextPresent("Your submission will now go through the review process for this collection."));	*/
 		
 	}
 	
