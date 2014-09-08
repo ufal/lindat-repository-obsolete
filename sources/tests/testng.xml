@@ -5,7 +5,7 @@
   
   <parameter name="ufal.properties" value="../../config/local.conf" />
     
-<!--   <test name="Test Basic Page Loading" preserve-order="true">
+  <test name="Test Basic Page Loading" preserve-order="true">
     <classes>
       <class name="cz.cuni.mff.ufal.test.PageLoadTest">
         <methods>
@@ -55,7 +55,7 @@
         </methods>
       </class>      
     </classes>
-  </test> -->
+  </test>
   
 
 
