@@ -98,9 +98,34 @@ public class SubmissionTest extends BaseTestCase {
 		// Step 5: Details
 		selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContactInfo#PersonInfo_surname", "Provider-A");
 		selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContactInfo#PersonInfo#OrganizationInfo#CommunicationInfo_email", "lindat-technical@ufal.mff.cuni.cz");
-		selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "label=text");
-		selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_size", "1");
-		selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_sizeUnit", "label=files");
+		
+		if (DCTYPE_VALUES[typeIndex].equals("corpus")) {
+			// required data characteristics: size, size unit, media type
+			selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_size", "1");
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_sizeUnit", "label=files");
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "label=text");
+			
+		}
+		else if (DCTYPE_VALUES[typeIndex].equals("lexicalConceptualResource")) {
+			// required fields: size, size unit, media type, detailed type
+			selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_size", "1");
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_sizeUnit", "label=files");
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "label=text");
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
+		}
+		else if (DCTYPE_VALUES[typeIndex].equals("languageDescription")) {
+			// required fields: size, size unit, media type, detailed type 
+			selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_size", "1");
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_sizeUnit", "label=files");
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "label=text");
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
+		}
+		else if (DCTYPE_VALUES[typeIndex].equals("toolService")) {
+			// required fields: detailed type, language independent
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
+			selenium.click("//input[@name='metashare_ResourceInfo#ResourceComponentType#ToolServiceInfo_languageDependent' and @value='true']");
+		}
+		
 		selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
 		selenium.waitForPageToLoad("30000");

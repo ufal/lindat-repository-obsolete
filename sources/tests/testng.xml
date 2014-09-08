@@ -4,6 +4,7 @@
   <parameter name="selenium.browser" value="*firefox3 /usr/lib/firefox/firefox" />
   
   <parameter name="ufal.properties" value="../../config/local.conf" />
+  
     
   <test name="Test Basic Page Loading" preserve-order="true">
     <classes>
@@ -57,7 +58,6 @@
     </classes>
   </test>
   
-
 
   <test name="Test Item Submission with Admin" preserve-order="true">
     <parameter name="user" value="admin" />  
