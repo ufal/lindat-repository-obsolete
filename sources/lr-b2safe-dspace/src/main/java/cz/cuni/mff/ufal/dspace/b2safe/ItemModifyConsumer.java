@@ -38,18 +38,32 @@ public class ItemModifyConsumer implements Consumer {
 	final private List<String> updatedHandles = new ArrayList<String>();
 
 	public void initialize() throws Exception {
-		try {
-			ReplicationManager.initialize();
-		} catch(Exception e) {
-			log.error(e);
+		if(ReplicationManager.isReplicationOn()) {
+			try {
+				ReplicationManager.initialize();
+			} catch(Exception e) {
+				log.error(e);
+			}
 		}
 	}
 
 	public void consume(Context context, Event event) throws Exception {
 		
-		// if not configured or not on don't do anything
-		if(!ReplicationManager.isInitialized() || !ReplicationManager.isReplicationOn()) {
+		// if not on don't do anything
+		if(!ReplicationManager.isReplicationOn()) {
 			return;
+		}
+		
+		// if not initialized try to initialize 
+		if(!ReplicationManager.isInitialized()) {
+			try {
+				boolean test = ReplicationManager.initialize();
+				if(!test) {
+					throw new Exception("Unable to initialize Replication Service.");
+				}
+			} catch(Exception e) {
+				log.error(e);
+			}
 		}
 		
 		int subjectType = event.getSubjectType();

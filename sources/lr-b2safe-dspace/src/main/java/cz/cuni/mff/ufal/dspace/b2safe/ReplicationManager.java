@@ -70,12 +70,14 @@ public class ReplicationManager {
 	
 	static Properties config = null;
 
-	public static void initialize() throws Exception {
+	public static boolean initialize() throws Exception {
+		boolean res = false;
 		config = new Properties();
 		populateConfig(config);
 		replicationService = new ReplicationServiceIRODSImpl();
-		replicationService.initialize(config);
+		res = replicationService.initialize(config);
 		overrideJargonProperties(((ReplicationServiceIRODSImpl)replicationService).getSettableJargonProperties());
+		return res;
 	}
 	
 	public static Properties getConfiguration(){

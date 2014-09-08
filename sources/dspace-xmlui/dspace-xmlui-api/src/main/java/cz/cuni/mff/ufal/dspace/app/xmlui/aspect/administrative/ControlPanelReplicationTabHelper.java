@@ -47,6 +47,18 @@ public class ControlPanelReplicationTabHelper {
 		row_tmp.addCell().addButton("submit_repl_on_toggle").setValue("Turn on/off");
 
 		if(isReplicationOn) {
+			
+			// if not initialized try initializing it
+			if (!ReplicationManager.isInitialized()) {
+				try {
+					ReplicationManager.initialize();
+				} catch (Exception e) {
+					List info = mainDiv.addList("replication-config");
+					info.addItem().addContent(e.getLocalizedMessage());
+					return;
+				}
+			}					
+			
 			Map<String, String> serverInfo = null;
 			try {
 				serverInfo = ReplicationManager.getServerInformation();

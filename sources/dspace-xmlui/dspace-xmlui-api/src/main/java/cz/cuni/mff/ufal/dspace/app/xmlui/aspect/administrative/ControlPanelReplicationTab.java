@@ -22,17 +22,6 @@ import cz.cuni.mff.ufal.dspace.b2safe.ReplicationManager;
 			request = ObjectModelHelper.getRequest(objectModel);
 	
 			Division div = mainDiv.addDivision("irods_div");
-	
-			// if not initialized try initializing it
-			if (!ReplicationManager.isInitialized()) {
-				try {
-					ReplicationManager.initialize();
-				} catch (Exception e) {
-					List info = div.addList("replication-config");
-					info.addItem().addContent(e.getLocalizedMessage());
-					return;
-				}
-			}		
 			
 			String commandOutput = ControlPanelReplicationTabHelper.executeCommand(request, context);
 			
