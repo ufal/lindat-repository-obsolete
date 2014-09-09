@@ -126,7 +126,6 @@ public class SubmissionTest extends BaseTestCase {
 			selenium.click("//input[@name='metashare_ResourceInfo#ResourceComponentType#ToolServiceInfo_languageDependent' and @value='true']");
 		}
 		
-		selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
 		selenium.waitForPageToLoad("30000");
 		
