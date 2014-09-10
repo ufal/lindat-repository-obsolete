@@ -4,6 +4,7 @@
   <parameter name="selenium.browser" value="*firefox3 /usr/lib/firefox/firefox" />
   
   <parameter name="ufal.properties" value="../../config/local.conf" />
+  
     
   <test name="Test Basic Page Loading" preserve-order="true">
     <classes>
@@ -13,7 +14,7 @@
           <include name="testVisitFirstWhatsNewItem" />
         </methods>
       </class>
-      <class name="cz.cuni.mff.ufal.test.SearchTest">
+     <class name="cz.cuni.mff.ufal.test.SearchTest">
 	<methods>
 	  <include name="testBrowseByIssueDate" />
 	</methods>
@@ -22,11 +23,11 @@
         <methods>
           <include name="testLoginLocal" />
         </methods>
-      </class>      
+      </class>     
     </classes>  
   </test>
  
-  <test name="Test Search with Login" preserve-order="true">
+ <test name="Test Search with Login" preserve-order="true">
     <classes>
       <class name="cz.cuni.mff.ufal.test.LoginTest">
         <methods>
@@ -44,6 +45,7 @@
     </classes>
   </test>
 
+
   <test name="Test Search without Login" preserve-order="true">
     <classes>
       <class name="cz.cuni.mff.ufal.test.SearchTest">
@@ -55,6 +57,7 @@
       </class>      
     </classes>
   </test>
+  
 
   <test name="Test Item Submission with Admin" preserve-order="true">
     <parameter name="user" value="admin" />  
@@ -67,20 +70,22 @@
       <class name="cz.cuni.mff.ufal.test.SubmissionTest">
         <methods>
           <include name="testSubmissionWithAdmin" />
-	  <include name="testFullSubmissionWithAdmin" />
+	      <include name="testFullSubmissionWithAdmin" />
         </methods>
       </class>
     </classes>
   </test>
+  
+    
 
   <test name="OAI Test" preserve-order="true">
   	<classes>
   		<class name="cz.cuni.mff.ufal.test.OAIRequestTest">
   			<methods>
   				<include name="testCMDIRequest" />
-  				<include name="testBibtexRequest" />  			
+   				<include name="testBibtexRequest" />  			
   				<include name="testCMDIClick" />
-  				<include name="testBibtexClick" />
+  				<include name="testBibtexClick" /> 
   			</methods>
   		</class>
   	</classes>

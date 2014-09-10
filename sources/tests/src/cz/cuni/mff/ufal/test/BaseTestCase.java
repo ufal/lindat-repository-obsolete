@@ -51,8 +51,7 @@ public class BaseTestCase {
 		seleniumHost = context.getCurrentXmlTest().getParameter("selenium.host");
 		seleniumPort = context.getCurrentXmlTest().getParameter("selenium.port");
 		seleniumBrowser = context.getCurrentXmlTest().getParameter("selenium.browser");
-		seleniumUrl = prop.getProperty("ufal.dspace.baseUrl");
-
+		seleniumUrl = prop.getProperty("lr.dspace.baseUrl");
 		if(!seleniumUrl.endsWith("/"))
 			seleniumUrl += "/";
 

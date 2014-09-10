@@ -19,14 +19,23 @@ public class OAIRequestTest extends BaseTestCase {
 		String itemList = prop.getProperty("selenium.test.oai.url") + "/request?verb=ListIdentifiers&metadataPrefix=oai_dc";
 		selenium.open(itemList);
 		selenium.waitForPageToLoad("30000");
-		String bodyText = selenium.getText("//div[@class='content']");
-		
-		for(String line : bodyText.split("\\n")) {
-			line = line.trim();
-			if(line.startsWith("Identifier")) {
-				identifiers.add(line.substring(10));
+		while (true) {
+			if (!selenium.isElementPresent("//a[@class='btn btn-primary' and contains(., 'Show More')]")) {
+				break;
 			}
-		}		
+			else {
+				selenium.click("//a[@class='btn btn-primary' and contains(., 'Show More')]");
+				selenium.waitForPageToLoad("30000");
+				String bodyText = selenium.getText("//div[@class='container']");		
+				for(String line : bodyText.split("\\n")) {
+					line = line.trim();
+					if(line.startsWith("Identifier")) {
+						identifiers.add(line.substring(10));
+					}
+				}					
+			}
+		}
+	
 	}
 	
 	@Test
@@ -38,7 +47,7 @@ public class OAIRequestTest extends BaseTestCase {
 		
 		selenium.open(prop.getProperty("selenium.test.oai.url") + "/request?verb=GetRecord&metadataPrefix=cmdi&identifier=" + identifier);
 		selenium.waitForPageToLoad("30000");
-		AssertJUnit.assertEquals(selenium.getTitle(), "DSpace OAI-PMH Data Provider");
+		AssertJUnit.assertEquals(selenium.getTitle(), "LINDAT/CLARIN OAI-PMH Data Provider Endpoint");
 		
 		for (int second = 0;; second++) {
 			if (second >= 60) AssertJUnit.fail("timeout");
@@ -57,7 +66,7 @@ public class OAIRequestTest extends BaseTestCase {
 		
 		selenium.open(prop.getProperty("selenium.test.oai.url") + "/request?verb=GetRecord&metadataPrefix=bibtex&identifier=" + identifier);
 		selenium.waitForPageToLoad("30000");
-		AssertJUnit.assertEquals(selenium.getTitle(), "DSpace OAI-PMH Data Provider");
+		AssertJUnit.assertEquals(selenium.getTitle(), "LINDAT/CLARIN OAI-PMH Data Provider Endpoint");
 		
 		for (int second = 0;; second++) {
 			if (second >= 60) AssertJUnit.fail("timeout");
@@ -88,8 +97,8 @@ public class OAIRequestTest extends BaseTestCase {
 
 		String xml = selenium.getText("//div[@class='modal-body']/pre").trim();
 		
-		AssertJUnit.assertTrue(xml.startsWith("<CMD"));
-		AssertJUnit.assertTrue(xml.endsWith("/CMD>"));
+		AssertJUnit.assertTrue(xml.startsWith("<?xml"));
+		AssertJUnit.assertTrue(xml.endsWith("</cmd:CMD>"));
 		
 	}
 

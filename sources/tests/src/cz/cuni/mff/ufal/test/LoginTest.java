@@ -2,6 +2,7 @@
 package cz.cuni.mff.ufal.test;
 
 import org.testng.AssertJUnit;
+import org.testng.Reporter;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
@@ -41,8 +42,8 @@ public class LoginTest extends BaseTestCase {
 		selenium.type("id=password", password);
 		selenium.click("name=dosubmit");
 		selenium.waitForPageToLoad("30000");
-		for (int second = 0;; second++) {
-			if (second >= 60) AssertJUnit.fail("timeout");
+		for (int second = 0; second <= 10; second++) {
+			//if (second >= 60) AssertJUnit.fail("timeout");
 			try { if (selenium.isElementPresent("//div[@id='userbox']")) break; } catch (Exception e) {}
 			Thread.sleep(1000);
 		}
@@ -58,8 +59,8 @@ public class LoginTest extends BaseTestCase {
 		selenium.type("id=aspect_eperson_PasswordLogin_field_login_password", password);
 		selenium.click("id=aspect_eperson_PasswordLogin_field_submit");
 		selenium.waitForPageToLoad("30000");
-		for (int second = 0;; second++) {
-			if (second >= 60) AssertJUnit.fail("timeout");
+		for (int second = 0; second <= 10; second++) {
+			//if (second >= 60) AssertJUnit.fail("timeout");
 			try { if (selenium.isElementPresent("//div[@id='userbox']")) break; } catch (Exception e) {}
 			Thread.sleep(1000);
 		}
