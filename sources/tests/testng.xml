@@ -70,7 +70,7 @@
       <class name="cz.cuni.mff.ufal.test.SubmissionTest">
         <methods>
           <include name="testSubmissionWithAdmin" />
-<!-- 	      <include name="testFullSubmissionWithAdmin" /> -->
+	      <include name="testFullSubmissionWithAdmin" />
         </methods>
       </class>
     </classes>
