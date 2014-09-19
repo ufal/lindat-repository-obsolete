@@ -6,7 +6,7 @@
   <parameter name="ufal.properties" value="../../config/local.conf" />
   
     
-  <test name="Test Basic Page Loading" preserve-order="true">
+  <!-- <test name="Test Basic Page Loading" preserve-order="true">
     <classes>
       <class name="cz.cuni.mff.ufal.test.PageLoadTest">
         <methods>
@@ -57,7 +57,7 @@
       </class>      
     </classes>
   </test>
-  
+   -->
 
   <test name="Test Item Submission with Admin" preserve-order="true">
     <parameter name="user" value="admin" />  
@@ -69,7 +69,7 @@
       </class>    
       <class name="cz.cuni.mff.ufal.test.SubmissionTest">
         <methods>
-          <include name="testSubmissionWithAdmin" />
+<!--           <include name="testSubmissionWithAdmin" /> -->
 	      <include name="testFullSubmissionWithAdmin" />
         </methods>
       </class>
@@ -77,7 +77,7 @@
   </test>
   
     
-
+<!-- 
   <test name="OAI Test" preserve-order="true">
   	<classes>
   		<class name="cz.cuni.mff.ufal.test.OAIRequestTest">
@@ -89,6 +89,6 @@
   			</methods>
   		</class>
   	</classes>
-  </test>
+  </test> -->
 
 </suite>
