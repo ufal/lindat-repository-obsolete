@@ -71,7 +71,6 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
 		selenium.waitForPageToLoad("30000");
 		
-		
 		// Step 3: Upload 
 /*		selenium.type("id=aspect_submission_StepTransformer_field_file", prop.getProperty("lr.dspace.source.dir") + "/tests/test_upload.txt");
 		for (int second = 0;; second++) {
@@ -87,9 +86,41 @@ public class SubmissionTest extends BaseTestCase {
 			Thread.sleep(1000);
 		}				
 		selenium.click("id=js-ok-button");
-		selenium.waitForPageToLoad("30000");	*/			
+		selenium.waitForPageToLoad("30000");	
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
-		selenium.waitForPageToLoad("30000");		
+		selenium.waitForPageToLoad("30000"); */			
+		
+		// uploading from "Add files from URI"
+		String testURIFileName="corpus.png";
+		selenium.type("id=aspect_submission_StepTransformer_field_fileLocal", "https://lindat.mff.cuni.cz/repository/xmlui/themes/UFALHome/lib/images/" + testURIFileName);
+		selenium.type("id=aspect_submission_StepTransformer_field_descriptionLocal", "An icon from LINDAT/CLARIN repository");
+		selenium.click("id=aspect_submission_StepTransformer_field_submit_upload_local");
+		selenium.waitForPageToLoad("30000");
+		for (int second = 0;; second++) {
+			if (second >= 60) AssertJUnit.fail("timeout");
+			try { if (selenium.getText("//*[@id='aspect_submission_StepTransformer_table_submit-upload-summary']/tbody/tr[last()-1]/td[2]/a").equals(testURIFileName)) break; } catch (Exception e) {}
+			Thread.sleep(1000);
+		}
+		
+		// remove the file
+		selenium.click("//table[@id='aspect_submission_StepTransformer_table_submit-upload-summary']/tbody/tr[last()-1]/td/span");
+		selenium.waitForPageToLoad("30000");	
+		boolean removeOK = !selenium.isElementPresent("//table[@id='aspect_submission_StepTransformer_table_submit-upload-summary']//a");
+		AssertJUnit.assertTrue(removeOK);
+		
+		// upload again
+		selenium.type("id=aspect_submission_StepTransformer_field_fileLocal", "https://lindat.mff.cuni.cz/repository/xmlui/themes/UFALHome/lib/images/" + testURIFileName);
+		selenium.type("id=aspect_submission_StepTransformer_field_descriptionLocal", "An icon from LINDAT/CLARIN repository");
+		selenium.click("id=aspect_submission_StepTransformer_field_submit_upload_local");
+		selenium.waitForPageToLoad("30000");
+		for (int second = 0;; second++) {
+			if (second >= 60) AssertJUnit.fail("timeout");
+			try { if (selenium.getText("//*[@id='aspect_submission_StepTransformer_table_submit-upload-summary']/tbody/tr[last()-1]/td[2]/a").equals(testURIFileName)) break; } catch (Exception e) {}
+			Thread.sleep(1000);
+		}
+		
+		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
+		selenium.waitForPageToLoad("30000");			
 		
 		// Step 4: License
 		selenium.click("name=decision");
@@ -203,21 +234,12 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.waitForPageToLoad("30000");
 		
 		// Step 3: Upload 
-		//selenium.type("id=aspect_submission_StepTransformer_field_file", prop.getProperty("lr.dspace.source.dir") + "/tests/test_upload.txt");
-		selenium.click("id=aspect_submission_StepTransformer_field_file");
-		Thread.sleep(1000);
-		String[] winTitles = selenium.getAllWindowTitles();
-		for (String t: winTitles) {
-			Reporter.log("my window title: " + t);
-		}
-		//selenium.selectWindow("File Upload");
-		
-/*		for (int second = 0;; second++) {
+/*		selenium.type("id=aspect_submission_StepTransformer_field_file", prop.getProperty("lr.dspace.source.dir") + "/tests/test_upload.txt");
+		for (int second = 0;; second++) {
 			if (second >= 60) AssertJUnit.fail("timeout");
 			try { if (selenium.isElementPresent("id=js-su-button")) break; } catch (Exception e) {}
 			Thread.sleep(1000);
-		}	*/	
-/*
+		}	
 		selenium.click("id=js-su-button");
 		Thread.sleep(2000);
 		for (int second = 0;; second++) {
@@ -229,7 +251,7 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.waitForPageToLoad("30000");	*/			
 
 		
-/*		// uploading from "Add files from URI"
+		// uploading from "Add files from URI"
 		String testURIFileName="corpus.png";
 		selenium.type("id=aspect_submission_StepTransformer_field_fileLocal", "https://lindat.mff.cuni.cz/repository/xmlui/themes/UFALHome/lib/images/" + testURIFileName);
 		selenium.type("id=aspect_submission_StepTransformer_field_descriptionLocal", "An icon from LINDAT/CLARIN repository");
@@ -239,9 +261,9 @@ public class SubmissionTest extends BaseTestCase {
 			if (second >= 60) AssertJUnit.fail("timeout");
 			try { if (selenium.getText("//*[@id='aspect_submission_StepTransformer_table_submit-upload-summary']/tbody/tr[last()-1]/td[2]/a").equals(testURIFileName)) break; } catch (Exception e) {}
 			Thread.sleep(1000);
-		}*/
+		}
 		
-/*		// remove the file
+		// remove the file
 		selenium.click("//table[@id='aspect_submission_StepTransformer_table_submit-upload-summary']/tbody/tr[last()-1]/td/span");
 		selenium.waitForPageToLoad("30000");	
 		boolean removeOK = !selenium.isElementPresent("//table[@id='aspect_submission_StepTransformer_table_submit-upload-summary']//a");
@@ -342,7 +364,7 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
 		selenium.waitForPageToLoad("30000");
 		
-		AssertJUnit.assertTrue(selenium.isTextPresent("Your submission will now go through the review process for this collection."));	*/
+		AssertJUnit.assertTrue(selenium.isTextPresent("Your submission will now go through the review process for this collection."));	
 		
 	
 		
