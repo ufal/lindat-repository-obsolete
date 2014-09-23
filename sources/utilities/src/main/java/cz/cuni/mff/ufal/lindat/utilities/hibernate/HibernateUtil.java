@@ -105,7 +105,6 @@ public class HibernateUtil {
 	public void endTransaction() {
 		try {
 			transaction.commit();
-			closeSession();
 		} catch (HibernateException e) {
 			log.error("Transaction Failed.", e);
 			transaction.rollback();
