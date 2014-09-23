@@ -38,8 +38,7 @@ import cz.cuni.mff.ufal.AllCertsTrustManager;
  * This link checker can be enhanced by extending this class, and overriding the
  * getURLs and checkURL methods.
  * 
- * based on class by Stuart Lewis 
- * modified for LINDAT/CLARIN
+ * based on class by Stuart Lewis modified for LINDAT/CLARIN
  */
 
 public class BasicLinkChecker extends AbstractCurationTask
@@ -323,34 +322,34 @@ public class BasicLinkChecker extends AbstractCurationTask
         String level;
         boolean res;
 
-		int httpStatus = responseStatus.isRedirection() ? responseStatus.getRedirectionCode() : responseStatus.getCode();
+        int httpStatus = responseStatus.isRedirection() ? responseStatus
+                .getRedirectionCode() : responseStatus.getCode();
 
-		if (((httpStatus >= 200) && (httpStatus < 300))
-				|| httpStatus == 401)
-		{
-			level = "OK";
-			res = true;
-		}
-		else if (httpStatus == -1)
-		{
-			level = "IGNORED";
-			res = false;
-		}
-		else if (httpStatus == -2)
-		{
-			level = "TIMEOUT";
-			res = false;
-		}
-		else if (httpStatus == -3)
-		{
-			level = "REDIRECTION LOOP";
-			res = false;
-		}
-		else
-		{
-			level = "FAILED";
-			res = false;
-		}
+        if (((httpStatus >= 200) && (httpStatus < 300)) || httpStatus == 401)
+        {
+            level = "OK";
+            res = true;
+        }
+        else if (httpStatus == -1)
+        {
+            level = "IGNORED";
+            res = false;
+        }
+        else if (httpStatus == -2)
+        {
+            level = "TIMEOUT";
+            res = false;
+        }
+        else if (httpStatus == -3)
+        {
+            level = "REDIRECTION LOOP";
+            res = false;
+        }
+        else
+        {
+            level = "FAILED";
+            res = false;
+        }
 
         results.append(formatResult(level, url, responseStatus));
         return res;
@@ -387,28 +386,89 @@ public class BasicLinkChecker extends AbstractCurationTask
     }
 
     /**
-     * Get the response code for a URL. If something goes wrong opening the URL,
-     * a response code of 0 is returned.
+     * Get the response status for a URL with redirection following and special
+     * handling of handle URLs. Possible response codes are: 0 = error, -2 =
+     * timeout, -3 = redirection loop, HTTP code otherwise.
      * 
      * @param url
      *            The url to open
-     * @return The HTTP response code (e.g. 200 / 301 / 404 / 500) and possible
-     *         redirection URL and its status
+     * @return Response status wrapping first response code, last redirection
+     *         url, and last response code
+     * 
      */
 
     protected ResponseStatus getResponseStatus(String url)
     {
+        Set<String> processedURLs = new HashSet<String>();
+        boolean isHandle = isHandleURL(url);
+
+        ResponseStatus responseStatus = getRealResponseStatus(url);
+        processedURLs.add(url);
+        ResponseStatus redirectionResponseStatus = new ResponseStatus(
+                responseStatus);
+
+        // loop over possible chain of redirections
+        while (redirectionResponseStatus.isRedirection())
+        {
+            url = redirectionResponseStatus.getRedirectionURL();
+            responseStatus.setRedirectionURL(url);
+
+            if (processedURLs.contains(redirectionResponseStatus
+                    .getRedirectionURL()))
+            {
+                responseStatus.setCode(-3);
+                break;
+            }
+
+            redirectionResponseStatus = getRealResponseStatus(url);
+            processedURLs.add(url);
+
+            if (isHandle)
+            {
+                // for handles overwrite the response code with the last
+                // code in redirection chain
+                responseStatus.setCode(redirectionResponseStatus.getCode());
+            }
+            else
+            {
+                responseStatus.setRedirectionCode(redirectionResponseStatus
+                        .getCode());
+            }
+        }
+
+        return responseStatus;
+    }
+
+    /**
+     * Get the response status for a URL. Redirection is not handled. Possible
+     * response codes are: 0 = error, -2 = timeout, -3 = redirection loop, HTTP
+     * code otherwise.
+     * 
+     * @param url
+     *            The url to open
+     * @return Response status wrapping first response code, and redirection URL
+     *         if the response code is 3xx
+     * 
+     */
+
+    protected ResponseStatus getRealResponseStatus(String url)
+    {
         ResponseStatus responseStatus = new ResponseStatus(0);
+
         try
         {
             URL theURL = new URL(url);
+
+            // prepare HTTP connection
             HttpURLConnection connection = (HttpURLConnection) theURL
                     .openConnection();
             connection
                     .setRequestProperty("User-Agent", LINK_CHECKER_USER_AGENT);
             connection.setConnectTimeout(LINK_CHECKER_CONNECT_TIMEOUT);
             connection.setReadTimeout(LINK_CHECKER_READ_TIMEOUT);
-            connection.setFollowRedirects(false);
+            connection.setInstanceFollowRedirects(false);
+
+            // handle HTTPS
             if (theURL.getProtocol().equals("https"))
             {
                 HttpsURLConnection
@@ -418,45 +478,19 @@ public class BasicLinkChecker extends AbstractCurationTask
                         .setSSLSocketFactory(AllCertsTrustManager
                                 .getSocketFactory());
             }
+
+            // get response code
             int code = connection.getResponseCode();
             responseStatus.setCode(code);
-
-	    boolean redirect = responseStatus.isRedirection();
-
-            Set<String> redirections = new HashSet<String>();
-
-            while(redirect)
-	    {
-                String redirectionURL = connection.getHeaderField("Location");
-
-	        if (redirections.contains(redirectionURL))
-        	{
-            		responseStatus.setCode(-3);
-			break;
-        	}
-
-                redirections.add(redirectionURL);
-
-                responseStatus.setRedirectionURL(redirectionURL);
-                
-                ResponseStatus redirectionResponseStatus = getResponseStatus(redirectionURL);
-                redirect = redirectionResponseStatus.isRedirection();
-
-                if (isHandleURL(url))
-                {
-                    responseStatus = redirectionResponseStatus;
-                }
-                else
-                {
-                    responseStatus.setRedirectionCode(redirectionResponseStatus
-                            .getCode());
-                }
+            if (responseStatus.isRedirection())
+            {
+                responseStatus.setRedirectionURL(connection
+                        .getHeaderField("Location"));
             }
 
             connection.disconnect();
 
             return responseStatus;
-
         }
         catch (SocketTimeoutException ste)
         {
