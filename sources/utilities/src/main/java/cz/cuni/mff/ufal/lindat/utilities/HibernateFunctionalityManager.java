@@ -64,10 +64,11 @@ public class HibernateFunctionalityManager implements IFunctionalities {
 	}
 
 	public  boolean isFunctionalityEnabled(String functionalityName) {
-		if(!Variables.isConfigurationTrue(functionalityName)){
+		// this logic needs inspection
+		/*if(!Variables.isConfigurationTrue(functionalityName)){
 			log.log(Level.FATAL,"Functionality " + functionalityName + " is not enabled!");
 			return false;
-		}
+		}*/
 		return true;
 	}
 
@@ -729,4 +730,5 @@ public class HibernateFunctionalityManager implements IFunctionalities {
 		this.closeSession();
 	}
 }
+
 
