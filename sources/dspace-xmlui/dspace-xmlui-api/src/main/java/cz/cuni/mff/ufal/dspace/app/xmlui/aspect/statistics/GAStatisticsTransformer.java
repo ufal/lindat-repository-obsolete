@@ -9,6 +9,7 @@ package cz.cuni.mff.ufal.dspace.app.xmlui.aspect.statistics;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -25,6 +26,7 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
 import org.dspace.core.ConfigurationManager;
 import org.xml.sax.SAXException;
+
 //
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -122,9 +124,15 @@ public class GAStatisticsTransformer extends AbstractDSpaceTransformer {
 		division.setHead(T_head_title);
 		try {
 			
+			String start_date = this.parameters.getParameter("start");
+			String end_date = this.parameters.getParameter("end");
+			if(!DateHelper.checkDate(start_date)){
+				start_date = DateHelper.today_one_month_ago();
+			}
+			if(!DateHelper.checkDate(end_date)){
+				end_date = DateHelper.today_string();
+			}
 			Analytics analytics = initializeAnalytics();
-			String start_date = DateHelper.today_one_month_ago();
-			String end_date = DateHelper.today_string();
 			GaData q = getCountries( url, analytics, start_date, end_date );
 			add_header_table( division, q, start_date, end_date, name );
 			
@@ -337,6 +345,20 @@ class DateHelper {
 
 	static public String today_year_string() {
 		return new SimpleDateFormat("yyyy").format(new Date()).toString()+"-01-01";
+	}
+	
+	static public boolean checkDate(String date){
+		if(date == null || date.length() == 0){
+			return false;
+		}
+
+		try{
+			Date d = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+			return d != null;
+		}catch(ParseException e){
+			//do nothing
+		}
+		return false;
 	}
 	
 } // class
