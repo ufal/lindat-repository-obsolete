@@ -15,6 +15,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
+import org.apache.cocoon.environment.ObjectModelHelper;
+import org.apache.cocoon.environment.Request;
 import org.apache.log4j.Logger;
 import org.dspace.app.xmlui.cocoon.AbstractDSpaceTransformer;
 import org.dspace.app.xmlui.utils.HandleUtil;
@@ -84,6 +86,7 @@ public class GAStatisticsTransformer extends AbstractDSpaceTransformer {
         // Add the page title
         pageMeta.addMetadata("title").addContent(T_head_title);
         pageMeta.addMetadata("include-library", "statistic-map");
+        pageMeta.addMetadata("include-library", "datepicker");
     }
 
     /**
@@ -126,6 +129,7 @@ public class GAStatisticsTransformer extends AbstractDSpaceTransformer {
 			
 			String start_date = this.parameters.getParameter("start");
 			String end_date = this.parameters.getParameter("end");
+			String filters = this.parameters.getParameter("filters");
 			if(!DateHelper.checkDate(start_date)){
 				start_date = DateHelper.today_one_month_ago();
 			}
@@ -133,7 +137,24 @@ public class GAStatisticsTransformer extends AbstractDSpaceTransformer {
 				end_date = DateHelper.today_string();
 			}
 			Analytics analytics = initializeAnalytics();
-			GaData q = getCountries( url, analytics, start_date, end_date );
+			
+			String dimensions = "ga:country,ga:visitorType,ga:networkDomain,ga:hostname";
+			
+			if(url != null && !url.isEmpty()) {
+				if(filters == null) { 
+					filters = "ga:pagePath=@" + url;
+				} else {
+					filters += "ga:pagePath=@" + url;
+				}
+			}
+			
+			if(filters != null && filters.contains("country")) {
+				dimensions = "ga:city,ga:visitorType,ga:networkDomain,ga:hostname";
+			}
+			
+			
+			
+			GaData q = getCountries(analytics, start_date, end_date, dimensions, filters);
 			add_header_table( division, q, start_date, end_date, name );
 			
 			// place holder for map
@@ -205,14 +226,22 @@ public class GAStatisticsTransformer extends AbstractDSpaceTransformer {
 		//
 		r = table.addRow();
 		r.addCell().addContent("Time range");
-		r.addCell().addContent( "[" + start_date + " - " + end_date + "]" );
+		
+		Cell c = r.addCell();				
+		Text sDate = c.addHighlight("col-md-4").addText("start_date", "form-control");
+		sDate.setValue(start_date);
+		sDate.setLabel("from");
+		Text eDate = c.addHighlight("col-md-4").addText("end_date", "form-control");
+		eDate.setValue(end_date);
+		eDate.setLabel("to");
+		c.addHighlight("col-md-2").addButton("update_range", "btn btn-default").setValue("Update");
 		
 		r = table.addRow( null, null, "totalvisits" );
 		r.addCell().addContent( "Total # of visits" );						
 		r.addCell().addContent( extractTotalVisits(q) );		
 	}
 
-	private void add_data( Division division, GaData q, String name ) throws WingException {
+	private void add_data( Division division, GaData q, String name) throws WingException {
 		java.util.List<ColumnHeaders> ch = q.getColumnHeaders();
 		java.util.List<java.util.List<String>> data = q.getRows();
 			if ( data == null )
@@ -255,22 +284,13 @@ public class GAStatisticsTransformer extends AbstractDSpaceTransformer {
 		            .build();
 	  }	
 	  
-	  private static GaData getCountries( Analytics analytics, String start_date, String end_date) throws IOException {
-		  return getCountries( null, analytics, start_date, end_date );
-	  }
-	  
-	  private static GaData getCountries( String url, Analytics analytics, String start_date, String end_date) throws IOException {
+	  private static GaData getCountries( Analytics analytics, String start_date, String end_date, String dimensions, String filters) throws IOException {
 		    // Query accounts collection.
-		  Get q = analytics.data().ga()
-		            .get("ga:" + profile_id,
-		            	start_date,
-		                end_date,
-		                "ga:visits")
-		            .setDimensions( "ga:country,ga:visitorType,ga:networkDomain,ga:hostname" )
-		            //.setDimensions( "ga:pagePath" )
-		            .setSort("-ga:visits");
-		  if ( url != null ) {
-			  q = q.setFilters( "ga:pagePath==" + url );
+		  Get q = analytics.data().ga().get("ga:" + profile_id, start_date, end_date, "ga:visits");
+		  q.setDimensions(dimensions);
+		  q.setSort("-ga:visits");
+		  if ( filters != null && !filters.isEmpty() ) {
+			  q = q.setFilters(filters);
 		  }
 		  return q.execute();
 	 }
@@ -307,7 +327,10 @@ public class GAStatisticsTransformer extends AbstractDSpaceTransformer {
 		      Analytics analytics = initializeAnalytics();
 		      String end_date = DateHelper.today_string();
 		      //GaData q = getCountries( analytics, start_date, end_date );
-		      GaData q = getCountries( "/xmlui/handle/11858/00-097C-0000-0001-4880-3", analytics, start_date, end_date );
+		      
+		      String filters = "ga:pagePath=@/xmlui/handle/11858/00-097C-0000-0001-4880-3"; 
+		      
+		      GaData q = getCountries(analytics, start_date, end_date, "ga:country,ga:visitorType,ga:networkDomain,ga:pagePath", filters);
 		      for ( String[] ss : get_info( q ) ) {
 		    	  String tmp = "";
 			      for ( String s : ss ) {
@@ -362,4 +385,5 @@ class DateHelper {
 	}
 	
 } // class
+
 
