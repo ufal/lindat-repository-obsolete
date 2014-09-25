@@ -16,7 +16,7 @@
   <!-- If this is a number greater than 0, c3p0 will test all idle, pooled but unchecked-out connections, every this number of seconds. Hibernate default: 0 -->
   <property name="hibernate.c3p0.idle_test_period">100</property>
   <!-- Minimum number of JDBC connections in the pool. Hibernate default: 1 -->
-  <property name="hibernate.c3p0.min_size">20</property>
+  <property name="hibernate.c3p0.min_size">5</property>
   <!-- Maximum number of JDBC connections in the pool. Hibernate default: 100 -->
   <property name="hibernate.c3p0.max_size">100</property>
   <!-- Number of prepared statements will be cached. Increase performance. Hibernate default: 0 , caching is disable. -->
@@ -35,4 +35,5 @@
   <mapping resource="cz/cuni/mff/ufal/lindat/utilities/hibernate/UserMetadata.hbm.xml"/>
  </session-factory>
 </hibernate-configuration>
+
 
