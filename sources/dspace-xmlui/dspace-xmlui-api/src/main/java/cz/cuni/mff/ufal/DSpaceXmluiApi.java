@@ -45,7 +45,7 @@ public class DSpaceXmluiApi {
 			err = "undefined";
 		}
 		log.warn("Displaying ERROR message app_xmlui_aspect_eperson_postError - " + err);
-		if (DSpaceApi.getFunctionalityManager().isFunctionalityEnabled("postError") == false) {
+		if (DSpaceApi.getFunctionalityManager().isFunctionalityEnabled("lr.post.error") == false) {
 			return;
 		}
 		
@@ -294,3 +294,4 @@ public class DSpaceXmluiApi {
 
 	}
 };
+
