@@ -112,7 +112,7 @@ DATABASE_BACKUP_DIRECTORY=/home/backup
 # tools
 
 ANT_WITH_CONF:=ant -Dconfig="$(SUBSTITUTED_DSPACE_CFG)" -Doverwrite=true
-HIDE_PASSW:=sed '/Password/id'
+HIDE_PASSW:=sed '/Password/Id'
 
 
 #======================================================
