@@ -384,7 +384,4 @@ public class HibernateUtil {
 
 }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> github_master
