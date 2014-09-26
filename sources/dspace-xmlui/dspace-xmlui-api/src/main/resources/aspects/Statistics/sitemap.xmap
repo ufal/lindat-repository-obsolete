@@ -52,6 +52,7 @@
                     	<map:parameter name="start" value="{request-param:start}"/>
                     	<map:parameter name="end" value="{request-param:end}"/>
                     	<map:parameter name="filters" value="{request-param:filters}"/>
+                    	<map:parameter name="dim" value="{request-param:dim}"/>
                     </map:transform>
                 </map:match>
             </map:match>
@@ -93,6 +94,7 @@
                     	<map:parameter name="start" value="{request-param:start}"/>
                     	<map:parameter name="end" value="{request-param:end}"/>
                     	<map:parameter name="filters" value="{request-param:filters}"/>
+                    	<map:parameter name="dim" value="{request-param:dim}"/>
                     </map:transform>
                 </map:match>
 

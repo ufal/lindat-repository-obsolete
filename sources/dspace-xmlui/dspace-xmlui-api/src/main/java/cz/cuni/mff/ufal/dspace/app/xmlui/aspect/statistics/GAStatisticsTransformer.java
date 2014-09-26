@@ -130,6 +130,8 @@ public class GAStatisticsTransformer extends AbstractDSpaceTransformer {
 			String start_date = this.parameters.getParameter("start");
 			String end_date = this.parameters.getParameter("end");
 			String filters = this.parameters.getParameter("filters");
+			String dimensions = this.parameters.getParameter("dim");
+			
 			if(!DateHelper.checkDate(start_date)){
 				start_date = DateHelper.today_one_month_ago();
 			}
@@ -137,8 +139,6 @@ public class GAStatisticsTransformer extends AbstractDSpaceTransformer {
 				end_date = DateHelper.today_string();
 			}
 			Analytics analytics = initializeAnalytics();
-			
-			String dimensions = "ga:country,ga:visitorType,ga:networkDomain,ga:hostname";
 			
 			if(url != null && !url.isEmpty()) {
 				if(filters == null) { 
@@ -148,10 +148,15 @@ public class GAStatisticsTransformer extends AbstractDSpaceTransformer {
 				}
 			}
 			
-			if(filters != null && filters.contains("country")) {
-				dimensions = "ga:city,ga:visitorType,ga:networkDomain,ga:hostname";
+			
+			if(dimensions==null || dimensions.isEmpty()) {
+				dimensions = "ga:country,ga:visitorType,ga:networkDomain,ga:hostname";				
 			}
 			
+			if(filters != null && filters.contains("country") && !filters.contains("city")) {
+				dimensions.replace("ga:country", "ga:city");
+			}
+
 			
 			
 			GaData q = getCountries(analytics, start_date, end_date, dimensions, filters);
