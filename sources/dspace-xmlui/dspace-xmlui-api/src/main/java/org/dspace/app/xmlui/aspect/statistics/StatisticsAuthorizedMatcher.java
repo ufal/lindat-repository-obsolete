@@ -17,6 +17,7 @@ import org.dspace.core.Constants;
 import org.dspace.app.xmlui.utils.ContextUtil;
 import org.dspace.app.xmlui.utils.HandleUtil;
 import org.dspace.content.DSpaceObject;
+import org.dspace.eperson.Group;
 import org.dspace.authorize.AuthorizeManager;
 
 import java.util.Map;
@@ -55,6 +56,16 @@ public class StatisticsAuthorizedMatcher extends AbstractLogEnabled implements M
 
             //We have always got rights to view stats on the home page (admin rights will be checked later)
             boolean authorized = dso == null || AuthorizeManager.authorizeActionBoolean(context, dso, action, false);
+            
+            // checking special rights if an eperson is part of the special group
+            // only if authorization.special is true
+            Group specialGroup = Group.findByName(context, "statistics_viewers");
+            if(authorized
+            		&& specialGroup!=null 
+            		&& ConfigurationManager.getBooleanProperty("solr-statistics", "authorization.special")
+            		&& specialGroup.isMember(context.getCurrentUser())) {
+	            	authorized = true;
+            } else
             //If we are authorized check for any other authorization actions present
             if(authorized && ConfigurationManager.getBooleanProperty("solr-statistics", "authorization.admin"))
             {
@@ -74,7 +85,7 @@ public class StatisticsAuthorizedMatcher extends AbstractLogEnabled implements M
                     }
                 }
             }
-
+            	
             // XOR
             if (not ^ authorized)
             {
@@ -93,3 +104,4 @@ public class StatisticsAuthorizedMatcher extends AbstractLogEnabled implements M
         }
     }
 }
+
