@@ -48,7 +48,11 @@
             <!--GA page statistics-->
             <map:match pattern="statistics-google">
                 <map:match type="StatisticsAuthorizedMatcher" pattern="READ">
-                    <map:transform type="GAStatisticsTransformer"/>
+                    <map:transform type="GAStatisticsTransformer">
+                    	<map:parameter name="start" value="{request-param:start}"/>
+                    	<map:parameter name="end" value="{request-param:end}"/>
+                    	<map:parameter name="filters" value="{request-param:filters}"/>
+                    </map:transform>
                 </map:match>
             </map:match>
 
@@ -85,7 +89,11 @@
             <!--Match google statistics-->
             <map:match pattern="handle/*/*/statistics-google">
                 <map:match type="StatisticsAuthorizedMatcher" pattern="READ">
-                    <map:transform type="GAStatisticsTransformer"/>
+                    <map:transform type="GAStatisticsTransformer">
+                    	<map:parameter name="start" value="{request-param:start}"/>
+                    	<map:parameter name="end" value="{request-param:end}"/>
+                    	<map:parameter name="filters" value="{request-param:filters}"/>
+                    </map:transform>
                 </map:match>
 
                 <map:match type="StatisticsAuthorizedMatcher" pattern="!READ">
@@ -112,3 +120,4 @@
 		</map:pipeline>
 	</map:pipelines>
 </map:sitemap>
+

@@ -9,10 +9,14 @@ package org.dspace.submit.step;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -85,7 +89,15 @@ public class DescribeStep extends AbstractProcessingStep
     
     // the metadata language qualifier
     public static final String LANGUAGE_QUALIFIER = getDefaultLanguageQualifier();
-
+    
+    // UFAL: the following metadata can have non-unique values (input-type: "onebox")
+    private static final String nonUniqueMd[] = new String[] {
+    	"metashare.ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo.projectName", 
+    	"metashare.ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo.fundingType"
+    }; 
+    private static final Set<String> nonUniqueMdSet = new HashSet<String>(Arrays.asList(nonUniqueMd));
+    
+    
     /** Constructor */
     public DescribeStep() throws ServletException
     {
@@ -255,7 +267,8 @@ public class DescribeStep extends AbstractProcessingStep
                 List<String> quals = getRepeatedParameter(request, schema + "_"
                         + element, schema + "_" + element + "_qualifier");
                 List<String> vals = getRepeatedParameter(request, schema + "_"
-                        + element, schema + "_" + element + "_value");
+                        + element, schema + "_" + element + "_value");                
+         
                 for (int z = 0; z < vals.size(); z++)
                 {
                     String thisQual = quals.get(z);
@@ -689,6 +702,14 @@ public class DescribeStep extends AbstractProcessingStep
         List<String> vals = null;
         List<String> auths = null;
         List<String> confs = null;
+        
+        String mdString;
+        if ((qualifier == null) || qualifier.equals("")) {
+        	mdString = schema + "." + element;
+        }
+        else {
+        	mdString = schema + "." + element + "." + qualifier;
+        }
 
         if (repeated)
         {
@@ -700,7 +721,22 @@ public class DescribeStep extends AbstractProcessingStep
             {
                 split_strings(vals);
             }
-            
+
+            // only unique values are allowed except the ones 
+            // defined in nonUniqMdSet
+            if (!nonUniqueMdSet.contains(mdString)) {
+                Set<String> uniqueValues = new HashSet<String>();
+                List<String> uniqueVals = new LinkedList<String>();
+                for ( int i=0; i < vals.size(); i++ ) {
+                	if (!uniqueValues.contains(vals.get(i))) {
+                    	uniqueValues.add(vals.get(i));
+                    	uniqueVals.add(vals.get(i));
+                	}
+                }
+                vals = uniqueVals;            	
+            }
+
+                        
             if (isAuthorityControlled)
             {
                 auths = getRepeatedParameter(request, metadataField, metadataField+"_authority");

@@ -79,8 +79,14 @@ public class HibernateUtil {
 	}
 
 	public void closeSession() {
-		if (session != null && session.isOpen())
-			session.close();
+		try {
+			if (session != null && session.isOpen()) {
+				session.flush();
+				session.close();
+			}
+		} catch (HibernateException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Transaction startTransaction() {
@@ -97,7 +103,6 @@ public class HibernateUtil {
 	public void endTransaction() {
 		try {
 			transaction.commit();
-			closeSession();
 		} catch (HibernateException e) {
 			log.error("Transaction Failed.", e);
 			transaction.rollback();
@@ -378,3 +383,5 @@ public class HibernateUtil {
 	}
 
 }
+
+

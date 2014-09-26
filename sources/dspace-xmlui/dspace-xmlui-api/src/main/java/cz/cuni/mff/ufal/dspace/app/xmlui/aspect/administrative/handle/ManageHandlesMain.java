@@ -221,14 +221,31 @@ public class ManageHandlesMain extends AbstractDSpaceTransformer {
 		// Table rows
 		for (int i = firstIndex - 1; i < lastIndex && i < handles.size(); i++) {
 			Handle h = handles.get(i);
-			Row hrow = htable.addRow(null, Row.ROLE_DATA, null);
-			String resolvedURL = HandleManager.resolveToURL(context, h.getHandle());
+			Row hrow = htable.addRow(null, Row.ROLE_DATA, null);			
 			hrow.addCell().addRadio("handle_id")
 					.addOption(false, "" + h.getID());
-			hrow.addCell().addXref(HandleManager.getCanonicalForm(h.getHandle()), h.getHandle(),
-					"target_blank");
-			hrow.addCell().addContent(h.isInternalResource() ? T_yes : T_no);
-			hrow.addCell().addXref(resolvedURL, resolvedURL, "target_blank");
+            if (h.getHandle() != null && !h.getHandle().isEmpty())
+            {
+                hrow.addCell().addXref(
+                        HandleManager.getCanonicalForm(h.getHandle()),
+                        h.getHandle(), "target_blank");
+            }
+            else
+            {
+                hrow.addCell().addContent(h.getHandle());
+            }
+            hrow.addCell().addContent(h.isInternalResource() ? T_yes : T_no);
+            if (h.getHandle() != null && !h.getHandle().isEmpty())
+            {
+                String resolvedURL = HandleManager.resolveToURL(context,
+                        h.getHandle());
+                hrow.addCell()
+                        .addXref(resolvedURL, resolvedURL, "target_blank");
+            }
+            else
+            {
+                hrow.addCell().addContent(h.getHandle());
+            }
 			String resourceType = h.getResourceTypeID() < 0 ? null : Constants.typeText[h.getResourceTypeID()]; 
 			hrow.addCell().addContent(resourceType);
 			String resourceID = h.getResourceID() < 0 ? null : String.valueOf(h.getResourceID());

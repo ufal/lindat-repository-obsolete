@@ -263,12 +263,12 @@ public class UFALLicenceAgreementAgreed extends AbstractDSpaceTransformer {
 
 			if (allzip) {
 				returnURL = encodeForURL(returnURL + "/handle/" + handle
-						+ "/allzip");
+						+ "/allzip?dtoken=" + token);
 			} else {
 				Bitstream bitstream = bss[0];
 				returnURL = encodeForURL(returnURL + "/bitstream/handle/"
 						+ handle + "/" + bitstream.getName() + "?sequence="
-						+ bitstream.getSequenceID());
+						+ bitstream.getSequenceID() + "&dtoken=" + token);
 			}
 
 			if (!actions.contains(ExtraLicenseField.SEND_TOKEN)) {

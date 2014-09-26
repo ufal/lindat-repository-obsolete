@@ -112,7 +112,7 @@ DATABASE_BACKUP_DIRECTORY=/home/backup
 # tools
 
 ANT_WITH_CONF:=ant -Dconfig="$(SUBSTITUTED_DSPACE_CFG)" -Doverwrite=true
-HIDE_PASSW:=sed '/Password/id'
+HIDE_PASSW:=sed '/Password/Id'
 
 
 #======================================================
@@ -132,6 +132,7 @@ add_cronjobs:
 	(crontab -l ; echo "00 02     * * *     cd $(BASE); sudo make update_statistics") | crontab -
 	(crontab -l ; echo "00 01     * * *     cd $(BASE); sudo make update_sitemap") | crontab -
 	(crontab -l ; echo "30 00     * * *     cd $(BASE); sudo make lift_embargos") | crontab -
+	(crontab -l ; echo "30 01     * * *     cd $(BASE); sudo make update_openaire_cache") | crontab -
 
 print_message:
 	@echo -e "$(GREEN)-- IMPORTANT INFORMATION  ---------------------------------------------$(NORMAL)"; 
@@ -309,7 +310,7 @@ check_lindat_common:
 	@test -d $(DIR_LINDAT_COMMON_THEME)/.git || git clone $(URL_LINDAT_COMMON_GIT) $(DIR_LINDAT_COMMON_THEME)
 
 update_lindat_common: check_lindat_common
-	cd $(DIR_LINDAT_COMMON_THEME) && git checkout $(LINDAT_COMMON_THEME_BRANCH) && git pull
+	cd $(DIR_LINDAT_COMMON_THEME) && git checkout -f $(LINDAT_COMMON_THEME_BRANCH) && git pull
 
 
 #======================================================
@@ -414,6 +415,9 @@ update_discovery:
 
 generate_handle_list:
 	@sudo -u $(DSPACE_USER) psql $(DATABASE_NAME) -c "select handle from handle where resource_id in (select item_id from item where in_archive = 't' and withdrawn = 'f');" | tail -n +3 | head -n -2
+
+update_openaire_cache:
+	@sudo -u $(TOMCAT_USER) $(DIR_INSTALLATION)/bin/openaire-refresh-list
 
 
 #======================================================

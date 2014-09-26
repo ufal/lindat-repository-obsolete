@@ -10,6 +10,10 @@ package org.dspace.xoai.util;
 import com.lyncode.xoai.dataprovider.xml.xoai.Element;
 import com.lyncode.xoai.dataprovider.xml.xoai.Metadata;
 import com.lyncode.xoai.util.Base64Utils;
+
+import cz.cuni.mff.ufal.lindat.utilities.hibernate.LicenseDefinition;
+import cz.cuni.mff.ufal.lindat.utilities.interfaces.IFunctionalities;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
@@ -142,6 +146,9 @@ public class ItemUtils
         // Now adding bitstream info
         Element bundles = create("bundles");
         metadata.getElement().add(bundles);
+		
+		//indicate restricted bitstreams -> restricted access
+		boolean restricted = false;
 
         Bundle[] bs;
         try
@@ -222,6 +229,20 @@ public class ItemUtils
                                     + ""));
                     bitstream.getField().add(
                     		createValue("id", bit.getID()+""));
+
+                    if(!restricted){
+                		IFunctionalities functionalityManager = cz.cuni.mff.ufal.DSpaceApi.getFunctionalityManager();
+                        List<LicenseDefinition> lds = functionalityManager.getLicenses(bit.getID());
+                        for(LicenseDefinition ld : lds){
+                             if(ld.getRequiredInfo() != null && ld.getRequiredInfo().length() > 0){
+                                     restricted = true;
+                             }
+                             if(restricted){
+                                     break;
+                             }
+                        }
+                		functionalityManager.close();                            
+                    }
                 }
             }
         }
@@ -241,6 +262,12 @@ public class ItemUtils
         other.getField().add(
                 createValue("lastModifyDate", item
                         .getLastModified().toString()));
+        
+		if(restricted){
+			other.getField().add(createValue("restrictedAccess", "true"));
+		}
+        
+        
         try{
 			other.getField().add(
 					createValue("owningCollection", item.getOwningCollection()
@@ -310,3 +337,4 @@ public class ItemUtils
         return metadata;
     }
 }
+

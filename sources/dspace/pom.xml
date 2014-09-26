@@ -273,6 +273,11 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
     	</dependency>
+	<dependency>
+	  <groupId>cz.cuni.mff.ufal.dspace</groupId>
+	  <artifactId>b2safe-dspace</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
     </dependencies>
 
 </project>

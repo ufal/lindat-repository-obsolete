@@ -17,8 +17,6 @@ import org.dspace.embargo.EmbargoManager;
 import org.dspace.event.Event;
 import org.dspace.handle.HandleManager;
 
-import cz.cuni.mff.ufal.dspace.storage.ReplicationManager;
-
 /**
  * Support to install an Item in the archive.
  * 

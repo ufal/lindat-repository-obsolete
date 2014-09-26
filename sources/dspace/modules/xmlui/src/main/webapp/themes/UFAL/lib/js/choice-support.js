@@ -61,6 +61,20 @@ function DSpaceSetupAutocomplete(formID, args) {
         var ac = $('#' + inputID);
         ac.autocomplete({
             source: function(request, response) {
+		//remove previous choices
+                var authInput = $('#' + authorityID);
+                if(authInput.length > 0) {
+                    authInput = authInput[0];
+		    authInput.value = "";
+		    // make indicator blank if no authority value
+		    DSpaceUpdateConfidence(document, args.confidenceIndicatorID, 'blank');
+                }
+		if (args.confidenceName != null) {
+		    var confInput = authInput.form.elements[args.confidenceName];
+		    if (confInput != null)
+			confInput.value = '';
+		}
+		//--
                 var reqUrl = choiceURL;
                 if(request && request.term) {
                     reqUrl += "&query=" + request.term;
@@ -305,11 +319,12 @@ function DSpaceChoicesLoad(form) {
             indicator.hide('fast');
 
             // "results" status line
-            var statLast = nextStart + (isClosed ? 2 : 1);
+            var statLast = nextStart + (isClosed ? 0 : 1);
+	    var legendStart = (lastTotal == 0 ? oldStart : (oldStart + 1));
 
             var legend = $('#aspect_general_ChoiceLookupTransformer_list_choicesList :header:first');
             legend.html(dspace_formatMessage(legend.data('template'),
-                            oldStart + 1, statLast, Math.max(lastTotal, statLast), value));
+                            legendStart, statLast, Math.max(lastTotal, statLast), value));
         }
     });
 }
@@ -374,7 +389,8 @@ function DSpaceChoicesAcceptOnClick() {
             var authValue = null;
             var selectedOption = select.find(':selected');
             if (selectedOption.length >= 0 && selectedOption.data('authority') != null) {
-                of.find('*[name = ' + authorityInput + ']').val(selectedOption.data('authority'));
+		authValue = selectedOption.data('authority');
+                of.find('*[name = ' + authorityInput + ']').val(authValue);
             }
             of.find('*[name = ' + confInput + ']').val('accepted');
             // make indicator blank if no authority value

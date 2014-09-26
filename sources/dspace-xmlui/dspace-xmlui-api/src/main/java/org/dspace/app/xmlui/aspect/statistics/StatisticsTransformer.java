@@ -10,8 +10,6 @@ package org.dspace.app.xmlui.aspect.statistics;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.Date;
-
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.dspace.app.xmlui.cocoon.AbstractDSpaceTransformer;
@@ -21,6 +19,8 @@ import org.dspace.app.xmlui.wing.WingException;
 import org.dspace.app.xmlui.wing.Message;
 import org.dspace.app.xmlui.wing.element.*;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.content.Bitstream;
+import org.dspace.content.Bundle;
 import org.dspace.content.DCValue;
 import org.dspace.content.DSpaceObject;
 import org.dspace.core.Constants;
@@ -40,6 +40,7 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
     private static final Message T_statistics_trail = message("xmlui.statistics.trail");
     private static final String T_head_visits_total = "xmlui.statistics.visits.total";
     private static final String T_head_visits_month = "xmlui.statistics.visits.month";
+    private static final String T_head_visits_year = "xmlui.statistics.visits.year";
     private static final String T_head_visits_views = "xmlui.statistics.visits.views";
     private static final String T_head_visits_countries = "xmlui.statistics.visits.countries";
     private static final String T_head_visits_cities = "xmlui.statistics.visits.cities";
@@ -149,6 +150,8 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 		Division division = home.addDivision("stats", "secondary stats");
 		division.setHead(T_head_title);
 		
+		division = division.addDivision("item_visits");
+		
 		String sdate = null;
 
 		if(Constants.ITEM == dso.getType()) {				
@@ -160,7 +163,7 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 		}			
 		
 		if(sdate!=null) {
-			division.addPara(null, "label").addContent("Showing statistics from " + sdate);
+			division.addPara(null, "label label-default").addContent("Showing statistics from " + sdate);
 		}
 				
 		try {
@@ -189,7 +192,7 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 
 			StatisticsTable statisticsTable = new StatisticsTable(new StatisticsDataVisits(dso));
 			
-			statisticsTable.setTitle(T_head_visits_month);
+			statisticsTable.setTitle(T_head_visits_year);
 			statisticsTable.setId("tab1");
 
 			DatasetTimeGenerator timeAxis = new DatasetTimeGenerator();
@@ -210,8 +213,8 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 							+ " and handle: " + dso.getHandle(), e);
 		}
 
-         if(dso instanceof org.dspace.content.Item){
-             //Make sure our item has at least one bitstream
+/*         if(dso instanceof org.dspace.content.Item){
+           //Make sure our item has at least one bitstream
              org.dspace.content.Item item = (org.dspace.content.Item) dso;
             try {
                 if(item.hasUploadedFiles()){
@@ -223,7 +226,6 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
                     DatasetDSpaceObjectGenerator dsoAxis = new DatasetDSpaceObjectGenerator();
                     dsoAxis.addDsoChild(Constants.BITSTREAM, 10, false, -1);
                     statsList.addDatasetGenerator(dsoAxis);
-
                     addDisplayListing(division, statsList);
                 }
             } catch (Exception e) {
@@ -232,7 +234,7 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
                                 + dso.getID() + " and type " + dso.getType()
                                 + " and handle: " + dso.getHandle(), e);
             }
-        }
+        }*/
 
         try {
             StatisticsListing statListing = new StatisticsListing(
@@ -280,6 +282,49 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
                             + " and handle: " + dso.getHandle(), e);
         }
 
+        
+        if(dso instanceof org.dspace.content.Item){
+            //Make sure our item has at least one bitstream
+            org.dspace.content.Item item = (org.dspace.content.Item) dso;
+           try {
+               if(item.hasUploadedFiles()){
+            	   
+            	   division = division.addDivision("file_visits");
+            	   division.setHead(message(T_head_visits_bitstream));
+
+                   StatisticsListing statsList = new StatisticsListing(new StatisticsDataVisits(dso));
+
+                   statsList.setTitle(T_head_visits_bitstream);
+                   statsList.setId("list-bit");
+
+                   DatasetDSpaceObjectGenerator dsoAxis = new DatasetDSpaceObjectGenerator();
+                   dsoAxis.addDsoChild(Constants.BITSTREAM, 10, false, -1);
+                   statsList.addDatasetGenerator(dsoAxis);
+                   addDisplayListing(division, statsList);
+            	   
+            	   for(Bundle bundle : item.getBundles("ORIGINAL")) {
+            		   for(Bitstream bitstream : bundle.getBitstreams()) {            			    
+            			    StatisticsListing bitstreamStats = new StatisticsListing(new StatisticsDataVisits(bitstream));
+            			    bitstreamStats.setTitle(bitstream.getName());
+            	            DatasetTypeGenerator typeAxis = new DatasetTypeGenerator();
+            	            typeAxis.setType("countryCode");
+            	            typeAxis.setMax(10);
+            	            bitstreamStats.addDatasetGenerator(typeAxis);
+
+            	            addDisplayListing(division, bitstreamStats);            			   
+            		   }
+            	   }
+            	                      
+               }
+           } catch (Exception e) {
+               log.error(
+                       "Error occurred while creating statistics for dso with ID: "
+                               + dso.getID() + " and type " + dso.getType()
+                               + " and handle: " + dso.getHandle(), e);
+           }
+       }
+        
+        
 	}
 
 	
@@ -390,9 +435,9 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 				
 				String rend = "";
 				
-				if(url==null) {
+				/* if(url==null) {
 					rend = "hidden";
-				}
+				}*/
 				
 				Row valListRow = table.addRow(null, null, rend);
 
@@ -420,4 +465,5 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 
 	}
 }
+
 

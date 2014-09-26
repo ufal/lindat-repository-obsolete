@@ -9,4 +9,3 @@ http://svn.ms.mff.cuni.cz/redmine/projects/dspace-modifications/wiki#UFAL-Digita
 contact email:
 misutka at ufal.mff.cuni.cz
 
-

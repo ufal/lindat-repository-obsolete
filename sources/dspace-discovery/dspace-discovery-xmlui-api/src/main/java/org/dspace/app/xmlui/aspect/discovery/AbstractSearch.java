@@ -808,8 +808,12 @@ public abstract class AbstractSearch extends AbstractDSpaceTransformer implement
             // Ignore, as we are only trying to get the scope to add detail to the log message
         }
 
+	//log empty searches as "<<BROWSING>>"
+	String query = (queryArgs == null ? "" :
+		       (queryArgs.getQuery() != null ? queryArgs.getQuery() :
+		       "<<BROWSING>>"));
         log.info(LogManager.getHeader(context, "search", logInfo + "query=\""
-                + (queryArgs == null ? "" : queryArgs.getQuery()) + "\",results=(" + countCommunities + ","
+                + query + "\",results=(" + countCommunities + ","
                 + countCollections + "," + countItems + ")"));
     }
 }

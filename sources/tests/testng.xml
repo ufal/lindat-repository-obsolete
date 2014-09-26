@@ -1,89 +1,99 @@
 <suite name="UFAL Point Test Setup" verbose="10">
-  <parameter name="selenium.host" value="localhost" />
-  <parameter name="selenium.port" value="8123" />
-  <parameter name="selenium.browser" value="*firefox3 /usr/lib/firefox/firefox" />
-  
-  <parameter name="ufal.properties" value="../../config/local.conf" />
-    
-  <test name="Test Basic Page Loading" preserve-order="true">
-    <classes>
-      <class name="cz.cuni.mff.ufal.test.PageLoadTest">
-        <methods>
-          <include name="testMainPageLoad" />
-          <include name="testVisitFirstWhatsNewItem" />
-        </methods>
-      </class>
-      <class name="cz.cuni.mff.ufal.test.SearchTest">
-	<methods>
-	  <include name="testBrowseByIssueDate" />
-	</methods>
-      </class>
-      <class name="cz.cuni.mff.ufal.test.LoginTest">
-        <methods>
-          <include name="testLoginLocal" />
-        </methods>
-      </class>      
-    </classes>  
-  </test>
- 
-  <test name="Test Search with Login" preserve-order="true">
-    <classes>
-      <class name="cz.cuni.mff.ufal.test.LoginTest">
-        <methods>
-          <include name="testLoginLocal" />
-        </methods>
-      </class>
-      <class name="cz.cuni.mff.ufal.test.SearchTest">
-        <methods>
-          <include name="testBasicSearchFromHomePage" />
-          <include name="testSearchWithQueryString" />
-          <include name="testSearchWithNoExpectedResults" />
-	  <include name="testClickAuthorOnItemView" />
-        </methods>
-      </class>      
-    </classes>
-  </test>
+	<parameter name="selenium.host" value="localhost" />
+	<parameter name="selenium.port" value="8123" />
+	<parameter name="selenium.browser" value="*firefox3 /usr/lib/firefox/firefox" />
 
-  <test name="Test Search without Login" preserve-order="true">
-    <classes>
-      <class name="cz.cuni.mff.ufal.test.SearchTest">
-        <methods>
-          <include name="testBasicSearchFromHomePage" />
-          <include name="testSearchWithQueryString" />
-          <include name="testSearchWithNoExpectedResults" />
-        </methods>
-      </class>      
-    </classes>
-  </test>
+	<parameter name="ufal.properties" value="../../config/local.conf" />
 
-  <test name="Test Item Submission with Admin" preserve-order="true">
-    <parameter name="user" value="admin" />  
-    <classes>
-      <class name="cz.cuni.mff.ufal.test.LoginTest">
-        <methods>
-          <include name="testLoginLocal" />
-        </methods>
-      </class>    
-      <class name="cz.cuni.mff.ufal.test.SubmissionTest">
-        <methods>
-          <include name="testSubmissionWithAdmin" />
-	  <include name="testFullSubmissionWithAdmin" />
-        </methods>
-      </class>
-    </classes>
-  </test>
+	<test name="Test for Download of Files in Items">
+		<classes>
+			<class name="cz.cuni.mff.ufal.test.DownloadTest">
+				<methods>
+					<include name="testFilesAvailableForDownload"></include>
+				</methods>
+			</class>
+		</classes>
+	</test>
 
-  <test name="OAI Test" preserve-order="true">
-  	<classes>
-  		<class name="cz.cuni.mff.ufal.test.OAIRequestTest">
-  			<methods>
-  				<include name="testCMDIRequest" />
-  				<include name="testBibtexRequest" />  			
-  				<include name="testCMDIClick" />
-  				<include name="testBibtexClick" />
-  			</methods>
-  		</class>
-  	</classes>
-  </test>
+	<test name="Test Basic Page Loading" preserve-order="true">
+		<classes>
+			<class name="cz.cuni.mff.ufal.test.PageLoadTest">
+				<methods>
+					<include name="testMainPageLoad" />
+					<include name="testVisitFirstWhatsNewItem" />
+				</methods>
+			</class>
+			<class name="cz.cuni.mff.ufal.test.SearchTest">
+				<methods>
+					<include name="testBrowseByIssueDate" />
+				</methods>
+			</class>
+			<class name="cz.cuni.mff.ufal.test.LoginTest">
+				<methods>
+					<include name="testLoginLocal" />
+				</methods>
+			</class>
+		</classes>
+	</test>
+
+	<test name="Test Search with Login" preserve-order="true">
+		<classes>
+			<class name="cz.cuni.mff.ufal.test.LoginTest">
+				<methods>
+					<include name="testLoginLocal" />
+				</methods>
+			</class>
+			<class name="cz.cuni.mff.ufal.test.SearchTest">
+				<methods>
+					<include name="testBasicSearchFromHomePage" />
+					<include name="testSearchWithQueryString" />
+					<include name="testSearchWithNoExpectedResults" />
+					<include name="testClickAuthorOnItemView" />
+				</methods>
+			</class>
+		</classes>
+	</test>
+
+	<test name="Test Search without Login" preserve-order="true">
+		<classes>
+			<class name="cz.cuni.mff.ufal.test.SearchTest">
+				<methods>
+					<include name="testBasicSearchFromHomePage" />
+					<include name="testSearchWithQueryString" />
+					<include name="testSearchWithNoExpectedResults" />
+				</methods>
+			</class>
+		</classes>
+	</test>
+
+	<test name="Test Item Submission with Admin" preserve-order="true">
+		<parameter name="user" value="admin" />
+		<classes>
+			<class name="cz.cuni.mff.ufal.test.LoginTest">
+				<methods>
+					<include name="testLoginLocal" />
+				</methods>
+			</class>
+			<class name="cz.cuni.mff.ufal.test.SubmissionTest">
+				<methods>
+					<include name="testSubmissionWithAdmin" />
+					<include name="testFullSubmissionWithAdmin" />
+				</methods>
+			</class>
+		</classes>
+	</test>
+
+	<test name="OAI Test" preserve-order="true">
+		<classes>
+			<class name="cz.cuni.mff.ufal.test.OAIRequestTest">
+				<methods>
+					<include name="testCMDIRequest" />
+					<include name="testBibtexRequest" />
+					<include name="testCMDIClick" />
+					<include name="testBibtexClick" />
+				</methods>
+			</class>
+		</classes>
+	</test>
 
 </suite>

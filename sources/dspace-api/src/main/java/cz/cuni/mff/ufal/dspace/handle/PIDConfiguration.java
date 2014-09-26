@@ -163,7 +163,7 @@ public class PIDConfiguration
         Set<String> alternativePrefixes = new HashSet<String>(); 
         for(PIDCommunityConfiguration pidCommunityConfiguration : pidCommunityConfigurations.values())
         {                  
-            if(mainPrefix.equals(pidCommunityConfiguration.getPrefix()))
+            if(mainPrefix != null && mainPrefix.equals(pidCommunityConfiguration.getPrefix()))
             {
                     Collections.addAll(alternativePrefixes, pidCommunityConfiguration.getAlternativePrefixes());
             }

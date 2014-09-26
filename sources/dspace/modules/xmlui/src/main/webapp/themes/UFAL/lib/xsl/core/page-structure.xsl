@@ -138,7 +138,16 @@
             <!-- dragNdrop -->
             <xsl:if test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='include-library'][@qualifier='dragNdrop']">
                 <link rel="stylesheet" href="{$theme-path}/lib/css/jquery.fileupload-ui.css"> </link>
+	    </xsl:if>
+
+	    <!-- jquery-ui -->
+            <xsl:if test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='include-library'][@qualifier='jquery-ui']">
                 <link rel="stylesheet" href="{$theme-path}/lib/css/ui-lightness/jquery-ui.css"> </link>
+            </xsl:if>
+
+	    <!-- authority css -->
+            <xsl:if test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='include-library'][@qualifier='authority-control']">
+                <link rel="stylesheet" href="{$theme-path}/lib/css/authority-control.css"> </link>
             </xsl:if>
             
             <!-- select2 -->

@@ -18,6 +18,7 @@ import org.dspace.usage.UsageEvent;
  * logging implementation from DSpace.
  * 
  * @author mdiggory
+ * modified for LINDAT/CLARIN
  *
  */
 public class SolrLoggerUsageEventListener extends AbstractUsageEventListener {
@@ -34,7 +35,7 @@ public class SolrLoggerUsageEventListener extends AbstractUsageEventListener {
 			
 			    EPerson currentUser = ue.getContext() == null ? null : ue.getContext().getCurrentUser();
 
-                SolrLogger.post(ue.getObject(), ue.getRequest(), currentUser);
+                SolrLogger.post(ue.getObject(), ue.getRequest(), currentUser, ue.getContext());
 
 			}
 			catch(Exception e)

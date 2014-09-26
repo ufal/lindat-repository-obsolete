@@ -671,6 +671,7 @@
     <message key="xmlui.Submission.submit.progressbar.initial-questions">Initial Questions</message>
     <message key="xmlui.Submission.submit.progressbar.describe">Item Type</message>
     <message key="xmlui.Submission.submit.progressbar.describe2">Describe</message>
+    <message key="xmlui.Submission.submit.progressbar.describe3">OpenAIRE</message>
     <message key="xmlui.Submission.submit.progressbar.upload">Upload</message>
     <message key="xmlui.Submission.submit.progressbar.additional">Details</message>
     <message key="xmlui.Submission.submit.progressbar.additional2">Note</message>
@@ -2108,12 +2109,13 @@
     <message key="xmlui.statistics.title">Statistics</message>
     <message key="xmlui.statistics.visits.total">Total Visits</message>
     <message key="xmlui.statistics.visits.month">Total Visits Per Month</message>
+	<message key="xmlui.statistics.visits.year">Total Visits Per Year</message>    
     <message key="xmlui.statistics.visits.views">Views</message>
     <message key="xmlui.statistics.visits.countries">Top country views</message>
     <message key="xmlui.statistics.visits.cities">Top cities views</message>
     <message key="xmlui.statistics.visits.bitstreams">File Visits</message>
     <message key="xmlui.statistics.Navigation.title">Statistics</message>
-    <message key="xmlui.statistics.Navigation.view">View Statistics</message>
+    <message key="xmlui.statistics.Navigation.view">View Statistics</message>    
     <message key="xmlui.statistics.trail">Statistics</message>
 
     <message key="xmlui.statistics.ga.title">GA Statistics</message>
@@ -2360,6 +2362,12 @@
   <message key="xmlui.ChoiceLookupTransformer.field.dc_contributor_author.title">LC Name Authority author lookup</message>
   <message key="xmlui.ChoiceLookupTransformer.field.dc_contributor_author.nonauthority">Local value "@1@" (not in Naming Authority)</message>
 
+  <!-- Choice Lookup - config for dc.relation field -->
+  <message key="xmlui.ChoiceLookupTransformer.field.dc_relation.help">OpenAIRE project identifier</message>
+  <message key="xmlui.ChoiceLookupTransformer.field.dc_relation.title">Look up project</message>
+  <!-- Params are: search-value -->
+  <message key="xmlui.ChoiceLookupTransformer.field.dc_relation.nonauthority">Non-authority value: @1@</message>
+
   <!-- jmisutka DragNDrop -->
   <message key="xmlui.UFAL.dragndrop.upload.button.text">Upload</message>
   <message key="xmlui.UFAL.dragndrop.upload.label">Drag 'n' drop to upload</message>
@@ -2381,3 +2389,4 @@
   <message key="xmlui.UFAL.artifactbrowser.item-download-file">Download file</message>
 
 </catalogue>
+
