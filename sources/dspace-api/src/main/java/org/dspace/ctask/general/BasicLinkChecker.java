@@ -508,6 +508,28 @@ public class BasicLinkChecker extends AbstractCurationTask
             responseStatus.setCode(0);
             return responseStatus;
         }
+        catch (IOException ioe)
+        {
+            // Must be a bad URL
+            log.error(String.format("Bad link [%s]: [%s]", url,
+                    ioe.getMessage()));
+            responseStatus.setCode(0);
+            return responseStatus;
+        }
+    }
+
+    /**
+     * Internal utitity method to get a formatted URL of the item in local
+     * repository
+     * 
+     * @param item
+     *            The item to get a URL of
+     * @return The URL of the item
+     */
+    protected static String getFormattedEditItemURL(Item item)
+    {
+        return String.format(" [%s/admin/item?itemID=%d]",
+                ConfigurationManager.getProperty("dspace.url"), item.getID());
     }
 
     /**
@@ -535,6 +557,28 @@ public class BasicLinkChecker extends AbstractCurationTask
     {
         String handle = item.getHandle();
         return (handle != null) ? handle : " in workflow";
+    }
+
+    /**
+     * Checks whether the given URL is Handle System URL
+     * 
+     * @param url
+     *            URL to check
+     * @return True if the given URL is a Handle System URL
+     */
+    protected boolean isHandleURL(String url)
+    {
+        return url.startsWith("http://hdl.handle.net/");
+    }
+
+    /**
+     * Checks whether we can continue performing tasks
+     * 
+     * @return False if no more checking should be done
+     */
+    protected boolean canContinue()
+    {
+        return true;
     }
 
     /**

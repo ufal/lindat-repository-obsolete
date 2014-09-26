@@ -146,6 +146,9 @@ public class ItemUtils
         // Now adding bitstream info
         Element bundles = create("bundles");
         metadata.getElement().add(bundles);
+		
+		//indicate restricted bitstreams -> restricted access
+		boolean restricted = false;
 
 		IFunctionalities functionalityManager = cz.cuni.mff.ufal.DSpaceApi.getFunctionalityManager();
 		//indicate restricted bitstreams -> restricted access
@@ -232,15 +235,18 @@ public class ItemUtils
                     		createValue("id", bit.getID()+""));
 
                     if(!restricted){
-                            List<LicenseDefinition> lds = functionalityManager.getLicenses(bit.getID());
-                            for(LicenseDefinition ld : lds){
-                                 if(ld.getRequiredInfo() != null && ld.getRequiredInfo().length() > 0){
-                                         restricted = true;
-                                 }
-                                 if(restricted){
-                                         break;
-                                 }
-                            }
+                	IFunctionalities functionalityManager = cz.cuni.mff.ufal.DSpaceApi.getFunctionalityManager();
+			functionalityManager.openSession();
+                        List<LicenseDefinition> lds = functionalityManager.getLicenses(bit.getID());
+                        for(LicenseDefinition ld : lds){
+                             if(ld.getRequiredInfo() != null && ld.getRequiredInfo().length() > 0){
+                                     restricted = true;
+                             }
+                             if(restricted){
+                                     break;
+                             }
+                        }
+                	functionalityManager.close();                            
                     }
                 }
             }
@@ -249,9 +255,6 @@ public class ItemUtils
         {
             e1.printStackTrace();
         }
-
-		functionalityManager.close();
-        
 
         // Other info
         Element other = create("others");
@@ -338,3 +341,4 @@ public class ItemUtils
         return metadata;
     }
 }
+

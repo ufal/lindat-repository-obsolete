@@ -81,9 +81,7 @@ public class HibernateUtil {
 	public void closeSession() {
 		try {
 			if (session != null && session.isOpen()) {
-				if(session.isDirty()) {
-					session.flush();
-				}
+				session.flush();
 				session.close();
 			}
 		} catch (HibernateException e) {
@@ -386,3 +384,7 @@ public class HibernateUtil {
 
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> github_master

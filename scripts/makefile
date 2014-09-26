@@ -433,14 +433,14 @@ substitute_backup_config:
 
 # This command makes backup for databases and put it into backuped directory $(DIR_DATABASE_BACKUP)
 backup_databases:
-	su postgres -l -c 'pg_dump $(DATABASE_NAME) > $(DIR_POSTGRESQL)/$(DATABASE_NAME)'
-	su postgres -l -c 'pg_dump $(UTILITIES_DATABASE_NAME) > $(DIR_POSTGRESQL)/$(UTILITIES_DATABASE_NAME)'
+	su postgres -l -c 'pg_dump $(DATABASE_NAME) > $(DIRECTORY_POSTGRESQL)/$(DATABASE_NAME)'
+	su postgres -l -c 'pg_dump $(UTILITIES_DATABASE_NAME) > $(DIRECTORY_POSTGRESQL)/$(UTILITIES_DATABASE_NAME)'
 	# with timestapm
-	cp $(DIR_POSTGRESQL)/$(DATABASE_NAME) $(DIR_DATABASE_BACKUP)/$(DATABASE_NAME).dumped.`date +"%d-%m-%y.at.%T"`
-	cp $(DIR_POSTGRESQL)/$(UTILITIES_DATABASE_NAME) $(DIR_DATABASE_BACKUP)/$(UTILITIES_DATABASE_NAME).dumped.`date +"%d-%m-%y.at.%T"`
+	cp $(DIRECTORY_POSTGRESQL)/$(DATABASE_NAME) $(DIR_DATABASE_BACKUP)/$(DATABASE_NAME).dumped.`date +"%d-%m-%y.at.%T"`
+	cp $(DIRECTORY_POSTGRESQL)/$(UTILITIES_DATABASE_NAME) $(DIR_DATABASE_BACKUP)/$(UTILITIES_DATABASE_NAME).dumped.`date +"%d-%m-%y.at.%T"`
 	# latest one
-	mv $(DIR_POSTGRESQL)/$(DATABASE_NAME) $(DIR_DATABASE_BACKUP)/$(DATABASE_NAME)
-	mv $(DIR_POSTGRESQL)/$(UTILITIES_DATABASE_NAME) $(DIR_DATABASE_BACKUP)/$(UTILITIES_DATABASE_NAME)
+	mv $(DIRECTORY_POSTGRESQL)/$(DATABASE_NAME) $(DIR_DATABASE_BACKUP)/$(DATABASE_NAME)
+	mv $(DIRECTORY_POSTGRESQL)/$(UTILITIES_DATABASE_NAME) $(DIR_DATABASE_BACKUP)/$(UTILITIES_DATABASE_NAME)
 
 # This is core backuping command. Here we have all the backups of all the key configurations.
 backup_dspace: backup_databases substitute_backup_config

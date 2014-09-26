@@ -92,6 +92,7 @@
                     <map:transform type="GAStatisticsTransformer">
                     	<map:parameter name="start" value="{request-param:start}"/>
                     	<map:parameter name="end" value="{request-param:end}"/>
+                    	<map:parameter name="filters" value="{request-param:filters}"/>
                     </map:transform>
                 </map:match>
 
