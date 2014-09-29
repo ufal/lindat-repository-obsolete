@@ -49,7 +49,7 @@
     <message key="xmlui.PageNotFound.para1">We can't find the page you asked for.</message>
 
     <!--  session expired  -->
-    <message key="xmlui.SessionExpired.title">Your Session has Expired - Please Login Again</message>
+    <message key="xmlui.SessionExpired.title">Your Session has Expired</message>
     <message key="xmlui.SessionExpired.head">To login and continue, click </message>
     <message key="xmlui.SessionExpired.para1">In case that there are other problems, please contact the </message>
 
