@@ -8,10 +8,12 @@
 package org.dspace.statistics;
 
 import org.apache.log4j.Logger;
+import org.dspace.content.Item;
 import org.dspace.eperson.EPerson;
 import org.dspace.services.model.Event;
 import org.dspace.usage.AbstractUsageEventListener;
 import org.dspace.usage.UsageEvent;
+import org.dspace.usage.UsageEvent.Action;
 
 /**
  * Simple SolrLoggerUsageEvent facade to separate Solr specific 
@@ -34,9 +36,18 @@ public class SolrLoggerUsageEventListener extends AbstractUsageEventListener {
 			    UsageEvent ue = (UsageEvent)event;
 			
 			    EPerson currentUser = ue.getContext() == null ? null : ue.getContext().getCurrentUser();
-
-                SolrLogger.post(ue.getObject(), ue.getRequest(), currentUser, ue.getContext());
-
+			    
+			    Action action = ue.getAction();
+			    
+			    if(action.equals(Action.WITHDRAW) || action.equals(Action.REINSTATE)){
+			    	if(ue.getObject() instanceof Item){
+			    		// change the withdrawn flag
+			    		SolrLogger.reindexWithdrawn(ue.getContext(), " AND id:" + ue.getObject().getID());
+			    	}
+			    } else{
+			    	// Log the VIEW/whatever else
+			    	SolrLogger.post(ue.getObject(), ue.getRequest(), currentUser);
+			    }
 			}
 			catch(Exception e)
 			{

@@ -174,19 +174,8 @@ public class SolrLogger
      * @param request the current request context.
      * @param currentUser the current session's user.
      */
-    public static void post(DSpaceObject dspaceObject, HttpServletRequest request, EPerson currentUser){
-    	post(dspaceObject, request, currentUser, null);
-    }
-    /**
-     * Store a usage event into Solr.
-     * 
-     * @param dspaceObject the object used.
-     * @param request the current request context.
-     * @param currentUser the current session's user.
-     * @param context dso db connection
-     */
     public static void post(DSpaceObject dspaceObject, HttpServletRequest request,
-            EPerson currentUser, Context context)
+            EPerson currentUser)
     {
         if (solr == null || locationService == null)
         {
@@ -298,7 +287,6 @@ public class SolrLogger
                     }
                 }
                 
-                SolrLogger.reindexWithdrawn(context, " AND id:" + item.getID());
                 doc1.addField("withdrawn", item.isWithdrawn());
             }
 
@@ -471,6 +459,7 @@ public class SolrLogger
             QueryResponse response = solr.query(solrParams);
             
             long numbFound = response.getResults().getNumFound();
+	    log.debug(String.format("Found %s documents.", numbFound));
 
             // process the first batch
             process(response.getResults());
@@ -1204,13 +1193,16 @@ public class SolrLogger
     private static class WithdrawResultProcessor extends ResultProcessor { 
 
     	Context context;
+    	int documentCounter;
         public WithdrawResultProcessor(Context context) {
         	super();
         	this.context = context;
+        	this.documentCounter = 0;
         } 
 
         public void process(SolrDocument doc) throws IOException, SolrServerException { 
             try{
+            	documentCounter++;
 				Item item = Item.find(context,
 						(Integer) doc.getFieldValue("id"));
 				if(item == null){
@@ -1239,18 +1231,22 @@ public class SolrLogger
 
 	public static void reindexWithdrawn(Context context, String extraQuery) {
 	       try {
+	           //make sure we change also the last view (view->edit->withdraw)
+	       	   solr.commit();
 	    	   boolean ourContext = false;
 	    	   if(context == null){
 	    		   context = new Context();
 	    		   ourContext = true;
 	    	   }
-               ResultProcessor processor = new WithdrawResultProcessor(context);
+               WithdrawResultProcessor processor = new WithdrawResultProcessor(context);
                String query = ("type:" + Constants.ITEM) + ((extraQuery != null && extraQuery.length()>0) ? (extraQuery) : "");
                processor.execute(query);
+               log.debug(String.format("Processed %s documents.",processor.documentCounter));
                if(ourContext){
             	   //close the context only if we've created it
             	   context.abort();
                }
+		//commit in order to see the changes ASAP
                solr.commit();
            } catch (Exception e) {
                log.error(e.getMessage(),e);
