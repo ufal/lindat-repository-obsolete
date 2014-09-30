@@ -151,7 +151,6 @@ public class DSpaceApi {
 			    
 			}			
 
-			manager.close();
 			// Check licenses
 		    if (manager.isUserAllowedToAccessTheResource(userID, resourceID)) {
 		        return true;
@@ -486,3 +485,4 @@ public class DSpaceApi {
     }
     
 }
+

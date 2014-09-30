@@ -80,10 +80,7 @@ public class HibernateUtil {
 
 	public void closeSession() {
 		try {
-			if (session != null && session.isOpen()) {
-				session.flush();
-				session.close();
-			}
+			this.session.close();
 		} catch (HibernateException e) {
 			e.printStackTrace();
 		}
@@ -91,8 +88,9 @@ public class HibernateUtil {
 
 	public Transaction startTransaction() {
 		try {
-			if (session == null || !session.isOpen())
+			if(!session.isOpen()) {
 				openSession();
+			}
 			transaction = session.beginTransaction();
 		} catch (HibernateException e) {
 			log.error("Failed to begin transaction.", e);
@@ -379,6 +377,13 @@ public class HibernateUtil {
 			closeSession();
 
 			throw re;
+		}
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		if(session.isOpen()) {
+			closeSession();
 		}
 	}
 
