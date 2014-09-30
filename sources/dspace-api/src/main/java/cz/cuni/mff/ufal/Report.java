@@ -1583,15 +1583,15 @@ class db {
             while( it.hasNext() )
             {
                 Item i = it.next();
-                DCValue[] pub_dc = i.getDC("rights", "label", Item.ANY);
+                DCValue[] labels = i.getMetadata("dc", "rights", "label", Item.ANY);
                 String pub_dc_value = "";
                 
-                if ( pub_dc.length > 0 ) {
-                    for ( DCValue dc : pub_dc ) {
+                if ( labels.length > 0 ) {
+                    for ( DCValue dc : labels ) {
                         if (pub_dc_value.length() == 0) {
                             pub_dc_value = dc.value;
                         }else {
-                            pub_dc_value = " " + dc.value;
+                            pub_dc_value = pub_dc_value + " " + dc.value;
                         }
                     }
                 }else {
