@@ -9,9 +9,11 @@ import org.dspace.content.Item;
 import org.dspace.content.ItemIterator;
 import org.dspace.core.Context;
 
-public class FixRightsLabel {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	private static final int lrt_col_id = 9;
+public class FixRightsLabel {
+	private static Logger log = LoggerFactory.getLogger(FixRightsLabel.class);
 
 	// run through dsrun
 	public static void main(String[] args) {
@@ -19,10 +21,9 @@ public class FixRightsLabel {
 		try {
 			context = new Context();
 			context.turnOffAuthorisationSystem();
-			Collection col = Collection.find(context, lrt_col_id);
 
 			// get in_archive items
-			ItemIterator it = col.getItems();
+			ItemIterator it = Item.findAll(context);
 
 			while (it.hasNext()) {
 				Item item = it.next();
@@ -36,17 +37,31 @@ public class FixRightsLabel {
 				if (!item.hasUploadedFiles()) {
 					DCValue[] dcvs = item.getMetadata("dc", "rights", "label",
 							Item.ANY);
-					// if there is dc.rights.label delete it and add PUB
+					// if there is dc.rights.label delete
 					if (dcvs != null && dcvs.length > 0) {
+						StringBuilder labels = new StringBuilder();
+						for (DCValue label : dcvs) {
+							labels.append(label.value + " ");
+						}
+						String message = String
+								.format("REMOVING labels [%s] from item's [%s] metadata.",
+										labels.toString(), item.getID());
+						log.info(message);
+						System.out.println(message);
+						item.addMetadata(
+								"dc",
+								"description",
+								"provenance",
+								"en",
+								String.format(
+										"removed dc.rights.label with the following values [%s]",
+										labels.toString()));
 						item.clearMetadata("dc", "rights", "label", Item.ANY);
-						item.addMetadata("dc", "rights", "label", "en_US",
-								"PUB");
-
 						try {
 							item.update();
 						} catch (AuthorizeException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
+							log.error(e.getMessage());
 						}
 					}
 				}
@@ -63,8 +78,8 @@ public class FixRightsLabel {
 			try {
 				context.complete();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+				log.error(e.getMessage());
 			}
 		}
 
