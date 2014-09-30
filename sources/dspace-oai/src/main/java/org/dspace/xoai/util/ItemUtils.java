@@ -149,6 +149,9 @@ public class ItemUtils
 		
 		//indicate restricted bitstreams -> restricted access
 		boolean restricted = false;
+		
+		IFunctionalities functionalityManager = cz.cuni.mff.ufal.DSpaceApi.getFunctionalityManager();
+		functionalityManager.openSession();
 
         Bundle[] bs;
         try
@@ -231,7 +234,6 @@ public class ItemUtils
                     		createValue("id", bit.getID()+""));
 
                     if(!restricted){
-                		IFunctionalities functionalityManager = cz.cuni.mff.ufal.DSpaceApi.getFunctionalityManager();
                         List<LicenseDefinition> lds = functionalityManager.getLicenses(bit.getID());
                         for(LicenseDefinition ld : lds){
                              if(ld.getRequiredInfo() != null && ld.getRequiredInfo().length() > 0){
@@ -241,7 +243,6 @@ public class ItemUtils
                                      break;
                              }
                         }
-                		functionalityManager.close();                            
                     }
                 }
             }
@@ -251,6 +252,8 @@ public class ItemUtils
             e1.printStackTrace();
         }
         
+
+		functionalityManager.close();                            
 
         // Other info
         Element other = create("others");
