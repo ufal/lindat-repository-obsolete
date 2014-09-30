@@ -298,8 +298,8 @@ public class SolrLogger
                     }
                 }
                 
-                SolrLogger.reindexWithdrawn(context, " AND id:" + item.getID());
-                doc1.addField("withdrawn", item.isWithdrawn());
+                //SolrLogger.reindexWithdrawn(context, " AND id:" + item.getID());
+                //doc1.addField("withdrawn", item.isWithdrawn());
             }
 
             if(dspaceObject instanceof Bitstream)
