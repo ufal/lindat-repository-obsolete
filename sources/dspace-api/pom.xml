@@ -321,7 +321,13 @@
             <artifactId>gson</artifactId>
             <version>1.7.1</version>
             <scope>compile</scope>
-        </dependency>        
+        </dependency>
+        <!-- Piwik tracking API -->
+        <dependency>
+            <groupId>org.piwik</groupId>
+            <artifactId>piwik-java-tracking</artifactId>
+            <version>1.1.0</version>
+        </dependency>
     </dependencies>
 
 </project>
