@@ -1248,8 +1248,10 @@ class report_pid_service implements simple_report
             }else {
                 ret += "Testing PID server not done! Test pid not in dspace.cfg!";
             }
+        }catch( org.apache.commons.lang.NotImplementedException e ) {
+            ret += String.format("Testing PID server - method who_am_i not implemented");
         }catch( Exception e ) {
-                ret += String.format("Testing PID server failed - exception occurred: %s", e.toString());
+            ret += String.format("Testing PID server failed - exception occurred: %s", e.toString());
             e.printStackTrace();
         }
         return ret;
@@ -1583,15 +1585,15 @@ class db {
             while( it.hasNext() )
             {
                 Item i = it.next();
-                DCValue[] pub_dc = i.getDC("rights", "label", Item.ANY);
+                DCValue[] labels = i.getMetadata("dc", "rights", "label", Item.ANY);
                 String pub_dc_value = "";
                 
-                if ( pub_dc.length > 0 ) {
-                    for ( DCValue dc : pub_dc ) {
+                if ( labels.length > 0 ) {
+                    for ( DCValue dc : labels ) {
                         if (pub_dc_value.length() == 0) {
                             pub_dc_value = dc.value;
                         }else {
-                            pub_dc_value = " " + dc.value;
+                            pub_dc_value = pub_dc_value + " " + dc.value;
                         }
                     }
                 }else {

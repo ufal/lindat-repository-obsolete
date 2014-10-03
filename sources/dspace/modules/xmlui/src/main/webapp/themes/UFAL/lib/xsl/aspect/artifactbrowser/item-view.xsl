@@ -797,6 +797,12 @@
 	                  		</xsl:attribute>
 				<i18n:text>CMDI</i18n:text>
 			</a>
+			<a data-toggle="modal" data-target="#exporter_model_div" class="label label-default">
+				<xsl:attribute name="href">
+								<xsl:value-of select="concat($oai-url, '/requeststripped?verb=GetRecord&amp;metadataPrefix=html&amp;identifier=', $oai-handle)" />
+							</xsl:attribute>
+				<i18n:text>HTML</i18n:text>
+			</a>
 			</dd>
 		</dl>
 		<div id="exporter_model_div" class="modal fade">

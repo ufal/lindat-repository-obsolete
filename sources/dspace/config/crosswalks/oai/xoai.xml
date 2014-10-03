@@ -25,6 +25,7 @@
 			<Format ref="oai_metasharev2" />
 			<Format ref="cmdi" />
 			<Format ref="olac" />
+			<Format ref="html" />
             <Description>
                 This is the default context of the DSpace data provider.
             </Description>
@@ -148,6 +149,12 @@
 		       <XSLT>metadataFormats/datacite_openaire.xsl</XSLT>
 		       <Namespace>http://schema.datacite.org/oai/oai-1.0/</Namespace>
 		       <SchemaLocation>http://schema.datacite.org/oai/oai-1.0/oai.xsd</SchemaLocation>
+		</Format>
+		<Format id="html">
+		    <Prefix>html</Prefix>
+		    <XSLT>metadataFormats/html.xsl</XSLT>
+		    <Namespace>http://lindat.mff.cuni.cz/ns/experimental/html</Namespace>
+		    <SchemaLocation>http://lindat.mff.cuni.cz/schemas/experimental/html.xsd</SchemaLocation>
 		</Format>
 	</Formats>
 	

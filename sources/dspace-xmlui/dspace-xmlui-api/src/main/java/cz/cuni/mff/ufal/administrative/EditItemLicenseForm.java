@@ -107,13 +107,12 @@ public class EditItemLicenseForm extends AbstractDSpaceTransformer {
 			List editLicenseForm = main.addList("currentLicense", List.TYPE_FORM, "well well-light");
 			editLicenseForm.setHead(T_head1);
 			
-			DCValue[] dc_rights = item.getMetadata("dc", "rights", null, Item.ANY);
 			DCValue[] dc_rights_uri = item.getMetadata("dc", "rights", "uri", Item.ANY);
 			
 			//String licenseName = null;
 			String licenseURI = null;
 				            
-			if(dc_rights!=null && dc_rights.length!=0) {
+			if(dc_rights_uri!=null && dc_rights_uri.length!=0) {
 				//licenseName = dc_rights[0].value;
 				licenseURI = dc_rights_uri[0].value;
 			} 

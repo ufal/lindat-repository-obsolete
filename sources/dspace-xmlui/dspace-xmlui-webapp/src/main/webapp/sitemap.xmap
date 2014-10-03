@@ -665,7 +665,7 @@
                                         <map:generate type="exception"/>
                                         <map:transform src="exceptionSessionExpired2html.xslt">
                                                 <map:parameter name="contextPath" value="{request:contextPath}"/>
-                                                <map:parameter name="pageTitle" value="Your Session has Expired - Please Login Again"/>
+                                                <map:parameter name="pageTitle" value="Your Session has Expired"/>
                                         </map:transform>
                                         <map:act type="locale">
                                             <map:transform type="i18n">

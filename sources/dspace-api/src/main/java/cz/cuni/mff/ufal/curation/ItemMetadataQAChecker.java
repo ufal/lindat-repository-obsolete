@@ -338,6 +338,7 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
         for ( String no_duplicate : new String[] {
             "local.branding",
             "dc.type",
+            "dc.accessioned"
         }) 
         {
             DCValue[] vals = item.getMetadata(no_duplicate);
