@@ -75,7 +75,7 @@ lr.utilities.functionalityManager.class = cz.cuni.mff.ufal.lindat.utilities.Hibe
 # You can use this value to append version with other values.
 lr.dspace.version = dspace-1.8.2
 
-# The installation directory of your instance. 
+# The installation directory of your instance.
 # THIS IS USED IN THE VARIABLES/MAKEFILE so don't use variables(${*}) here
 lr.dspace.dir = /installations/dspace/dspace-1.8.2
 
@@ -102,7 +102,7 @@ lr.feedback.recipient = dspace-help@ufal.mff.cuni.cz
 lr.info.recipient = lindat-technical@ufal.mff.cuni.cz
 
 
-# solr server address that your instance is using. 
+# solr server address that your instance is using.
 lr.solr.log.server = http://ufal-point-dev.ms.mff.cuni.cz:8080/repository/solr
 
 # Google Analytics
@@ -125,7 +125,7 @@ lr.backup.source = (/installations/dspace/dspace-1.8.2/ /installations/dspace/da
 # where the backup should be stored
 lr.backup.target = "/home/backup/"
 
-# the following settings are good to keep one month of restorable backup 
+# the following settings are good to keep one month of restorable backup
 # with differential backup every day and full backup every week
 
 # max levels of differential backups
@@ -157,7 +157,7 @@ lr.replication.jargon.numThreads=
 lr.replication.jargon.MAX_SZ_FOR_SINGLE_BUF=
 # default 65535
 lr.replication.jargon.BUFFER_SIZE=
-# log progress after count of iterations (depends on buffer_size) 
+# log progress after count of iterations (depends on buffer_size)
 lr.replication.jargon.PUT_LOG_AFTER=
 
 # Email where errors will be sent (from specific classes)
@@ -203,7 +203,7 @@ lr.common.theme = /opt/lindat-common
 #
 #  RewriteRule ^/jm/repository/JSON/solr/(.*)$  http://localhost:8080/jm/solr/search/select/?q=*:*&rows=0&facet=on&wt=json&indent=true&facet.field=$1 [P,L]
 #
-# There are more ways in DSpace how to restrict metadata values (authority manager, 
+# There are more ways in DSpace how to restrict metadata values (authority manager,
 # value pairs, specific js code and this)
 #
 lr.autocomplete.on=true
@@ -213,7 +213,7 @@ lr.autocomplete.json_static.url=${dspace.url}/static/json/
 ############################################
 #
 # File download options
-# 
+#
 # minimum number of files for enabling zipped download:
 lr.download.all.limit.min.file.count = 1
 # maximum total size of files for enabling zipped download:
@@ -224,7 +224,7 @@ lr.download.all.alert.min.file.size = 10485760
 ############################################
 #
 # File upload options
-# 
+#
 # maximum size of file for enabling upload alert
 lr.upload.file.alert.max.file.size = 2147483648
 
@@ -254,8 +254,8 @@ harvesterInfo.anchorName = LINDAT_CLARIN_digital_library_at_Institute_of_Formal_
 ############################################
 #
 # User profile options
-# 
+#
 # whether to show language field in user profile
 lr.xmlui.user.showlanguage = false
 
-lr.repository.identifier = lindat.mff.cuni.cz 
+lr.repository.identifier = lindat.mff.cuni.cz
