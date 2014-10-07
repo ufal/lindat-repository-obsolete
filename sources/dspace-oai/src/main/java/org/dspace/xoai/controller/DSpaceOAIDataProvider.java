@@ -85,7 +85,7 @@ public class DSpaceOAIDataProvider
     /*
      * This is not an oai endpoint. It's here only to expose the metadata
      */
-    @RequestMapping("/requeststripped")
+    @RequestMapping("/cite")
     public String contextAction (Model model, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         Context context = null;
         try {
