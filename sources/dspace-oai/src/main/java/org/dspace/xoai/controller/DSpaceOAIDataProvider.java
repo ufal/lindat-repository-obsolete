@@ -7,16 +7,24 @@
  */
 package org.dspace.xoai.controller;
 
-import com.lyncode.xoai.dataprovider.OAIDataProvider;
-import com.lyncode.xoai.dataprovider.OAIRequestParameters;
-import com.lyncode.xoai.dataprovider.core.XOAIManager;
-import com.lyncode.xoai.dataprovider.exceptions.InvalidContextException;
-import com.lyncode.xoai.dataprovider.exceptions.OAIException;
-import com.lyncode.xoai.dataprovider.exceptions.WritingXmlException;
-import com.lyncode.xoai.dataprovider.xml.XmlOutputContext;
-import com.lyncode.xoai.dataprovider.xml.oaipmh.OAIPMH;
+import static java.util.Arrays.asList;
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static org.apache.log4j.Logger.getLogger;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.xml.stream.XMLStreamException;
 
 import org.apache.log4j.Logger;
+import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Context;
 import org.dspace.xoai.services.api.cache.XOAICacheService;
 import org.dspace.xoai.services.api.config.XOAIManagerResolver;
@@ -33,24 +41,20 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.xml.stream.XMLStreamException;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.sql.SQLException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.lyncode.xoai.dataprovider.OAIDataProvider;
+import com.lyncode.xoai.dataprovider.OAIRequestParameters;
+import com.lyncode.xoai.dataprovider.core.XOAIManager;
+import com.lyncode.xoai.dataprovider.exceptions.InvalidContextException;
+import com.lyncode.xoai.dataprovider.exceptions.OAIException;
+import com.lyncode.xoai.dataprovider.exceptions.WritingXmlException;
+import com.lyncode.xoai.dataprovider.xml.XmlOutputContext;
+import com.lyncode.xoai.dataprovider.xml.oaipmh.OAIPMH;
 
-import static java.util.Arrays.asList;
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static org.apache.log4j.Logger.getLogger;
+import cz.cuni.mff.ufal.tracker.TrackerFactory;
+import cz.cuni.mff.ufal.tracker.TrackingSite;
 
 /**
- * 
+ *
  * based on class by Lyncode Development Team <dspace@lyncode.com>
  * modified for LINDAT/CLARIN
  */
@@ -80,8 +84,8 @@ public class DSpaceOAIDataProvider
         }
         return "index";
     }
-    
-    
+
+
     /*
      * This is not an oai endpoint. It's here only to expose the metadata
      */
@@ -106,10 +110,10 @@ public class DSpaceOAIDataProvider
             response.setContentType("application/xml");
 
             OAIPMH oaipmh = dataProvider.handle(parameters);
-            
+
             XmlOutputContext xmlOutContext = XmlOutputContext.emptyContext(out);
             xmlOutContext.getWriter().writeStartDocument();
-            
+
             //Try to obtain just the metadata, if that fails return "normal" response
             try{
             	oaipmh.getInfo().getGetRecord().getRecord().getMetadata().write(xmlOutContext);
@@ -153,6 +157,12 @@ public class DSpaceOAIDataProvider
 
     @RequestMapping("/{context}")
     public String contextAction (Model model, HttpServletRequest request, HttpServletResponse response, @PathVariable("context") String xoaiContext) throws IOException, ServletException {
+
+        if(ConfigurationManager.getBooleanProperty("lr", "lr.tracker.enabled")) {
+            // Track the OAI request for analytics platform
+            TrackerFactory.createInstance(TrackingSite.OAI).trackPage(request, "LINDAT/CLARIN OAI-PMH Data Provider Endpoint");
+        }
+
         Context context = null;
         try {
             request.setCharacterEncoding("UTF-8");
