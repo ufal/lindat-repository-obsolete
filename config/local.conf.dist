@@ -259,3 +259,5 @@ harvesterInfo.anchorName = LINDAT_CLARIN_digital_library_at_Institute_of_Formal_
 lr.xmlui.user.showlanguage = false
 
 lr.repository.identifier = lindat.mff.cuni.cz
+
+#mind the documentation for oai/cite and the respective apache rewrite
