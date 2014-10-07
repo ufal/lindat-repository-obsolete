@@ -12,9 +12,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.internet.MimeUtility;
 
@@ -47,25 +47,26 @@ import org.dspace.core.Utils;
 import org.dspace.handle.HandleManager;
 import org.xml.sax.SAXException;
 
-import cz.cuni.mff.ufal.MissingLicenseAgreementException;
+import cz.cuni.mff.ufal.tracker.TrackerFactory;
+import cz.cuni.mff.ufal.tracker.TrackingSite;
 
 public class AllBitstreamZipArchiveReader extends AbstractReader implements Recyclable {
 
-    
+
     private static Logger log = cz.cuni.mff.ufal.Logger.getLogger(BitstreamReader.class);
-    
-        
+
+
     /**
      * How big of a buffer should we use when reading from the bitstream before
      * writting to the HTTP response?
      */
     protected static final int BUFFER_SIZE = 8192;
-        
-    /** Redirection possibilities */     
+
+    /** Redirection possibilities */
     protected static final int NO_REDIRECTION = 1;
     protected static final int REDIRECT_TO_RESTRICTION_INFO = 2;
     protected static final int REDIRECT_TO_LICENSE_AGREEMENT = 3;
-    
+
     /** Redirect target */
     protected int redirect;
 
@@ -74,49 +75,49 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
 
     /** The Cocoon request */
     protected Request request;
-    
+
     /** The bitstream's IDs */
-    protected ArrayList<Integer> bitstreamIDs;    
+    protected ArrayList<Integer> bitstreamIDs;
 
     /** The user ID */
     protected int userID;
 
     /** Item containing the Bitstreams */
-    private Item item = null;       
-    
+    private Item item = null;
+
     /** The zip file */
     protected InputStream zipInputStream;
-    
+
     /** The zip file size */
     protected long zipFileSize;
-    
+
     public void setup(SourceResolver resolver, Map objectModel, String src,
             Parameters par) throws ProcessingException, SAXException,
             IOException
     {
         super.setup(resolver, objectModel, src, par);
-        
+
         redirect = NO_REDIRECTION;
 
         try
         {
             this.request = ObjectModelHelper.getRequest(objectModel);
-            this.response = ObjectModelHelper.getResponse(objectModel);            
-            
+            this.response = ObjectModelHelper.getResponse(objectModel);
+
             Context context = ContextUtil.obtainContext(objectModel);
-            
+
             int itemID = par.getParameterAsInteger("itemID", -1);
-            if(context.getCurrentUser() == null) 
+            if(context.getCurrentUser() == null)
             {
                 this.userID = 0;
             }
             else {
                 this.userID = context.getCurrentUser().getID();
             }
-            String handle = par.getParameter("handle", null);            
+            String handle = par.getParameter("handle", null);
 
             DSpaceObject dso = null;
-            
+
             if (itemID > -1)
             {
                 // Referenced by internal itemID
@@ -132,9 +133,9 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
                     item = (Item)dso;
                 }
             }
-            
+
             bitstreamIDs = new ArrayList<Integer>();
-                        
+
             Bundle[] originals = item.getBundles("ORIGINAL");
             for (Bundle original : originals)
             {
@@ -148,28 +149,32 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
                     }
                     catch (MissingLicenseAgreementException e)
                     {
-                    	redirect = REDIRECT_TO_LICENSE_AGREEMENT; 
+                    	redirect = REDIRECT_TO_LICENSE_AGREEMENT;
                         BitstreamReader.redirectToLicenseAgreement(context, request, dso, item, bitstream, objectModel, false);
                         return;
                     }
                     catch (AuthorizeException e) {
                     	redirect = REDIRECT_TO_RESTRICTION_INFO;
-                        BitstreamReader.redirectToRestrictionInfo(context, request, dso, item, bitstream, objectModel, false);                
-                        return;
-                    }            
-                    
-                    if (item != null && item.isWithdrawn() && !AuthorizeManager.isAdmin(context))
-                    {                   
-                        log.info(LogManager.getHeader(context, "view_bitstream", "handle=" + item.getHandle() + ",withdrawn=true"));
-                        BitstreamReader.redirectToRestrictionInfo(context, request, dso, item, bitstream, objectModel, false);                
+                        BitstreamReader.redirectToRestrictionInfo(context, request, dso, item, bitstream, objectModel, false);
                         return;
                     }
-                    
+
+                    if (item != null && item.isWithdrawn() && !AuthorizeManager.isAdmin(context))
+                    {
+                        log.info(LogManager.getHeader(context, "view_bitstream", "handle=" + item.getHandle() + ",withdrawn=true"));
+                        BitstreamReader.redirectToRestrictionInfo(context, request, dso, item, bitstream, objectModel, false);
+                        return;
+                    }
+
                     bitstreamIDs.add(bitstream.getID());
                     //</UFAL>
                 }
             }
-            
+
+            if(ConfigurationManager.getBooleanProperty("lr", "lr.tracker.enabled")) {
+                // Track the download for analytics platform
+                TrackerFactory.createInstance(TrackingSite.BITSTREAM).trackPage(request, "Bitstream Download / Zip Archive");
+            }
 
         }
         catch (SQLException sqle)
@@ -177,7 +182,7 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
             throw new ProcessingException("Unable to read bitstreams.", sqle);
         }
     }
-    
+
     /** Adds suffix to filename before extension */
     protected String addSuffixToFilename(String filename, String suffix) {
         String suffixedFilename = FilenameUtils.getBaseName(filename) + "_" + suffix;
@@ -185,33 +190,33 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
         if(!extension.isEmpty()) {
             suffixedFilename += "." + extension;
         }
-        return suffixedFilename;                
+        return suffixedFilename;
     }
-    
+
     /** Creates unique filename based on map of counters of already used filenames */
     protected String createUniqueFilename(String filename, ConcurrentMap<String, AtomicInteger> usedFilenames) {
-        String uniqueFilename = filename;        
+        String uniqueFilename = filename;
         usedFilenames.putIfAbsent(filename, new AtomicInteger(0));
         int occurence = usedFilenames.get(filename).incrementAndGet();
         if(occurence > 1) {
-            uniqueFilename = addSuffixToFilename(filename, String.valueOf(occurence));            
+            uniqueFilename = addSuffixToFilename(filename, String.valueOf(occurence));
         }
         return uniqueFilename;
     }
-    
+
     @Override
     public void generate() throws IOException, SAXException,
             ProcessingException {
-		
+
 		if(redirect != NO_REDIRECTION) {
-			return;		
+			return;
 		}
-        
+
          String name = item.getName() + ".zip";
-        
+
          try
             {
-                         
+
                 // first write everything to a temp file
                 String tempDir = ConfigurationManager.getProperty("upload.temp.dir");
                 String fn = tempDir + File.separator + "SWORD." + item.getID() + "." + UUID.randomUUID().toString() + ".zip";
@@ -240,7 +245,7 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
 
                 File file = new File(fn);
                 zipFileSize = file.length();
-                
+
                 zipInputStream = new TempFileInputStream(file);
             } catch (AuthorizeException e) {
                 log.error(e.getMessage(), e);
@@ -250,15 +255,15 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
                 throw new ProcessingException("Could not create ZIP, please download the files one by one. " +
                         "The error has been stored and will be solved by our technical team.");
             }
-         
-            // Log download statistics                                   
+
+            // Log download statistics
             for (int bitstreamID : bitstreamIDs)
             {
                 DSpaceApi.updateFileDownloadStatistics(userID, bitstreamID);
-            }   
-         
+            }
+
             response.setDateHeader("Last-Modified", item.getLastModified().getTime());
-                    
+
             // Try and make the download file name formated for each browser.
             try {
                     String agent = request.getHeader("USER-AGENT");
@@ -275,11 +280,11 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
             {
                 name = "item_" + item.getID() + ".zip";
             }
-            response.setHeader("Content-Disposition", "attachment;filename=" + name);           
+            response.setHeader("Content-Disposition", "attachment;filename=" + name);
 
             byte[] buffer = new byte[BUFFER_SIZE];
             int length = -1;
-            
+
             try
             {
                 response.setHeader("Content-Length", String.valueOf(this.zipFileSize));
@@ -288,7 +293,7 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
                 {
                     out.write(buffer, 0, length);
                 }
-                out.flush();                                        
+                out.flush();
             }
             finally
             {
@@ -300,7 +305,7 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
                     if ( out != null ) {
                         out.close();
                     }
-                } 
+                }
                 catch (IOException ioe)
                 {
                     // Closing the stream threw an IOException but do we want this to propagate up to Cocoon?
@@ -309,9 +314,9 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
                 }
             }
 
-        
+
     }
-    
+
     /**
      * Recycle
      */
@@ -323,6 +328,6 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
         this.bitstreamIDs = null;
         this.userID = 0;
     }
-    
-    
+
+
 }
