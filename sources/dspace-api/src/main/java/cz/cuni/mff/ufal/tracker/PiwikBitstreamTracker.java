@@ -11,7 +11,8 @@ public class PiwikBitstreamTracker extends PiwikTracker
 {
     /** log4j category */
     private static Logger log = Logger.getLogger(TrackerFactory.class);
-        
+
+    @Override
     protected void preTrack(HttpServletRequest request) {
         tracker.setIdSite(getIdSite());
         try
@@ -23,7 +24,7 @@ public class PiwikBitstreamTracker extends PiwikTracker
             log.error(e);
         }
     }
-    
+
     private int getIdSite() {
         return ConfigurationManager.getIntProperty("lr", "lr.tracker.bitstream.site_id");
     }
