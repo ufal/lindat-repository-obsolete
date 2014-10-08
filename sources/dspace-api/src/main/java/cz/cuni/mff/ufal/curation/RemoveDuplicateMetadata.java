@@ -2,6 +2,9 @@
 package cz.cuni.mff.ufal.curation;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.dspace.content.Community;
@@ -33,10 +36,31 @@ public class RemoveDuplicateMetadata extends AbstractCurationTask {
 	            Item item = (Item)dso;	         
 				DCValue[] vals = item.getMetadata("local.branding");
 				if (vals != null && vals.length > 0) {
+					Set<String> uniqVals = new HashSet<String>();
+					String[] strVals = new String[vals.length];
+					boolean isUnique = true;
+					int i = 0;
 					for (DCValue val : vals) {
-						results.append("Item " + item.getHandle() + " belongs to local.branding: " + val.value);
+						strVals[i] = val.value;
+						if (uniqVals.contains(val.value)) {
+							isUnique = false;
+						}
+						else {
+							uniqVals.add(val.value);							
+						}					
+						i++;
 					}
-					status = Curator.CURATE_SUCCESS;
+					if (!isUnique) {
+						item.clearMetadata("local", "branding", null, Item.ANY);
+						item.addMetadata("local", "branding", null, null, uniqVals.toArray(new String[uniqVals.size()]));
+						item.update();
+						results.append(item.getHandle() + "\t->\tItem's original 'local.branding': " + Arrays.toString(strVals));
+						results.append(item.getHandle() + "\t->\tItem's 'local.branding' values set to: " + Arrays.toString(uniqVals.toArray()));
+						status = Curator.CURATE_SUCCESS;						
+					}
+					else {
+				        status = Curator.CURATE_SKIP;						
+					}
 				}
 				else {
 					status = Curator.CURATE_FAIL;
