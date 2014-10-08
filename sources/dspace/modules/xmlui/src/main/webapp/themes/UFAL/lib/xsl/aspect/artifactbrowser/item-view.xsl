@@ -96,24 +96,30 @@
 
 		<xsl:choose>
 			<!-- identifier.uri row -->
-			<xsl:when test="$clause = 1 and (dim:field[@element='identifier' and @qualifier='uri'])">
-				<div class="alert bold text-center">
-						<i class="fa fa-info-circle fa-lg">&#160;</i>
-						Please use the following URI to cite or link to this item.
-						<span>
-							<xsl:for-each
-								select="dim:field[@element='identifier' and @qualifier='uri']">
-								<a>
-									<xsl:attribute name="href">
-			                            <xsl:copy-of select="./node()" />
-			                        </xsl:attribute>
-									<xsl:copy-of select="./node()" />
-								</a>
-								<xsl:if test="count(following-sibling::dim:field[@element='identifier' and @qualifier='uri']) != 0">
-									<br />
-								</xsl:if>
-							</xsl:for-each>
-						</span>
+			<xsl:when test="$clause = 2 and (dim:field[@element='identifier' and @qualifier='uri'])">
+				<div id='exporter_model_div' class='modal fade'>
+				  <div class='modal-dialog'>
+				  	<div class='modal-content'>
+					  <div class='modal-header'>
+					    <button type='button' class='close' data-dismiss='modal'><span aria-hidden='true'>&#215;</span>
+					    <span class='sr-only'>Close</span></button>
+					    <h3 class='modal-title'>Exported Item</h3>
+					  </div>
+					  <div class='modal-body'><i class='fa fa-spinner fa-spin' style='margin: auto;'>&#160;</i></div>
+					</div>
+				  </div>
+				</div>			
+				<div data-target="#exporter_model_div" class="citationbox">
+					<xsl:attribute name="uri">
+                 		<xsl:value-of select="dim:field[@element='identifier' and @qualifier='uri']/node()" />
+               		</xsl:attribute>
+					<xsl:attribute name="oai">
+                 		<xsl:value-of select="$oai-url" />
+               		</xsl:attribute>
+					<xsl:attribute name="oai-handle">
+                 		<xsl:value-of select="$oai-handle" />
+               		</xsl:attribute>
+               		&#160;               		
 				</div>
 				<xsl:call-template name="itemSummaryView-DIM-fields">
 					<xsl:with-param name="clause" select="($clause + 1)" />
@@ -123,7 +129,7 @@
 
 
 			<!-- Title row -->
-			<xsl:when test="$clause = 2">
+			<xsl:when test="$clause = 1">
 				<!-- printer icon -->
 				<a href="javascript:window.print();" class="pull-right" style="position: relative; top: 10px;">
 					<i class="fa fa-print">&#160;</i>
@@ -157,6 +163,23 @@
 							<xsl:value-of
 								select="dim:field[@element='title'][not(@qualifier)][1]/node()" />
 						</h3>
+					</xsl:when>
+					<xsl:otherwise>
+						<h3>
+							<i18n:text>xmlui.dri2xhtml.METS-1.0.no-title</i18n:text>
+						</h3>
+					</xsl:otherwise>
+				</xsl:choose>
+				<xsl:call-template name="itemSummaryView-DIM-fields">
+					<xsl:with-param name="clause" select="($clause + 1)" />
+					<xsl:with-param name="phase" select="$otherPhase" />
+				</xsl:call-template>
+			</xsl:when>
+
+			<!-- Author(s) row -->
+			<xsl:when
+				test="$clause = 3 and (dim:field[@element='contributor'][@qualifier='author' or @qualifier='other'] or dim:field[@element='creator'])">
+
 					<xsl:if test="dim:field[@mdschema='local' and @element='branding']">
 						<div class="item-branding label pull-right">
 							<a>
@@ -167,24 +190,8 @@
 								<xsl:value-of select="dim:field[@mdschema='local' and @element='branding'][1]/node()"/>
 							</a>
 						</div>
-					</xsl:if>
-					</xsl:when>
-					<xsl:otherwise>
-						<h3>
-							<i18n:text>xmlui.dri2xhtml.METS-1.0.no-title</i18n:text>
-						</h3>
-					</xsl:otherwise>
-				</xsl:choose>
+					</xsl:if>				
 				
-				<xsl:call-template name="itemSummaryView-DIM-fields">
-					<xsl:with-param name="clause" select="($clause + 1)" />
-					<xsl:with-param name="phase" select="$otherPhase" />
-				</xsl:call-template>
-			</xsl:when>
-
-			<!-- Author(s) row -->
-			<xsl:when
-				test="$clause = 3 and (dim:field[@element='contributor'][@qualifier='author' or @qualifier='other'] or dim:field[@element='creator'])">
 					<dl id="item-authors" class="dl-horizontal" style="clear:both;">
 					<dt style="text-align: left">
 						<i class="fa fa-pencil">&#160;</i>
@@ -560,7 +567,19 @@
 				   </div>				   
 				</xsl:if>				
 				
-				<xsl:call-template name="exporters"/>
+				<dl class="dl-horizontal">
+					<dt style="text-align: left">
+						<a class="btn btn-link" style="padding-left:0">
+						<xsl:attribute name="href"><xsl:value-of
+							select="$ds_item_view_toggle_url" /></xsl:attribute>
+							<i18n:text>xmlui.ArtifactBrowser.ItemViewer.show_full</i18n:text>
+						</a>					
+					</dt>
+					<dd class="text-right">
+						&#160;
+					</dd>
+				</dl>
+
 			</xsl:when>						
 
 			<!-- recurse without changing phase if we didn't output anything -->
@@ -583,6 +602,20 @@
 
 
 	<xsl:template match="dim:dim" mode="itemDetailView-DIM">
+		<xsl:if test="dim:field[@element='identifier' and @qualifier='uri']">
+				<div data-target="#exporter_model_div" class="citationbox">
+					<xsl:attribute name="uri">
+                 		<xsl:value-of select="dim:field[@element='identifier' and @qualifier='uri']/node()" />
+               		</xsl:attribute>
+					<xsl:attribute name="oai">
+                 		<xsl:value-of select="$oai-url" />
+               		</xsl:attribute>
+					<xsl:attribute name="oai-handle">
+                 		<xsl:value-of select="$oai-handle" />
+               		</xsl:attribute>
+               		&#160;
+				</div>		
+		</xsl:if>	
 		<table class="table">
 			<xsl:apply-templates mode="itemDetailView-DIM" select="dim:field[@mdschema != 'metashare' or (@qualifier != 'resourceType' and @qualifier != 'description' and  @qualifier != 'resourceName' and @qualifier != 'license')]" />
 		</table>
@@ -775,50 +808,6 @@
         </div>
 	</xsl:template>
 
-	<xsl:template name="exporters">
-		<dl class="dl-horizontal">
-			<dt style="text-align: left">
-				<a class="btn btn-link" style="padding-left:0">
-					<xsl:attribute name="href"><xsl:value-of
-						select="$ds_item_view_toggle_url" /></xsl:attribute>
-					<i18n:text>xmlui.ArtifactBrowser.ItemViewer.show_full</i18n:text>
-				</a>					
-			</dt>
-			<dd class="text-right">
-			<span class="bold"><i class="fa fa-magic">&#160;</i>Export to</span>			
-			<a data-toggle="modal" data-target="#exporter_model_div" class="label label-default">
-				<xsl:attribute name="href">
-	                    		<xsl:value-of select="concat($oai-url, '/requeststripped?verb=GetRecord&amp;metadataPrefix=bibtex&amp;identifier=', $oai-handle)" />
-	                  		</xsl:attribute>
-				<i18n:text>BibTeX</i18n:text>
-			</a> <a data-toggle="modal" data-target="#exporter_model_div" class="label label-default">
-				<xsl:attribute name="href">
-	                    		<xsl:value-of select="concat($oai-url, '/requeststripped?verb=GetRecord&amp;metadataPrefix=cmdi&amp;identifier=', $oai-handle)" />
-	                  		</xsl:attribute>
-				<i18n:text>CMDI</i18n:text>
-			</a>
-			<a data-toggle="modal" data-target="#exporter_model_div" class="label label-default">
-				<xsl:attribute name="href">
-								<xsl:value-of select="concat($oai-url, '/requeststripped?verb=GetRecord&amp;metadataPrefix=html&amp;identifier=', $oai-handle)" />
-							</xsl:attribute>
-				<i18n:text>HTML</i18n:text>
-			</a>
-			</dd>
-		</dl>
-		<div id="exporter_model_div" class="modal fade">
-		  <div class="modal-dialog">
-		  	<div class="modal-content">
-			  <div class="modal-header">
-			    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&#215;</span>
-			    <span class="sr-only">Close</span></button>
-			    <h3 class="modal-title">Exported Item</h3>
-			  </div>
-			  <div class="modal-body"><i class="fa fa-spinner fa-spin" style="margin: auto;">&#160;</i></div>
-			</div>
-		  </div>
-		</div>		
-	</xsl:template>
-
 	<xsl:template name="download-all">
         <xsl:param name="download-all-url" />
         <xsl:variable name="file-count" select="count(/mets:METS/mets:fileSec/mets:fileGrp[@USE='CONTENT']/mets:file)" />
@@ -894,5 +883,6 @@
     </xsl:template>
 	
 </xsl:stylesheet>
+
 
 

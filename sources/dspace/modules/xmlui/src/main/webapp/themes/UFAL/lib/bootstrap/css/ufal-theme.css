@@ -1285,3 +1285,7 @@ dl {
 	text-align: right;
 	display: block;
 }
+
+.modal-open {
+	margin-right: 0px !important;
+}
