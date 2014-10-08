@@ -18,6 +18,15 @@ public class RemoveDuplicateMetadata extends AbstractCurationTask {
 
     private int status = Curator.CURATE_UNSET;
 
+    private String[] uniqueMd = {
+    		"local.branding",
+    };
+    
+    // schema, qualifier and element for the above md values
+    private String[][] mdSQE = {
+    		{"local", "branding", null},
+    };
+
     // The log4j logger for this class
     private static Logger log = Logger.getLogger(Curator.class);
 
@@ -32,43 +41,10 @@ public class RemoveDuplicateMetadata extends AbstractCurationTask {
 		
         if (dso instanceof Item)
         {
-        	try {
-	            Item item = (Item)dso;	         
-				DCValue[] vals = item.getMetadata("local.branding");
-				if (vals != null && vals.length > 0) {
-					Set<String> uniqVals = new HashSet<String>();
-					String[] strVals = new String[vals.length];
-					boolean isUnique = true;
-					int i = 0;
-					for (DCValue val : vals) {
-						strVals[i] = val.value;
-						if (uniqVals.contains(val.value)) {
-							isUnique = false;
-						}
-						else {
-							uniqVals.add(val.value);							
-						}					
-						i++;
-					}
-					if (!isUnique) {
-						item.clearMetadata("local", "branding", null, Item.ANY);
-						item.addMetadata("local", "branding", null, null, uniqVals.toArray(new String[uniqVals.size()]));
-						item.update();
-						results.append(item.getHandle() + "\t->\tItem's original 'local.branding': " + Arrays.toString(strVals));
-						results.append(item.getHandle() + "\t->\tItem's 'local.branding' values set to: " + Arrays.toString(uniqVals.toArray()));
-						status = Curator.CURATE_SUCCESS;						
-					}
-					else {
-				        status = Curator.CURATE_SKIP;						
-					}
-				}
-				else {
-					status = Curator.CURATE_FAIL;
-				}
-        	} catch (Exception ex) {
-        		status = Curator.CURATE_FAIL;
-        		results.append(ex.getLocalizedMessage()).append("\n");
-        	}
+            Item item = (Item)dso;
+            for (int i = 0; i < uniqueMd.length; i++) {
+            	results = removeDuplicateMdInItem(item, uniqueMd[i], mdSQE[i][0], mdSQE[i][1], mdSQE[i][2]);
+            }
         }
         
         report(results.toString());
@@ -76,5 +52,44 @@ public class RemoveDuplicateMetadata extends AbstractCurationTask {
 		return status;
 	}
 
-
+	private StringBuilder removeDuplicateMdInItem(Item item, String md, String sch, String qual, String ele)  throws IOException {
+		StringBuilder results = new StringBuilder();
+    	try {
+			DCValue[] vals = item.getMetadata(md);
+			if (vals != null && vals.length > 0) {
+				Set<String> uniqVals = new HashSet<String>();
+				String[] strVals = new String[vals.length];
+				boolean isUnique = true;
+				int i = 0;
+				for (DCValue val : vals) {
+					strVals[i] = val.value;
+					if (uniqVals.contains(val.value)) {
+						isUnique = false;
+					}
+					else {
+						uniqVals.add(val.value);							
+					}					
+					i++;
+				}
+				if (!isUnique) {
+					item.clearMetadata(sch, qual, ele, Item.ANY);
+					item.addMetadata(sch, qual, ele,  null, uniqVals.toArray(new String[uniqVals.size()]));
+					item.update();
+					results.append("Item -> " + item.getHandle() + ",\tItem's original " + md + "\t->\t" + Arrays.toString(strVals));
+					results.append("Item -> " + item.getHandle() + ",\tItem's " + md + " values set to\t->\t" +  Arrays.toString(uniqVals.toArray()));
+					status = Curator.CURATE_SUCCESS;						
+				}
+				else {
+			        status = Curator.CURATE_SKIP;						
+				}
+			}
+			else {
+				status = Curator.CURATE_FAIL;
+			}
+    	} catch (Exception ex) {
+    		status = Curator.CURATE_FAIL;
+    		results.append(ex.getLocalizedMessage()).append("\n");
+    	}
+		return results;
+	}
 }
