@@ -633,4 +633,13 @@ public abstract class Field extends AbstractWingElement implements
         instances = null;
         super.dispose();
     }
+    
+    //TODO better refactor these in an interface
+    public Instance addInstance() throws WingException{
+    	throw new UnsupportedOperationException();
+    }
+
+    public void setValue(String characters) throws WingException{
+    	throw new UnsupportedOperationException();
+    }
 }

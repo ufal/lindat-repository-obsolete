@@ -318,4 +318,8 @@ public class Select extends Field
         return instance;
     }
     
+    public void setValue(String value) throws WingException{
+    	setOptionSelected(value);
+    }
+    
 }

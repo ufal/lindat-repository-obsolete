@@ -8,14 +8,18 @@
 package org.dspace.app.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.dspace.content.MetadataSchema;
 import org.dspace.core.Context;
+import org.xml.sax.SAXException;
 
 import cz.cuni.mff.ufal.dspace.app.util.ACL;
 
@@ -108,6 +112,8 @@ public class DCInput
 
     /** allowed document types */
     private List<String> typeBind = null;
+    
+    private ComplexDefinition complexDefinition = null;
 
     /**
      * The scope of the input sets, this restricts hidden metadata fields from
@@ -130,7 +136,7 @@ public class DCInput
      * @param listMap
      */
     public DCInput(Map<String, String> fieldMap,
-            Map<String, List<String>> listMap)
+            Map<String, List<String>> listMap, ComplexDefinitions complexDefinitions)
     {
         dcElement = fieldMap.get("dc-element");
         dcQualifier = fieldMap.get("dc-qualifier");
@@ -172,6 +178,10 @@ public class DCInput
         {
             valueListName = fieldMap.get("value-pairs-name");
             valueList = listMap.get(valueListName);
+        }
+        
+        if ("complex".equals(inputType)){
+        	complexDefinition = complexDefinitions.getByName((fieldMap.get(DCInputsReader.COMPLEX_DEFINITION_REF)));
         }
         hint = fieldMap.get("hint");
         warning = fieldMap.get("required");
@@ -628,6 +638,88 @@ public class DCInput
     public String getRendsAsString() {
         return StringUtils.join(rends.toArray()," ");        
     }
+
+	public ComplexDefinition getComplexDefinition() {
+		if(getInputType().equals("complex")){
+			return complexDefinition;
+		} else{
+			throw new UnsupportedOperationException();
+		}
+	}
+	
+	public static class ComplexDefinitions{
+		private Map<String, ComplexDefinition> definitions = null;
+		private Map<String, List<String>> valuePairs = null;
+		
+		ComplexDefinitions(Map<String, List<String>> valuePairs){
+			definitions = new HashMap<String, ComplexDefinition>();
+			this.valuePairs = valuePairs;
+		}
+		
+		public ComplexDefinition getByName(String name){
+			return definitions.get(name);
+		}
+
+		public void addDefinition(ComplexDefinition definition) {
+			definitions.put(definition.getName(), definition);
+			definition.setValuePairs(valuePairs);
+		}
+	}
+	
+	public static class ComplexDefinition{
+		public static final String SEPARATOR = "@@@";
+		private SortedMap<String, Map<String, String>> inputs;
+		private String name;
+		private Map<String, List<String>> valuePairs = null;
+
+		public ComplexDefinition(String definitionName) {
+			name = definitionName;
+			inputs = new TreeMap<String, Map<String, String>>();
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void addInput(Map<String, String> attributes) throws SAXException {
+			// these two are a must, check if present
+			String iName = attributes.get("name");
+			String iType = attributes.get("type");
+
+			if (iName == null || iType == null) {
+				throw new SAXException(
+						"Missing attributes (name or type) on complex definition input");
+			}
+			
+			inputs.put(iName,attributes);
+
+		}
+		
+		public Map<String, String> getInput(String name){
+			return inputs.get(name);
+		}
+		
+		public Set<String> getInputNames() {
+			return inputs.keySet();
+		}
+
+		public int inputsCount() {
+			return getInputNames().size();
+		}
+		
+		void setValuePairs(Map<String, List<String>> valuePairs){
+			this.valuePairs = valuePairs;
+		}
+
+		public java.util.List<String> getValuePairsForInput(String name) {
+			String pairsRef = getInput(name).get("pairs");
+			if(valuePairs != null && pairsRef != null){
+				return valuePairs.get(pairsRef);
+			}
+			return null;
+		}
+		
+	}
     
 
 }

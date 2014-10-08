@@ -37,7 +37,62 @@
 
   <form-definitions>
 
-    <form name="traditional">
+	<form name="traditional">
+	<page number="1">
+        <field>
+          <dc-schema>dc</dc-schema>
+          <dc-element>type</dc-element>
+          <dc-qualifier></dc-qualifier>
+          <repeatable>false</repeatable>
+          <label>Select type of your resource</label>
+          <input-type value-pairs-name="common_types">dropdown</input-type>
+          <hint>Type of the resource: "Corpus" refers to text, speech and multimodal corpora.
+          "Lexical Conceptual Resource" includes lexica, ontologies, dictionaries, word lists etc.
+          "language Description" covers language models and grammars.
+          "Technology / Tool / Service" is used for tools, systems, system components etc.</hint>
+          <required>Please select a resource type for your submission.</required>
+        </field>
+     </page>
+     <page number="2">
+        <field>
+          <dc-schema>dc</dc-schema>
+          <dc-element>title</dc-element>
+          <dc-qualifier></dc-qualifier>
+          <repeatable>false</repeatable>
+          <label>Title</label>
+          <input-type>onebox</input-type>
+          <hint>Enter the main title of the item in English.</hint>
+          <required>You must enter a main title for this item.</required>
+        </field>
+
+        <field>
+          <dc-schema>dc</dc-schema>
+          <dc-element>contributor</dc-element>
+          <dc-qualifier>author</dc-qualifier>
+          <repeatable>true</repeatable>
+          <label>Authors</label>
+          <input-type>name</input-type>
+          <hint>Enter the names of the authors of this item. Start typing the author's last name and use autocomplete form that will appear if applicable. End your input by pressing ESC if you don't want to use the preselected value.</hint>
+          <required>Please add author(s)</required>
+          <autocomplete>solr-author_ac-specific</autocomplete>
+        </field>
+
+		<field>
+			<dc-schema>dc</dc-schema>
+			<dc-element>description</dc-element>
+			<dc-qualifier>abstract</dc-qualifier>
+			<!-- try true -->
+			<repeatable>true</repeatable>
+			<label>This is a complex field</label>
+			<!-- try different def -->
+			<input-type complex-definition-ref="cd_1">complex</input-type>
+			<hint>You are testing complex field</hint>
+			<!-- required -->
+			<required>Please fill all the fields</required>
+		</field>
+	</page>
+	</form>
+    <form name="old">
       <page number="1">
 
         <field>
@@ -1409,5 +1464,14 @@
     </value-pairs>
 
   </form-value-pairs>
+  
+  <form-complex-definitions>
+  	<definition name="cd_1">
+  		<input name="2_test" type="text" label="second label"/>
+  		<input name="1_test" type="text" label="first label"/>
+  		<input name="3_test" type="text"/>
+  		<input name="4_test" type="dropdown" pairs="common_types" label="4 dropdown"/>
+  	</definition>
+  </form-complex-definitions>
 
 </input-forms>
