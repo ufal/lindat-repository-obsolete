@@ -139,6 +139,7 @@
             <xsl:if test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='include-library'][@qualifier='dragNdrop']">
                 <link rel="stylesheet" href="{$theme-path}/lib/css/jquery.fileupload-ui.css"> </link>
 	    </xsl:if>
+	    
 
 	    <!-- jquery-ui -->
             <xsl:if test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='include-library'][@qualifier='jquery-ui']">
@@ -526,6 +527,12 @@
                  <xsl:text>/lib/bootstrap/js/ufal.min.js</xsl:text>
             </xsl:attribute>&#160;</script>
 
+        <script type="text/javascript">
+            <xsl:attribute name="src">
+                 <xsl:value-of select="$theme-path" />
+                 <xsl:text>/lib/js/citation.js</xsl:text>
+            </xsl:attribute>&#160;</script>
+
 
         <!-- UFAL additional libraries
         -->
@@ -564,7 +571,7 @@
         <xsl:if test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='include-library'][@qualifier='select-collection']">
             <script type="text/javascript" src="{$theme-path}/lib/js/ufal-select-collection.js">&#160;</script>
         </xsl:if>
-
+        
 
         <script type="text/javascript">
             runAfterJSImports.execute();
@@ -587,4 +594,5 @@
     </xsl:template>
 
 </xsl:stylesheet>
+
 
