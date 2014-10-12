@@ -52,6 +52,9 @@ public class RequiredMetadata extends AbstractCurationTask
     private DCInputsReader reader = null;
     // map of required fields
     private Map<String, List<DCInput>> reqMap = new HashMap<String, List<DCInput>>();
+
+    // meta data equivalence map
+    private Map<String, String> mdEquivalenceMap;
     //
     private Map<String, List<RepeatableComponent>> rcMap = new HashMap<String, List<RepeatableComponent>>();
     
@@ -62,6 +65,11 @@ public class RequiredMetadata extends AbstractCurationTask
         try
         {
             reader = new DCInputsReader();
+            mdEquivalenceMap = new HashMap<String, String>();
+            
+            // "dc.contributor.author" <=> "dc.contributor.other"
+            mdEquivalenceMap.put("dc.contributor.author", "dc.contributor.other");
+            mdEquivalenceMap.put("dc.contributor.other", "dc.contributor.author");            
         }
         catch (DCInputsReaderException dcrE)
         {
@@ -127,8 +135,17 @@ public class RequiredMetadata extends AbstractCurationTask
                     DCValue[] vals = item.getMetadata(req);
                     if ((itemType == null || input.isAllowedFor(itemType)) && vals.length == 0)
                     {
-                        sb.append(" missing required field: ").append(req);
-                        count++;
+                    	if (mdEquivalenceMap.containsKey(req)) {
+                    		DCValue[] valsAlt = item.getMetadata(mdEquivalenceMap.get(req));
+                    		if (valsAlt == null || valsAlt.length == 0) {
+                            	sb.append(" missing required field: ").append(req);
+                                count++;                    			
+                    		}
+                    	}
+                    	else {
+                        	sb.append(" missing required field: ").append(req);
+                            count++;                    		
+                    	}
                     }
                 }
                 
