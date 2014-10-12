@@ -55,6 +55,13 @@ public class RequiredMetadata extends AbstractCurationTask
 
     // meta data equivalence map
     private Map<String, String> mdEquivalenceMap;
+    
+    // ignore certain metadata from required checks
+    private boolean ignoreMdPattern = true;    
+    private String[] mdPatterns = {
+    		"metashare.*",
+    };
+    
     //
     private Map<String, List<RepeatableComponent>> rcMap = new HashMap<String, List<RepeatableComponent>>();
     
@@ -65,6 +72,7 @@ public class RequiredMetadata extends AbstractCurationTask
         try
         {
             reader = new DCInputsReader();
+
             mdEquivalenceMap = new HashMap<String, String>();
             
             // "dc.contributor.author" <=> "dc.contributor.other"
@@ -132,20 +140,33 @@ public class RequiredMetadata extends AbstractCurationTask
                     }
                     reqsb.append(qual);
                     String req = reqsb.toString();
-                    DCValue[] vals = item.getMetadata(req);
-                    if ((itemType == null || input.isAllowedFor(itemType)) && vals.length == 0)
-                    {
-                    	if (mdEquivalenceMap.containsKey(req)) {
-                    		DCValue[] valsAlt = item.getMetadata(mdEquivalenceMap.get(req));
-                    		if (valsAlt == null || valsAlt.length == 0) {
-                            	sb.append(" missing required field: ").append(req);
-                                count++;                    			
+                    
+                    boolean mdPatFound = false;
+                    if (ignoreMdPattern) {
+                    	for (String p: mdPatterns) {
+                    		mdPatFound = req.matches("^" + p + "$")?true:false;
+                    		if (mdPatFound) {
+                    			break;
                     		}
                     	}
-                    	else {
-                        	sb.append(" missing required field: ").append(req);
-                            count++;                    		
-                    	}
+                    }
+                    
+                    if (!mdPatFound) {
+                        DCValue[] vals = item.getMetadata(req);
+                        if ((itemType == null || input.isAllowedFor(itemType)) && vals.length == 0)
+                        {
+                        	if (mdEquivalenceMap.containsKey(req)) {
+                        		DCValue[] valsAlt = item.getMetadata(mdEquivalenceMap.get(req));
+                        		if (valsAlt == null || valsAlt.length == 0) {
+                                	sb.append(" missing required field: ").append(req);
+                                    count++;                    			
+                        		}
+                        	}
+                        	else {
+                            	sb.append(" missing required field: ").append(req);
+                                count++;                    		
+                        	}
+                        }                    	
                     }
                 }
                 
