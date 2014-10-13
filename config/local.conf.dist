@@ -285,3 +285,15 @@ lr.tracker.type = piwik
 lr.tracker.api.url = https://ufal.mff.cuni.cz/piwik/piwik.php
 lr.tracker.oai.site_id = 5
 lr.tracker.bitstream.site_id = 5
+
+############################################
+#
+# Curation
+#
+############################################
+
+# Space separated metadata patterns (regular expression)
+# that should be ignored while checking for required metadata.
+# Leave it empty if you want to check everything.
+lr.curation.metadata.checkrequired.ignore = metashare.*
+
