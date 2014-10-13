@@ -17,6 +17,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.dspace.app.util.DCInput;
@@ -57,10 +59,8 @@ public class RequiredMetadata extends AbstractCurationTask
     private Map<String, String> mdEquivalenceMap;
     
     // ignore certain metadata from required checks
-    private boolean ignoreMdPattern = true;    
-    private String[] mdPatterns = {
-    		"metashare.*",
-    };
+    private boolean ignoreMdPattern = false;    
+    private String[] mdPatterns;
     
     //
     private Map<String, List<RepeatableComponent>> rcMap = new HashMap<String, List<RepeatableComponent>>();
@@ -77,7 +77,26 @@ public class RequiredMetadata extends AbstractCurationTask
             
             // "dc.contributor.author" <=> "dc.contributor.other"
             mdEquivalenceMap.put("dc.contributor.author", "dc.contributor.other");
-            mdEquivalenceMap.put("dc.contributor.other", "dc.contributor.author");            
+            mdEquivalenceMap.put("dc.contributor.other", "dc.contributor.author");           
+            
+            String checkReqMdPat = ConfigurationManager.getProperty("lr", "lr.curation.metadata.checkrequired.ignore");
+            if (checkReqMdPat != null) {
+            	ignoreMdPattern = true;
+            	
+            	// remove spaces at the beginning and end
+            	Pattern p = Pattern.compile("(^\\s+|\\s+$)");
+            	Matcher m = p.matcher(checkReqMdPat);
+            	String cleanedMdPatLine = m.replaceAll("");
+            	
+            	// split the space separated pattern line 
+            	p = Pattern.compile("\\s+");
+            	mdPatterns = p.split(cleanedMdPatLine);
+            	if (mdPatterns.length == 1) {
+            		if (mdPatterns[0].equals("")) {
+            			ignoreMdPattern = false;
+            		}
+            	}
+            }
         }
         catch (DCInputsReaderException dcrE)
         {
