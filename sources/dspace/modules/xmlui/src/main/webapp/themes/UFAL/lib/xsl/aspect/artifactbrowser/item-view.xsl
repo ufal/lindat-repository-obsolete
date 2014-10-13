@@ -632,7 +632,7 @@
 					<xsl:value-of select="./@qualifier" />
 				</xsl:if>
 			</td>
-			<td>
+			<td class="linkify">
 				<xsl:copy-of select="./node()" />
 				<xsl:if test="./@authority and ./@confidence">
 					<xsl:call-template name="authorityConfidenceIcon">
