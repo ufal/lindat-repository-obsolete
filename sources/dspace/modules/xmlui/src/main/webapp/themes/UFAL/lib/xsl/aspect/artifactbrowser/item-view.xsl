@@ -107,9 +107,9 @@
 					<xsl:attribute name="oai-handle">
                  		<xsl:value-of select="$oai-handle" />
                		</xsl:attribute>
-                                        <xsl:attribute name="title">
-                                <xsl:value-of select="dim:field[@element='title'][not(@qualifier)]/node()" />
-                        </xsl:attribute>
+					<xsl:attribute name="title">
+                        <xsl:value-of select="dim:field[@element='title'][not(@qualifier)]/node()" />
+                    </xsl:attribute>               		
                		&#160;               		
 				</div>
 				<xsl:call-template name="itemSummaryView-DIM-fields">
@@ -594,18 +594,6 @@
 
 	<xsl:template match="dim:dim" mode="itemDetailView-DIM">
 		<xsl:if test="dim:field[@element='identifier' and @qualifier='uri']">
-				<div id='exporter_model_div' class='modal fade'>
-				  <div class='modal-dialog'>
-				  	<div class='modal-content'>
-					  <div class='modal-header'>
-					    <button type='button' class='close' data-dismiss='modal'><span aria-hidden='true'>&#215;</span>
-					    <span class='sr-only'>Close</span></button>
-					    <h3 class='modal-title'>Exported Item</h3>
-					  </div>
-					  <div class='modal-body'><i class='fa fa-spinner fa-spin' style='margin: auto;'>&#160;</i></div>
-					</div>
-				  </div>
-				</div>					
 				<div data-target="#exporter_model_div" class="citationbox">
 					<xsl:attribute name="uri">
                  		<xsl:value-of select="dim:field[@element='identifier' and @qualifier='uri']/node()" />
@@ -616,7 +604,10 @@
 					<xsl:attribute name="oai-handle">
                  		<xsl:value-of select="$oai-handle" />
                		</xsl:attribute>
-               		&#160;
+					<xsl:attribute name="title">
+                        <xsl:value-of select="dim:field[@element='title'][not(@qualifier)]/node()" />
+                    </xsl:attribute>
+                    &#160;
 				</div>		
 		</xsl:if>	
 		<table class="table">
