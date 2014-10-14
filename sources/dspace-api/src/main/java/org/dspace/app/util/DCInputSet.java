@@ -15,6 +15,7 @@ import java.util.Map;
  * Class representing all DC inputs required for a submission, organized into pages
  *
  * @author Brian S. Hughes, based on work by Jenny Toves, OCLC
+ * modified for LINDAT/CLARIN
  * @version $Revision$
  */
 

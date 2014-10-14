@@ -56,6 +56,7 @@ package org.dspace.app.xmlui.wing.element;
  * composite: A combination of multile fields into one input control.
  *
  * @author Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 
 import java.util.ArrayList;

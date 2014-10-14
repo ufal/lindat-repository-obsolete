@@ -13,6 +13,7 @@ package org.dspace.app.xmlui.wing.element;
  * the user to select from a list of available options.
  * 
  * @author Scott Phillips
+ * modified for LINDAT/CLARIN
  */
 
 import org.dspace.app.xmlui.wing.Message;
