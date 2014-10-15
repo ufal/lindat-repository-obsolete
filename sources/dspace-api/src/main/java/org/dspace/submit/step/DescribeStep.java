@@ -406,6 +406,7 @@ public class DescribeStep extends AbstractProcessingStep
         //for all values
         for(int i = 0; i < valuesPerField; i++){
         	StringBuilder complexValue = new StringBuilder();
+        	int emptyFields = 0;
         	//separator empty for first iter
         	String separator = "";
         	//in all fields
@@ -417,6 +418,14 @@ public class DescribeStep extends AbstractProcessingStep
         		} else{
         			value = "";
         		}
+        		if("".equals(value)){
+        			++emptyFields;
+        		}
+                // regexp checking 
+        		/*String regex = definition.getInput(name).get("regexp");
+                if(regex != null && !regex.isEmpty() && !value.isEmpty()) {
+                	addErrorField(request, metadataField + "_" + name);
+                }*/
         		complexValue.append(separator).append(value);
         		//non empty separator for the remaining iterations;
         		separator = DCInput.ComplexDefinition.SEPARATOR;
@@ -424,13 +433,12 @@ public class DescribeStep extends AbstractProcessingStep
         	//required and all empty handled by doProcessing
         	//this checks whether one of the fields was empty
         	String finalValue = complexValue.toString();
-        	int nonEmptyFieldCount = StringUtils.split(finalValue, DCInput.ComplexDefinition.SEPARATOR).length;
-        	if( nonEmptyFieldCount > 0 && nonEmptyFieldCount != definition.inputsCount()){
+        	if( emptyFields > 0 && emptyFields < definition.inputsCount()){
         		addErrorField(request, metadataField);
         	}
         	
         	//if something was filled keep it (the submission might be continued at a later time)
-        	if(nonEmptyFieldCount > 0){
+        	if(emptyFields < definition.inputsCount()){
         		item.addMetadata(schema, element, qualifier, null, finalValue);
         	}
         }

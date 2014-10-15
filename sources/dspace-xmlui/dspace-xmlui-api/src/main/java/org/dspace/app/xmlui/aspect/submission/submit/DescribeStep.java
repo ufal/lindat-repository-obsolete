@@ -1262,11 +1262,6 @@ public class DescribeStep extends AbstractSubmissionStep
 
                         Composite composite = item.addComposite(fieldName, rend);
 
-                        /*
-                         * if(isAutocompletable(dcInput)) { rend += " autocomplete";
-                         * addAutocompleteComponents(fieldName+"_last", dcInput, item); }
-                         */
-
                         DCInput.ComplexDefinition definition = dcInput.getComplexDefinition();
                         java.util.List<Field> fields = new ArrayList<Field>();
                         for (String name : definition.getInputNames()) {
@@ -1275,6 +1270,11 @@ public class DescribeStep extends AbstractSubmissionStep
                                 String type = definition.getInput(name).get("type");
                                 if ("text".equals(type)) {
                                 		field = composite.addText(fullInputName, rend); 
+                                		String autocomplete  = definition.getInput(name).get("autocomplete");
+                                		if(isAutocompletable(autocomplete)) {
+                                			rend += " autocomplete";
+                                			addAutocompleteComponents(fullInputName, autocomplete, item);
+                                		}
                                 } else if ("dropdown".equals(type)){
                                         Select select = composite.addSelect(fullInputName, rend);
                                         // Setup the possible options
@@ -1297,13 +1297,18 @@ public class DescribeStep extends AbstractSubmissionStep
                                 if(field != null){
                                     fields.add(field);
                                 }
+                               /* if(field != null && isFieldInError(fullInputName)){
+                                	//regex error
+                                	String regex = definition.getInput(name).get("regexp");
+                                	field.addError(String.format("The field \"%s\" doesn't match the required regular expression (format) \"%s\"",label,regex));
+                                }*/
                         }
 
                         // Setup the field's values
                         if (dcInput.isRepeatable() || dcValues.length > 1) {
                                 for (DCValue dcValue : dcValues) {
                                         java.util.List<String> values = split(dcValue.value);
-                                        if (StringUtils.split(dcValue.value,
+                                        if (StringUtils.splitByWholeSeparator(dcValue.value,
                                                         DCInput.ComplexDefinition.SEPARATOR).length == definition
                                                         .inputsCount()) {
                                                 // this is a complete field, proceed with another instance
@@ -1349,7 +1354,7 @@ public class DescribeStep extends AbstractSubmissionStep
                                                 && dcInput.getWarning().length() > 0) {
                                         composite.addError(dcInput.getWarning());
                                 } else {
-                                        composite.addError(T_required_field);
+                                        composite.addError("Fill all the fields, please.");
                                 }
                         }
                         if (dcInput.isRepeatable() && !readonly) {
@@ -1373,9 +1378,12 @@ public class DescribeStep extends AbstractSubmissionStep
         	return Arrays.asList(value.split(DCInput.ComplexDefinition.SEPARATOR, -1));
 		}
 
-		protected boolean isAutocompletable(DCInput dcInput) {
+        protected boolean isAutocompletable(DCInput dcInput){
         	 // autocomplete
             String autocomplete = dcInput.getAutocomplete();
+            return isAutocompletable(autocomplete);
+        }
+		protected boolean isAutocompletable(String autocomplete) {
             if ( null != autocomplete ) 
             {
                 //ConfigurationService cs = new DSpace().getConfigurationService();
@@ -1395,9 +1403,12 @@ public class DescribeStep extends AbstractSubmissionStep
             return false;
         }
         
-        protected void addAutocompleteComponents(String fieldName, DCInput dcInput, org.dspace.app.xmlui.wing.element.Item item) throws WingException {
+		protected void addAutocompleteComponents(String fieldName, DCInput dcInput, org.dspace.app.xmlui.wing.element.Item item) throws WingException {
         	String autocomplete = dcInput.getAutocomplete();
-        	ConfigurationService cs = new DSpace().getConfigurationService();
+        	addAutocompleteComponents(fieldName, autocomplete, item);
+		}
+		
+        protected void addAutocompleteComponents(String fieldName, String autocomplete, org.dspace.app.xmlui.wing.element.Item item) throws WingException {
         	String[] parts = autocomplete.split("-");
             String url_property = String.format("lr.autocomplete.%s.url", parts[0]);
             //String auto_url = cs.getProperty(url_property);
