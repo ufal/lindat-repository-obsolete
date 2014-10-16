@@ -1,4 +1,4 @@
-var exportFormats = [ "bibtex", "cmdi", "html"];
+var exportFormats = [ "bibtex", "cmdi" ];
 var ufal = ufal || {};
 ufal.citation = {
 
@@ -31,14 +31,40 @@ ufal.citation = {
 				link.click(ufal.citation.exporter_click);
 			}
 
-			var link = jQuery("<span>" +
+			jQuery("<div>" +
 					"<i class='fa fa-quote-left fa-2x pull-left'>&#160;</i>" +
-					"Please use the following persistent identifier to cite this item or export to a predefine format:" +
-					"<br>" +
-					"<a href='" + URI + "'>" + URI + "</a> " +					
-					"</span>").appendTo(div);
-			var copyLink = jQuery("<a data-uri='" + URI +"'href='#!' style='text-decoration: none;' data-toggle='modal' data-target='#exporter_copy_div'><i class='fa fa-copy text-info'>&#160;</i></a>")
-				.appendTo(link);
+					"Please use the following text to cite this item or export to a predefined format:" +
+					"</div>").appendTo(div);
+			
+			var textDiv = jQuery(
+				"<div style='margin-top: 10px; padding: 10px; color: #999999;'>" +
+				"</div>").appendTo(div);
+			
+			var copyLink = jQuery(
+					"<a title='Copy Citation Text' data-div='.cite-text' href='#!' style='text-decoration: none;' data-toggle='modal' data-target='#exporter_copy_div'>" +
+						"<span class='fa-stack fa-lg pull-right text-warning'>" +
+							"<i class='fa fa-circle fa-stack-2x'></i>" +
+							"<i class='fa fa-copy fa-inverse fa-stack-1x'></i>" +
+						"</span>" +
+					"</a>").appendTo(textDiv);					
+			
+			var citeText = jQuery("<div class='cite-text linkify'></div>").appendTo(textDiv);
+			
+			jQuery.ajax(
+				{
+					url : oaiURI + "/cite?verb=GetRecord&metadataPrefix=html&identifier=" + oaiHandle,
+					context : document.body,
+					dataType : 'text'
+				}
+			)
+			.done(
+					function(data) {
+						var jdata_html = data;
+						jdata_html = ufal.citation.extract_metadata_html(jdata_html);
+						citeText.html(ufal.citation.convert_metadata_to_html(jdata_html, "extract_metadata_html"));
+					}
+			);
+						
 			copyLink.click(ufal.citation.copy_click);
 		},
 
@@ -130,12 +156,12 @@ ufal.citation = {
 		
 		copy_click : function(e) {
 			e.preventDefault();
-			var link = jQuery(this).attr("data-uri");
-			jQuery("#exporter_copy_div .modal-body textarea").text(link);
+			var datadiv = jQuery(this).attr("data-div");			
+			jQuery("#exporter_copy_div .modal-body textarea").text(jQuery(datadiv, jQuery(this).parent()).text());
 			setTimeout(function(){
 				jQuery("#exporter_copy_div .modal-body textarea").focus();
 				jQuery("#exporter_copy_div .modal-body textarea").select();
-			}, 200);
+			}, 300);
 		}
 
 };
@@ -164,7 +190,7 @@ jQuery(document).ready(function (){
 		          "<h4 class='modal-title'>Press <kbd class='label label-default'><kbd>ctrl</kbd> + <kbd>c</kbd></kbd> to copy</h4>" +
 		        "</div>" + 
 		        "<div class='modal-body'>" +
-		          "<textarea class='form-control' readonly></textarea>" +
+		          "<textarea class='form-control' readonly style='height: 200px;'></textarea>" +
 		        "</div>" +
 		      "</div>" +			 			 
 			 "</div>" +
