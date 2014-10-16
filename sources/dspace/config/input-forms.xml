@@ -353,6 +353,7 @@
         	<dc-qualifier>spatial</dc-qualifier>
         	<repeatable>true</repeatable>
         	<label>Country</label>
+        	<input-type>onebox</input-type>
         	<hint>The country where the resource was created or originated.</hint>
         </field>
         
@@ -361,6 +362,7 @@
         	<dc-element>genre</dc-element>
         	<repeatable>true</repeatable>
         	<label>Genre</label>
+        	<input-type>onebox</input-type>
         	<hint>???</hint>
         </field>
 

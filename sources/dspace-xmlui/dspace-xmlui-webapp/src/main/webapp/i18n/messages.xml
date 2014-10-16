@@ -726,9 +726,9 @@
     <message key="xmlui.Submission.submit.InitialQuestionsStep.publisher">Publisher</message>
 
     <!-- org.dspace.app.xmlui.Submission.submit.DescribeStep -->
-    <message key="xmlui.Submission.submit.DescribeStep.head">Select Item Type</message>
+    <message key="xmlui.Submission.submit.DescribeStep.head">Submission Info</message>
     <message key="xmlui.Submission.submit.DescribeStep.head2">People and organizations involved</message>
-    <message key="xmlui.Submission.submit.DescribeStep.head3">Describe Item</message>
+    <message key="xmlui.Submission.submit.DescribeStep.head3">Resource details</message>
     <message key="xmlui.Submission.submit.DescribeStep.unknown_field">Error: Unknown field type</message>
     <message key="xmlui.Submission.submit.DescribeStep.required_field">This field is required</message>
     <message key="xmlui.Submission.submit.DescribeStep.last_name_help">Last name, <i>e.g. Smith</i></message>
