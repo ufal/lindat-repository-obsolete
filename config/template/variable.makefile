@@ -25,4 +25,5 @@ HANDLE_SERVER:=/etc/init.d/handle-server
 BACKUP2l:=/usr/sbin/backup2l
 
 # database settings - mostly for recovering 
-RESTORE_FROM_DATABASE=prod-dspace-1.8
+#RESTORE_FROM_DATABASE=prod-dspace-1.8
+RESTORE_FROM_DATABASE=lrt-dspace-1.8
