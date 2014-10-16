@@ -414,18 +414,13 @@ public class DescribeStep extends AbstractProcessingStep
         		String value = fieldsValues.get(name).get(i);
         		if(value != null){
         			value = value.trim();
-        			value = value.replaceAll(DCInput.ComplexDefinition.SEPARATOR, DCInput.ComplexDefinition.SEPARATOR.replaceAll("(.)", "/$1"));
+        			value = value.replaceAll(DCInput.ComplexDefinition.SEPARATOR, DCInput.ComplexDefinition.SEPARATOR.replaceAll("(.)", "_$1_"));
         		} else{
         			value = "";
         		}
         		if("".equals(value)){
         			++emptyFields;
         		}
-                // regexp checking 
-        		/*String regex = definition.getInput(name).get("regexp");
-                if(regex != null && !regex.isEmpty() && !value.isEmpty()) {
-                	addErrorField(request, metadataField + "_" + name);
-                }*/
         		complexValue.append(separator).append(value);
         		//non empty separator for the remaining iterations;
         		separator = DCInput.ComplexDefinition.SEPARATOR;

@@ -643,4 +643,8 @@ public abstract class Field extends AbstractWingElement implements
     public void setValue(String characters) throws WingException{
     	throw new UnsupportedOperationException();
     }
+    
+    public String getName(){
+    	return name;
+    }
 }

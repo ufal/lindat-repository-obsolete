@@ -531,9 +531,13 @@ public class DCInput
      * @param value
      * @return
      */
-    public boolean isAllowedValue(String value)
+    public boolean isAllowedValue(String value){
+    	return isAllowedValue(value, regexp);
+    }
+    
+    public static boolean isAllowedValue(String value, String regex)
     {
-        if (regexp == null || regexp.isEmpty())
+        if (regex == null || regex.isEmpty())
         {
             return true;
         }
@@ -543,7 +547,7 @@ public class DCInput
         }
         else
         {
-            return value.matches(regexp);
+            return value.matches(regex);
         }
     }
 
@@ -667,7 +671,8 @@ public class DCInput
 	}
 	
 	public static class ComplexDefinition{
-		public static final String SEPARATOR = "@@@";
+		//use something that wont get replaced when entering into db
+		public static final String SEPARATOR = "@@";
 		private SortedMap<String, Map<String, String>> inputs;
 		private String name;
 		private Map<String, List<String>> valuePairs = null;

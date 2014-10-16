@@ -21,6 +21,7 @@ import javax.servlet.ServletException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dspace.app.util.DCInput;
+import org.dspace.app.util.DCInput.ComplexDefinition;
 import org.dspace.app.util.DCInputSet;
 import org.dspace.app.util.DCInputsReader;
 import org.dspace.app.util.DCInputsReaderException;
@@ -1295,6 +1296,10 @@ public class DescribeStep extends AbstractSubmissionStep
                                 if(label != null && field != null){
                                 	field.setLabel(label);
                                 }
+                                String help = definition.getInput(name).get("help");
+                                if(help != null && field != null){
+                                	field.setHelp(help);
+                                }
                                 if(field != null){
                                     fields.add(field);
                                 }
@@ -1313,35 +1318,23 @@ public class DescribeStep extends AbstractSubmissionStep
                                                         DCInput.ComplexDefinition.SEPARATOR).length == definition
                                                         .inputsCount()) {
                                                 // this is a complete field, proceed with another instance
-                                                for (int i = 0; i < fields.size(); i++) {
-                                                        Field field = fields.get(i);
-                                                        String value = values.get(i);
-                                                        Instance instance = field.addInstance();
-                                                        //XXX: Branching on type
-                                                        if(field instanceof Select){
-                                                        	instance.setOptionSelected(value);
-                                                        } else{
-                                                        	instance.setValue(value);
-                                                        }
-                                                }
-                                                composite.addInstance().setValue(dcValue.value);
+                                        		//unless there are invalid values
+                                        		boolean validValues = fill(fields,values,true,definition,fieldName);
+                                        		if(validValues){
+                                        			composite.addInstance().setValue(StringUtils.join(values.iterator(), "||"));
+                                        		} else{
+                                        			break;
+                                        		}
                                         } else {
                                                 // partially fill the form
-                                                for (int i = 0; i < fields.size(); i++) {
-                                                        Field field = fields.get(i);
-                                                        String value = values.get(i);
-                                                        field.setValue(value);
-                                                }
+                                        		fill(fields,values,false,definition,fieldName);
+                                        		break;
                                         }
                                 }
                         } else if (dcValues.length == 1) {
                                 // fill the values into the form, no extra instances
                                 java.util.List<String> values = split(dcValues[0].value);
-                                for (int i = 0; i < fields.size(); i++) {
-                                        Field field = fields.get(i);
-                                        String value = values.get(i);
-                                        field.setValue(value);
-                                }
+                                fill(fields,values,false,definition,fieldName);
                         }
 
                         // Setup the full name
@@ -1374,7 +1367,43 @@ public class DescribeStep extends AbstractSubmissionStep
 
         }
         
-        private java.util.List<String> split(String value) {
+        private boolean fill(java.util.List<Field> fields,
+				java.util.List<String> values, boolean addInstances, ComplexDefinition definition, String fieldName) throws WingException {
+        		boolean noErrors = true;
+        		//check values first
+                for (int i = 0; i < fields.size(); i++) {
+                        Field field = fields.get(i);
+                        String inputName = StringUtils.difference(fieldName+"_", field.getName());
+                        String regex = definition.getInput(inputName).get("regexp");
+                        String value = values.get(i);
+                        boolean isAllowedValue = DCInput.isAllowedValue(value, regex);
+                        if(!isAllowedValue){
+                        	field.addError(String.format("The field doesn't match the required regular expression (format) \"%s\"",regex));
+                        	noErrors = false;
+                        	//keep the value in the form
+                        	addInstances = false;
+                        }
+                }
+                //fill the form
+                for (int i = 0; i < fields.size(); i++) {
+                        Field field = fields.get(i);
+                        String value = values.get(i);
+                        if(addInstances){
+                                Instance instance = field.addInstance();
+                                //XXX: Branching on type
+                                if(field instanceof Select){
+                                        instance.setOptionSelected(value);
+                                } else{
+                                        instance.setValue(value);
+                                }
+                        } else{
+                                field.setValue(value);
+                        }
+                }
+                return noErrors;
+		}
+
+		private java.util.List<String> split(String value) {
         	//
         	return Arrays.asList(value.split(DCInput.ComplexDefinition.SEPARATOR, -1));
 		}

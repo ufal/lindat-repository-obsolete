@@ -1007,8 +1007,8 @@
   <!-- currently only text and dropbox -->
   	<definition name="contact_person">
   		<input name="1_givenname" type="text" label="Provider's given name"/>
-  		<input name="2_surname" type="text" label="Provider's surname"/>
-  		<input name="3_email" type="text" label="Provider's email"/>
+  		<input name="2_surname" type="text" label="Provider's surname" help="Family name"/>
+  		<input name="3_email" type="text" label="Provider's email" regexp="[^@]+@[^\.@]+\.[^@]+"/>
   		<input name="4_affiliation" type="text" label="Provider's institution name" autocomplete="solr-publisher_ac"/>
   	</definition>
 
@@ -1020,7 +1020,7 @@
   	</definition>
   	
   <definition name="sizeInfo">
-  		<input name="1_size" type="text"/>
+  		<input name="1_size" type="text" regexp="\d+.?\d*"/>
   		<input name="2_unit" type="dropdown" pairs="metashare_sizeunit" label="Unit"/>
   </definition>
   </form-complex-definitions>
