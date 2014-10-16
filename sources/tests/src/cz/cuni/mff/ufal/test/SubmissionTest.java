@@ -24,11 +24,11 @@ public class SubmissionTest extends BaseTestCase {
 
 		// Step 1: Community selection
 		// select collection  (random)
-		String[] availableCommunities = {"community_1", "community_12", "community_11", "community_9", "community_10"};
+		String[] availableCommunities = {"community_1", "community_12"};
 		int communityIndex = randGen.nextInt(availableCommunities.length);		
 		selenium.click("id=" + availableCommunities[communityIndex] + "" );
 		selenium.waitForPageToLoad("30000");
-		selenium.select("id=cz_cuni_mff_ufal_dspace_app_xmlui_aspect_submission_submit_SelectCollectionStep_field_handle", "index=1");
+		//selenium.select("id=cz_cuni_mff_ufal_dspace_app_xmlui_aspect_submission_submit_SelectCollectionStep_field_handle", "index=1");
 		selenium.click("id=cz_cuni_mff_ufal_dspace_app_xmlui_aspect_submission_submit_SelectCollectionStep_field_submit");
 		selenium.waitForPageToLoad("30000");
 		
@@ -184,7 +184,7 @@ public class SubmissionTest extends BaseTestCase {
 
 		// Step 1: Community selection
 		// select collection  (random)
-		String[] availableCommunities = {"community_1", "community_12", "community_11", "community_9", "community_10"};
+		String[] availableCommunities = {"community_1", "community_12"};
 		int communityIndex = randGen.nextInt(availableCommunities.length);		
 		selenium.click("id=" + availableCommunities[communityIndex] + "" );
 		selenium.waitForPageToLoad("30000");
