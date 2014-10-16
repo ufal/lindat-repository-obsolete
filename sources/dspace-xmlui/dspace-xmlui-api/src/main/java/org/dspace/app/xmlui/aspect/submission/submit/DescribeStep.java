@@ -1303,11 +1303,6 @@ public class DescribeStep extends AbstractSubmissionStep
                                 if(field != null){
                                     fields.add(field);
                                 }
-                               /* if(field != null && isFieldInError(fullInputName)){
-                                	//regex error
-                                	String regex = definition.getInput(name).get("regexp");
-                                	field.addError(String.format("The field \"%s\" doesn't match the required regular expression (format) \"%s\"",label,regex));
-                                }*/
                         }
 
                         // Setup the field's values
@@ -1370,14 +1365,12 @@ public class DescribeStep extends AbstractSubmissionStep
         private boolean fill(java.util.List<Field> fields,
 				java.util.List<String> values, boolean addInstances, ComplexDefinition definition, String fieldName) throws WingException {
         		boolean noErrors = true;
-        		//check values first
+        		//check for regex errors
                 for (int i = 0; i < fields.size(); i++) {
                         Field field = fields.get(i);
                         String inputName = StringUtils.difference(fieldName+"_", field.getName());
-                        String regex = definition.getInput(inputName).get("regexp");
-                        String value = values.get(i);
-                        boolean isAllowedValue = DCInput.isAllowedValue(value, regex);
-                        if(!isAllowedValue){
+                        if(isFieldInError(inputName)){
+                        	String regex = definition.getInput(inputName).get("regexp");
                         	field.addError(String.format("The field doesn't match the required regular expression (format) \"%s\"",regex));
                         	noErrors = false;
                         	//keep the value in the form

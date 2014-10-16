@@ -421,6 +421,10 @@ public class DescribeStep extends AbstractProcessingStep
         		if("".equals(value)){
         			++emptyFields;
         		}
+                String regex = definition.getInput(name).get("regexp");
+                if(!DCInput.isAllowedValue(value, regex)){
+                	addErrorField(request, name);
+                }
         		complexValue.append(separator).append(value);
         		//non empty separator for the remaining iterations;
         		separator = DCInput.ComplexDefinition.SEPARATOR;
