@@ -400,8 +400,17 @@
   <form-definitions-extra>
     <form name="traditional">
       <page number="1">
+        <field>
+          <dc-schema>local</dc-schema>
+          <dc-element>submission</dc-element>
+          <dc-qualifier>note</dc-qualifier>
+          <repeatable>false</repeatable>
+          <label>Note</label>
+          <input-type>textarea</input-type>
+          <hint>Leave a note for the editors/reviewers</hint>
+          <required></required>
+        </field>      
 
-        
         <!-- DC.Relation.Replaces -->
         <field>
           <dc-schema>dc</dc-schema>
@@ -455,16 +464,6 @@
           </acl>                    
         </field>        
 
-        <field>
-          <dc-schema>local</dc-schema>
-          <dc-element>submission</dc-element>
-          <dc-qualifier>note</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Note</label>
-          <input-type>textarea</input-type>
-          <hint>Leave a note for the editors/reviewers</hint>
-          <required></required>
-        </field>      
       </page>
     </form>
   </form-definitions-extra>
