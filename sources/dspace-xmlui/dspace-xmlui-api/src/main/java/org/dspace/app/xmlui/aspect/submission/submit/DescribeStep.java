@@ -223,7 +223,7 @@ public class DescribeStep extends AbstractSubmissionStep
                 if ( this.getPage() == 1 ) {
                     form.setHead(T_head);
                 }else {
-                    form.setHead(T_head2);
+                	form.setHead(message("xmlui.Submission.submit.DescribeStep.head"+this.getPage()));
                 }
 
                 // Fetch the document type (dc.type)
@@ -378,7 +378,7 @@ public class DescribeStep extends AbstractSubmissionStep
     {
         //Create a new list section for this step (and set its heading)
         List describeSection = reviewList.addList("submit-review-" + this.stepAndPage, List.TYPE_FORM);
-        describeSection.setHead(T_head2);
+        describeSection.setHead(message("xmlui.Submission.submit.DescribeStep.head" + this.getPage()));
         
         //Review the values assigned to all inputs
         //on this page of the Describe step.
