@@ -378,7 +378,8 @@ public class DescribeStep extends AbstractSubmissionStep
     {
         //Create a new list section for this step (and set its heading)
         List describeSection = reviewList.addList("submit-review-" + this.stepAndPage, List.TYPE_FORM);
-        describeSection.setHead(message("xmlui.Submission.submit.DescribeStep.head" + this.getPage()));
+        String suffix = this.getPage() == 1 ? "" : Integer.toString(this.getPage());
+        describeSection.setHead(message("xmlui.Submission.submit.DescribeStep.head" + suffix));
         
         //Review the values assigned to all inputs
         //on this page of the Describe step.
