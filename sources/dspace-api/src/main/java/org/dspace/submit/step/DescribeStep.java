@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -24,7 +25,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-
 import org.dspace.app.util.DCInputsReader;
 import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.app.util.DCInput;
@@ -292,6 +292,8 @@ public class DescribeStep extends AbstractProcessingStep
             {
                 readText(request, item, schema, element, qualifier, inputs[j]
                         .getRepeatable(), LANGUAGE_QUALIFIER, inputs[j].getRepeatableParse());
+            } else if(inputType.equals("complex")){
+                readComplex(request, item, schema, element, qualifier, inputs[j]);
             }
             else
             {
@@ -366,7 +368,82 @@ public class DescribeStep extends AbstractProcessingStep
 
     
 
-    /**
+    private void readComplex(HttpServletRequest request, Item item,
+			String schema, String element, String qualifier, DCInput input) {
+
+        String metadataField = MetadataField
+                .formKey(schema, element, qualifier);
+        boolean repeated = input.getRepeatable();
+        
+        DCInput.ComplexDefinition definition = input.getComplexDefinition();
+        java.util.Map<String, java.util.List<String>> fieldsValues = new HashMap<String, java.util.List<String>>();
+        int valuesPerField = 0;
+
+        if (repeated)
+        {
+        	for(String name : definition.getInputNames()){
+        		List<String> list = getRepeatedParameter(request, metadataField, metadataField + "_" + name);
+                fieldsValues.put(name, list);
+                //assume the list are all the same size
+                valuesPerField = list.size();
+        	}
+
+        }
+        else
+        {
+        	for(String name : definition.getInputNames()){
+        		List<String> list = new ArrayList<String>();
+        		String value = request.getParameter(metadataField + "_" + name);
+        		if(value != null){
+        			list.add(value);
+        			fieldsValues.put(name, list);
+        		}
+        	}
+        	valuesPerField = 1;
+        }
+
+
+        //for all values
+        for(int i = 0; i < valuesPerField; i++){
+        	StringBuilder complexValue = new StringBuilder();
+        	int emptyFields = 0;
+        	//separator empty for first iter
+        	String separator = "";
+        	//in all fields
+        	for(String name : definition.getInputNames()){
+        		String value = fieldsValues.get(name).get(i);
+        		if(value != null){
+        			value = value.trim();
+        			value = value.replaceAll(DCInput.ComplexDefinition.SEPARATOR, DCInput.ComplexDefinition.SEPARATOR.replaceAll("(.)", "_$1_"));
+        		} else{
+        			value = "";
+        		}
+        		if("".equals(value)){
+        			++emptyFields;
+        		}
+                String regex = definition.getInput(name).get("regexp");
+                if(!DCInput.isAllowedValue(value, regex)){
+                	addErrorField(request, name);
+                }
+        		complexValue.append(separator).append(value);
+        		//non empty separator for the remaining iterations;
+        		separator = DCInput.ComplexDefinition.SEPARATOR;
+        	}
+        	//required and all empty handled by doProcessing
+        	//this checks whether one of the fields was empty
+        	String finalValue = complexValue.toString();
+        	if( emptyFields > 0 && emptyFields < definition.inputsCount()){
+        		addErrorField(request, metadataField);
+        	}
+        	
+        	//if something was filled keep it (the submission might be continued at a later time)
+        	if(emptyFields < definition.inputsCount()){
+        		item.addMetadata(schema, element, qualifier, null, finalValue);
+        	}
+        }
+	}
+
+	/**
      * Retrieves the number of pages that this "step" extends over. This method
      * is used to build the progress bar.
      * <P>

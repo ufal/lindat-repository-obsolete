@@ -39,7 +39,48 @@
 
     <form name="traditional">
       <page number="1">
+      
+      <!-- Basic info
+      		projectUrl
+      		title
+      		date
+      		+type for type binds
+      		+admin only fields-->
+        <field>
+          <dc-schema>dc</dc-schema>
+          <dc-element>title</dc-element>
+          <dc-qualifier></dc-qualifier>
+          <repeatable>false</repeatable>
+          <label>Title</label>
+          <input-type>onebox</input-type>
+          <hint>Enter the main title of the item in English.</hint>
+          <required>You must enter a main title for this item.</required>
+        </field>
 
+        <field>
+          <dc-schema>dc</dc-schema>
+          <dc-element>source</dc-element>
+          <dc-qualifier>uri</dc-qualifier>
+          <repeatable>false</repeatable>
+          <label>Project URL</label>
+          <input-type>onebox</input-type>
+          <hint>Enter the project url.</hint>
+          <required></required>
+        </field>
+
+        <field>
+          <dc-schema>dc</dc-schema>
+          <dc-element>date</dc-element>
+          <dc-qualifier>issued</dc-qualifier>
+          <repeatable>false</repeatable>
+          <label>Date issued</label>
+          <input-type>onebox</input-type>
+          <hint>Please give the date when the submission data were issued if any e.g., 2014-01-21 or at least the year.</hint>
+          <required>You must enter the date or at least the year.</required>
+          <regexp>\d\d\d\d(-\d\d)?(-\d\d)?</regexp>
+          <regexp-warning>The supplied date does not follow our date pattern \d\d\d\d(-\d\d)?(-\d\d)? e.g., 2014-01-21 or 2014</regexp-warning>         
+        </field>
+        
         <field>
           <dc-schema>dc</dc-schema>
           <dc-element>type</dc-element>
@@ -85,17 +126,15 @@
       </page>
 
       <page number="2">
+      
+      <!-- who's involved 
+      		authors
+      		publisher
+      		funding
+      		contact
+      -->
+      
 
-        <field>
-          <dc-schema>dc</dc-schema>
-          <dc-element>title</dc-element>
-          <dc-qualifier></dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Title</label>
-          <input-type>onebox</input-type>
-          <hint>Enter the main title of the item in English.</hint>
-          <required>You must enter a main title for this item.</required>
-        </field>
 
         <field>
           <dc-schema>dc</dc-schema>
@@ -111,28 +150,54 @@
 
         <field>
           <dc-schema>dc</dc-schema>
-          <dc-element>source</dc-element>
-          <dc-qualifier>uri</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Project URL</label>
+          <dc-element>publisher</dc-element>
+          <dc-qualifier></dc-qualifier>
+          <repeatable>true</repeatable>
+          <autocomplete>solr-publisher_ac</autocomplete>
+          <label>Publisher</label>
           <input-type>onebox</input-type>
-          <hint>Enter the project url.</hint>
-          <required></required>
+          <hint>Enter the name of the publisher of the previously issued instance of this item, or your home institution. Start typing the publisher and use autocomplete form that will appear if applicable. End your input by pressing ESC if you don't want to use the preselected value.</hint>
+          <required>You must enter the name of the publisher.</required>
         </field>
-
+        
         <field>
-          <dc-schema>dc</dc-schema>
-          <dc-element>date</dc-element>
-          <dc-qualifier>issued</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Date issued</label>
-          <input-type>onebox</input-type>
-          <hint>Please give the date when the submission data were issued if any e.g., 2014-01-21 or at least the year.</hint>
-          <required>You must enter the date or at least the year.</required>
-          <regexp>\d\d\d\d(-\d\d)?(-\d\d)?</regexp>
-          <regexp-warning>The supplied date does not follow our date pattern \d\d\d\d(-\d\d)?(-\d\d)? e.g., 2014-01-21 or 2014</regexp-warning>         
+        	<dc-schema>local</dc-schema>
+        	<dc-element>contact</dc-element>
+        	<dc-qualifier>person</dc-qualifier>
+        	<repeatable>true</repeatable>
+        	<label>Contact person</label>
+        	<input-type complex-definition-ref="contact_person">complex</input-type>
+        	<hint>Provider</hint>
+        	<required>Please fill all the fields for the contact person.</required>
         </field>
 
+
+		<field>
+		<dc-schema>local</dc-schema>
+		<dc-element>sponsor</dc-element>
+		<repeatable>true</repeatable>
+		<label>Funding</label>
+		<input-type complex-definition-ref="funding">complex</input-type>
+		<hint>Sponsors and funding codes. For European projects ask admins about OpenAIRE</hint>
+		</field>
+		
+       <field>
+         <dc-schema>dc</dc-schema>
+         <dc-element>relation</dc-element>
+         <dc-qualifier></dc-qualifier>
+         <repeatable>false</repeatable>
+         <label>OpenAIRE Project Identifier</label>
+         <input-type>onebox</input-type>
+         <hint>Start typing the number, name or acronym of the European project (EC / ERC) and select the project from suggestions.</hint>
+         <acl>          	          	        	
+           	policy=deny,action=read,grantee-type=user,grantee-id=*
+         </acl>                    
+       </field>
+
+
+	</page>
+	<page number="3">
+		<!-- describe the resource -->
         <field>
           <dc-schema>dc</dc-schema>
           <dc-element>description</dc-element>
@@ -144,30 +209,7 @@
           <required>Please give us a description</required>
         </field>
 
-        <field>
-          <dc-schema>dc</dc-schema>
-          <dc-element>publisher</dc-element>
-          <dc-qualifier></dc-qualifier>
-          <repeatable>true</repeatable>
-          <autocomplete>solr-publisher_ac</autocomplete>
-          <label>Publisher</label>
-          <input-type>onebox</input-type>
-          <hint>Enter the name of the publisher of the previously issued instance of this item, or your home institution. Start typing the publisher and use autocomplete form that will appear if applicable. End your input by pressing ESC if you don't want to use the preselected value.</hint>
-          <required>You must enter the name of the publisher.</required>
-        </field>
 
-<!-- not used and the values entered by users are ambiguous
-        <field>
-          <dc-schema>dc</dc-schema>
-          <dc-element>identifier</dc-element>
-          <dc-qualifier></dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Identifiers</label>
-          <input-type>onebox</input-type>
-          <hint>Unique identifier (e.g. URI).</hint>
-          <required></required>
-        </field>
--->
         <field>
           <dc-schema>dc</dc-schema>
           <dc-element>language</dc-element>
@@ -208,194 +250,17 @@
           <autocomplete>solr-subject_ac</autocomplete>
         </field>
 
+		<field>
+			<dc-schema>local</dc-schema>
+			<dc-element>size</dc-element>
+			<dc-qualifier>info</dc-qualifier>
+			<repetable>true</repetable>
+			<label>Size</label>
+			<input-type complex-definition-ref="sizeInfo">complex</input-type>
+			<type-bind>corpus,languageDescription,lexicalConceptualResource</type-bind>
+			<required>Size is required</required>
+		</field>
 
-        <field>
-          <dc-schema>dc</dc-schema>
-          <dc-element>description</dc-element>
-          <dc-qualifier>sponsorship</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Sponsors</label>
-          <input-type>textarea</input-type>
-          <hint>Enter the names of any sponsors and/or funding codes.</hint>
-          <required></required>
-        </field>
-
-       <field>
-         <dc-schema>dc</dc-schema>
-         <dc-element>relation</dc-element>
-         <dc-qualifier></dc-qualifier>
-         <repeatable>false</repeatable>
-         <label>OpenAIRE Project Identifier</label>
-         <input-type>onebox</input-type>
-         <hint>Start typing the number, name or acronym of the European project (EC / ERC) and select the project from suggestions.</hint>
-         <acl>          	          	        	
-           	policy=deny,action=read,grantee-type=user,grantee-id=*
-         </acl>                    
-       </field>
-
-      </page>
-    </form>
-
-    <form name="one">
-      <page number="1">
-        <field>
-          <dc-schema>dc</dc-schema>
-          <dc-element>contributor</dc-element>
-          <dc-qualifier>author</dc-qualifier>
-          <repeatable>true</repeatable>
-          <label>One: Authors</label>
-          <input-type>name</input-type>
-          <hint>Enter the names of the author(s) of this item.</hint>
-          <required></required>
-        </field>
-      </page>
-    </form>
-  </form-definitions>
-
-
-  <!-- 
-  ====================================================== 
-  UFAL/jmisutka adding 
-    additional can be one or more of
-      - hidenonempty
-      
-      in the current implementation it is not possible  to use
-      all the possibilities of additional and extra attributes e.g.,
-      autocomplete with hidenonempty etc.  
-  -->
-
-  <form-definitions-extra>
-    <form name="traditional">
-      <page number="1">
-
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#IdentificationInfo</dc-element>
-          <dc-qualifier>resourceName</dc-qualifier>
-          <component-label>Provider Information</component-label>
-          <repeatable>false</repeatable>
-          <mapped-to>dc.title</mapped-to>
-          <label>Title</label>
-          <input-type>onebox</input-type>
-          <hint>The name by which the resource is known.</hint>
-          <required>Enter the name of the resource</required>
-          <extra>hidenonempty</extra>
-        </field>
-
-        <!-- This should be automatically assigned, TODO: when? <field> <dc-schema>metashare</dc-schema> 
-          <dc-element>ResourceInfo#IdentificationInfo</dc-element> <dc-qualifier>pid</dc-qualifier> 
-          <repeatable>false</repeatable> <label>ResourceInfo#IdentificationInfo.pid</label> 
-          <input-type>textarea</input-type> <hint>Specification of a persistent identifier 
-          that refers to the resource or tool/service this metadata information describes.</hint> 
-          <required></required> </field> Should be decoded from dc.identifier at export 
-          time. <field> <dc-schema>metashare</dc-schema> <dc-element>ResourceInfo#IdentificationInfo</dc-element> 
-          <dc-qualifier>identifier</dc-qualifier> <repeatable>false</repeatable> <mapped-to>dc.identifier</mapped-to> 
-          <label>Unique identifier</label> <input-type>onebox</input-type> <hint>Unique 
-          identifier (should be assigned automatically).</hint> <required></required> 
-          </field> -->
-
-        <!-- ContactInfo.PersonInfo -->
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#ContactInfo#PersonInfo</dc-element>
-          <dc-qualifier>surname</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Provider's surname</label>
-          <input-type>onebox</input-type>
-          <hint>Surname (family name) of the provider.</hint>
-          <required>Surname is required</required>
-        </field>
-
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#ContactInfo#PersonInfo</dc-element>
-          <dc-qualifier>givenName</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Provider's given name</label>
-          <input-type>onebox</input-type>
-          <hint>Given name of the provider.</hint>
-          <required></required>
-        </field>
-
-        <!-- ContactInfo.PersonInfo.CommunicationInfo not in the new metashare 
-          standard; however, there is OrganizationInfo.CommunicationInfo.email -->
-
-        <!-- ContactInfo.PersonInfo.OrganizationInfo -->
-
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#ContactInfo#PersonInfo#OrganizationInfo</dc-element>
-          <dc-qualifier>organizationName</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Provider's institution name</label>
-          <input-type>onebox</input-type>
-          <hint>Name of the provider's organization (specific group name,
-            research organisation name, institute name e.g "Charles University
-            in Prague, UFAL"). End your input by pressing ESC if you don't want to use the preselected value.</hint>
-          <required></required>
-          <autocomplete>solr-publisher_ac</autocomplete>
-        </field>
-
-        <!-- ContactInfo.PersonInfo.CommunicationInfo -->
-        <!-- OndraK: renamed - "moved" to OrganizationInfo -->
-
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#ContactInfo#PersonInfo#OrganizationInfo#CommunicationInfo</dc-element>
-          <dc-qualifier>email</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Provider's email</label>
-          <input-type>onebox</input-type>
-          <hint>Email address of the provider (person or organisation).</hint>
-          <required>Email is required</required>
-          <regexp>[^@]+@[^\.@]+\.[^@]+</regexp>
-          <regexp-warning>The supplied email does not follow our email pattern ("[^@]+@[^\\.]+\\..+|")</regexp-warning>         
-        </field>
-
-        <!-- VersionInfo -->
-        <!-- OndraK: This has no counterpart in db <field> <dc-schema>metashare</dc-schema> 
-          <dc-element>ResourceInfo#VersionInfo</dc-element> <dc-qualifier>version</dc-qualifier> 
-          <repeatable>false</repeatable> <label>Version</label> <input-type>onebox</input-type> 
-          <hint>Any string (e.g. number) that identifies the version of a metadata 
-          description, a resource or a tool/web service.</hint> <required></required> 
-          </field> -->
-
-
-        <!-- ResourceInfo.VersionInfo not in the new metashare standard -->
-
-
-
-        <!-- ResourceInfo.TextInfo.LanguageInfo.SizeInfo -->
-
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#TextInfo#SizeInfo</dc-element>
-          <dc-qualifier>size</dc-qualifier>
-          <component-label>Data Characteristics</component-label>
-          <repeatable>false</repeatable>
-          <label>Size</label>
-          <type-bind>corpus,languageDescription,lexicalConceptualResource</type-bind>         
-          <input-type>onebox</input-type>
-          <hint>The size of the resource with regard to the Size unit below
-            measurement in form of a number.</hint>
-          <regexp>\d+.?\d*</regexp>
-          <required>Size is required</required>
-        </field>
-
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#TextInfo#SizeInfo</dc-element>
-          <dc-qualifier>sizeUnit</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Size unit</label>
-          <type-bind>corpus,languageDescription,lexicalConceptualResource</type-bind>         
-          <input-type value-pairs-name="metashare_sizeunit">dropdown</input-type>
-          <hint>Specification of the unit of size that is used when
-            specifying the size.</hint>
-          <required>Size unit is required</required>
-        </field>
-        
-                
         <field>
           <dc-schema>metashare</dc-schema>
           <dc-element>ResourceInfo#ContentInfo</dc-element>
@@ -469,29 +334,6 @@
             language dependent or not</hint>
           <required>Please indicate whether the tool is language dependent</required>
         </field>        
-        
-        <!-- Should be always empty! -->
-
-<!-- 
-  ====================================================== 
-    The below metadata fields should *NOT* be required because they are hidden 
-    by default! 
--->
-
-        <!-- ResourceInfo.ValidationInfo -->
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <component-label> </component-label>
-          <dc-element>ResourceInfo#ValidationInfo</dc-element>
-          <dc-qualifier>validated</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Validation status</label>
-          <input-type value-pairs-name="metashare_validation">dropdown</input-type>
-          <hint>Has the resource been validated in some form content and/or format? Select "True" even
-            for partially validated resources.</hint>
-          <required></required>
-          <collapsible>Even More Information</collapsible>
-        </field>
 
         <field>
           <dc-schema>metashare</dc-schema>
@@ -504,144 +346,71 @@
             of samples of the output.</hint>
           <required></required>
         </field>
-
-  <!--
-  ====================================================== 
-  ResourceInfo.ResourceCreationInfo.FundingInfo in new metashare standard 
-    this is represented simply as FundingInfo...
-  -->
-
+        
         <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo</dc-element>
-          <component-label> </component-label>
-          <dc-qualifier>projectName</dc-qualifier>
-          <repeatable>true</repeatable>
-          <repeatable-component>ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo</repeatable-component>
-          <label>Funding project title</label>
-          <input-type>onebox</input-type>
-          <hint>The full title of the funding project that led to the
-            creation of the resource or tool/service.</hint>
-          <required></required>
-        </field>
-
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo</dc-element>
-          <dc-qualifier>fundingType</dc-qualifier>
-          <repeatable>true</repeatable>
-          <repeatable-component>ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo</repeatable-component>
-          <label>Funding type</label>
-          <input-type>onebox</input-type><!-- Todo should be dropbox but the functionality 
-            needs to be slightly changed for that -->
-          <hint>The source of the funding of the data creation - possible
-            values are EU, Own, National, 3rd party.</hint>
-          <required></required>
+        	<dc-schema>dc</dc-schema>
+        	<dc-element>coverage</dc-element>
+        	<dc-qualifier>spatial</dc-qualifier>
+        	<repeatable>true</repeatable>
+        	<label>Country</label>
+        	<input-type>onebox</input-type>
+        	<hint>The country where the resource was created or originated.</hint>
         </field>
         
+        <field>
+        	<dc-schema>local</dc-schema>
+        	<dc-element>genre</dc-element>
+        	<repeatable>true</repeatable>
+        	<label>Genre</label>
+        	<input-type>onebox</input-type>
+        	<hint>???</hint>
+        </field>
+
+      </page>
+    </form>
+
+    <form name="one">
+      <page number="1">
+        <field>
+          <dc-schema>dc</dc-schema>
+          <dc-element>contributor</dc-element>
+          <dc-qualifier>author</dc-qualifier>
+          <repeatable>true</repeatable>
+          <label>One: Authors</label>
+          <input-type>name</input-type>
+          <hint>Enter the names of the author(s) of this item.</hint>
+          <required></required>
+        </field>
+      </page>
+    </form>
+  </form-definitions>
+
+
   <!-- 
-  end funding
   ====================================================== 
+  UFAL/jmisutka adding 
+    additional can be one or more of
+      - hidenonempty
+      
+      in the current implementation it is not possible  to use
+      all the possibilities of additional and extra attributes e.g.,
+      autocomplete with hidenonempty etc.  
   -->
-        
 
-        <!-- ResourceInfo.UsageInfo.ActualUseInfo -->
-
-        <!-- OndraK: This has no counterpart in db <field> <dc-schema>metashare</dc-schema> 
-          <dc-element>ResourceInfo#UsageInfo#ActualUseInfo</dc-element> <dc-qualifier>actualUse</dc-qualifier> 
-          <repeatable>false</repeatable> <label>Used by</label> <input-type value-pairs-name="metashare_usage">dropdown</input-type> 
-          <hint>The application for which it has been used.</hint> <required></required> 
-          </field> -->
-
-
-        <!-- ResourceInfo.MetadataInfo Should be decoded from dc.? at export 
-          time. <field> <dc-schema>metashare</dc-schema> <dc-element>ResourceInfo#MetadataInfo</dc-element> 
-          <dc-qualifier>metadataCreationDate</dc-qualifier> <repeatable>false</repeatable> 
-          <label>MetaData creation time</label> <input-type>date</input-type> <hint>The 
-          date of creation of this metadata description.</hint> <required></required> 
-          </field> -->
-
-        <!-- ResourceInfo.ContentInfo -->
-
+  <form-definitions-extra>
+    <form name="traditional">
+      <page number="1">
         <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#ContentInfo</dc-element>
-          <dc-qualifier>resourceType</dc-qualifier>
+          <dc-schema>local</dc-schema>
+          <dc-element>submission</dc-element>
+          <dc-qualifier>note</dc-qualifier>
           <repeatable>false</repeatable>
-          <mapped-to>dc.type</mapped-to>
-          <label>Resource type</label>
-          <input-type value-pairs-name="common_types">dropdown</input-type>
-          <hint>Type of the resource; "corpus" refers to text, speech and
-            multimodal corpora; "lexicalConceptualResource" includes lexica,
-            ontologies, dictionaries, word lists etc.; "technologyToolService"
-            is used for tools, systems, system components etc.;
-            "languageDescription" covers language models and grammars;
-            "evaluationPackage" is used for datasets &amp; tools used as such
-            for evaluation</hint>
-          <required>Type of the resource.</required>
-          <extra>hidenonempty</extra>
-        </field>
-
-        <!-- MC -->
-        <!-- OndraK: not sure why it was commented... -->
-
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#DistributionInfo#LicenseInfo</dc-element>
-          <dc-qualifier>distributionAccessMedium</dc-qualifier>
-          <component-label> </component-label>
-          <repeatable>true</repeatable>
-          <label>Distribution medium</label>
-          <input-type value-pairs-name="metashare_mediums">dropdown</input-type>
-          <hint>Specifies the format used for the delivery of the resource.</hint>
+          <label>Note</label>
+          <input-type>textarea</input-type>
+          <hint>Leave a note for the editors/reviewers</hint>
           <required></required>
-        </field>
+        </field>      
 
-
-        <!-- ResourceInfo.TextInfo.LingualityInfo -->
-
-        <!-- OndraK: This has no counterpart in db <field> <dc-schema>metashare</dc-schema> 
-          <dc-element>ResourceInfo#TextInfo#LingualityInfo</dc-element> <dc-qualifier>lingualityType</dc-qualifier> 
-          <repeatable>false</repeatable> <label>Linguality type</label> <input-type 
-          value-pairs-name="metashare_lingtype">dropdown</input-type> <hint>Indicates 
-          whether the resource includes one, two ore more languages.</hint> <required></required> 
-          </field> -->
-
-        <!-- ResourceInfo.TextInfo.LanguageInfo <field> <dc-schema>metashare</dc-schema> 
-          <dc-element>ResourceInfo#TextInfo#LanguageInfo</dc-element> <dc-qualifier>languageCoding</dc-qualifier> 
-          <mapped-to>dc.language.iso</mapped-to> <repeatable>false</repeatable> <label>Language 
-          code</label> <input-type>onebox</input-type> <hint>Language code used in 
-          the in the resource or supported by the tool/service.</hint> <required></required> 
-          </field> -->
-
-        <!-- OndraK: This has no counterpart in db <field> <dc-schema>metashare</dc-schema> 
-          <dc-element>ResourceInfo#TextInfo#LanguageInfo#LanguageVarietyInfo</dc-element> 
-          <dc-qualifier>languageVarietyType</dc-qualifier> <repeatable>false</repeatable> 
-          <label>Language type</label> <input-type value-pairs-name="metashare_langtype">dropdown</input-type> 
-          <hint>Type of the language variety.</hint> <required></required> </field> 
-          <field> <dc-schema>metashare</dc-schema> <dc-element>ResourceInfo#TextInfo#LanguageInfo#LanguageVarietyInfo</dc-element> 
-          <dc-qualifier>languageVarietyName</dc-qualifier> <repeatable>false</repeatable> 
-          <label>Language variety name</label> <input-type>onebox</input-type> <hint>Names 
-          of the language varieties that occur in the resource.</hint> <required></required> 
-          </field> -->
-
-
-        <!-- Should be done in export step <field> <dc-schema>metashare</dc-schema> 
-          <dc-element>ResourceInfo#TextInfo#LanguageInfo</dc-element> <dc-qualifier>languageId</dc-qualifier> 
-          <repeatable>false</repeatable> <label>Language ID</label> <input-type>onebox</input-type> 
-          <hint>Should be a value from IETF BCP47.</hint> <required></required> </field> 
-          <field> <dc-schema>metashare</dc-schema> <dc-element>ResourceInfo#TextInfo#LanguageInfo</dc-element> 
-          <dc-qualifier>languageName</dc-qualifier> <repeatable>false</repeatable> 
-          <label>Language name</label> <input-type>onebox</input-type> <hint>A human 
-          understandable name of the language that is used in the resource or supported 
-          by the tool/service.</hint> <required></required> </field> -->
-
-        <!-- ok: not in v2 <field> <dc-schema>metashare</dc-schema> <dc-element>ResourceInfo#TextInfo#SizeInfo</dc-element> 
-          <dc-qualifier>sizeUnitMultiplier</dc-qualifier> <repeatable>false</repeatable> 
-          <label>Size unit multiplier</label> <input-type value-pairs-name="metashare_sizeunitmult">dropdown</input-type> 
-          <hint>Size unit will be multiplied by the value of this item to get the result.</hint> 
-          <required></required> </field> -->
-          
         <!-- DC.Relation.Replaces -->
         <field>
           <dc-schema>dc</dc-schema>
@@ -695,19 +464,6 @@
           </acl>                    
         </field>        
 
-      </page>
-      
-      <page number="2">
-        <field>
-          <dc-schema>local</dc-schema>
-          <dc-element>submission</dc-element>
-          <dc-qualifier>note</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Note</label>
-          <input-type>textarea</input-type>
-          <hint>Leave a note for the editors/reviewers</hint>
-          <required></required>
-        </field>      
       </page>
     </form>
   </form-definitions-extra>
@@ -787,108 +543,6 @@
       <stored-value></stored-value> </pair> </value-pairs> -->
 
     <!-- the dc-term is taken from the new standard -->
-    <value-pairs value-pairs-name="metashare_availability"
-      dc-term="accessRights">
-      <pair>
-        <displayed-value>N/A</displayed-value>
-        <stored-value>notAvailable</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>Unrestricted</displayed-value>
-        <stored-value>unrestrictedUse</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>Restricted</displayed-value>
-        <stored-value>restrictedUse</stored-value>
-      </pair>
-    </value-pairs>
-
-    <!-- taken from the metashare standard -->
-    <value-pairs value-pairs-name="metashare_licensing"
-      dc-term="">
-      <pair>
-        <displayed-value>N/A</displayed-value>
-        <stored-value></stored-value>
-      </pair>
-      <pair>
-        <displayed-value>GNU</displayed-value>
-        <stored-value>GNU</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>CC</displayed-value>
-        <stored-value>CC</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>Own</displayed-value>
-        <stored-value>own</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>ELRA end user</displayed-value>
-        <stored-value>ELRA_END_USER</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>ELRA var</displayed-value>
-        <stored-value>ELRA_VAR</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>ELRA evaluation</displayed-value>
-        <stored-value>ELRA_EVALUATION</stored-value>
-      </pair>
-    </value-pairs>
-
-    <!-- taken from the metashare standard -->
-    <value-pairs value-pairs-name="metashare_restrictions"
-      dc-term="">
-      <pair>
-        <displayed-value>N/A</displayed-value>
-        <stored-value></stored-value>
-      </pair>
-      <pair>
-        <displayed-value>Inform Licensor</displayed-value>
-        <stored-value>informLicensor</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>Redeposit</displayed-value>
-        <stored-value>redeposit</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>Only MS members</displayed-value>
-        <stored-value>onlyMSmembers</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>academic-nonCommercialUse</displayed-value>
-        <stored-value>academic-nonCommercialUse</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>Evaluation Use</displayed-value>
-        <stored-value>evaluationUse</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>Commercial Use</displayed-value>
-        <stored-value>commercialUse</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>Attribution</displayed-value>
-        <stored-value>attribution</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>Share Alike</displayed-value>
-        <stored-value>shareAlike</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>No Derivatives</displayed-value>
-        <stored-value>noDerivatives</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>No Redistribution</displayed-value>
-        <stored-value>noRedistribution</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>other</displayed-value>
-        <stored-value>other</stored-value>
-      </pair>
-    </value-pairs>
-
     <!-- taken from the metashare standard -->
     <value-pairs value-pairs-name="metashare_mediums" dc-term="">
       <pair>
@@ -949,22 +603,6 @@
         <stored-value>False</stored-value>
       </pair>
     </value-pairs>
-
-    <!-- taken from the metashare standard <value-pairs value-pairs-name="metashare_lingtype" 
-      dc-term=""> <pair> <displayed-value>N/A</displayed-value> <stored-value></stored-value> 
-      </pair> <pair> <displayed-value>Monolingual</displayed-value> <stored-value>monolingual</stored-value> 
-      </pair> <pair> <displayed-value>Bilingual</displayed-value> <stored-value>bilingual</stored-value> 
-      </pair> <pair> <displayed-value>Multilingual</displayed-value> <stored-value>multilingual</stored-value> 
-      </pair> </value-pairs> -->
-
-    <!-- taken from the metashare standard <value-pairs value-pairs-name="metashare_langtype" 
-      dc-term=""> <pair> <displayed-value>N/A</displayed-value> <stored-value></stored-value> 
-      </pair> <pair> <displayed-value>Other</displayed-value> <stored-value>other</stored-value> 
-      </pair> <pair> <displayed-value>Dialect</displayed-value> <stored-value>dialect</stored-value> 
-      </pair> <pair> <displayed-value>Jargon</displayed-value> <stored-value>jargon</stored-value> 
-      </pair> </value-pairs> -->
-
-
 
     <!-- used for media types -->
     <value-pairs value-pairs-name="metashare_media_corpus_lcr"
@@ -1135,23 +773,6 @@
       <pair>
         <displayed-value>other</displayed-value>
         <stored-value>Other</stored-value>
-      </pair>
-    </value-pairs>
-
-    <!-- taken from the metashare standard -->
-    <value-pairs value-pairs-name="metashare_usage" dc-term="">
-      <pair>
-        <displayed-value>N/A</displayed-value>
-        <stored-value></stored-value>
-      </pair>
-
-      <pair>
-        <displayed-value>Human use</displayed-value>
-        <stored-value>humanUse</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>NLP applications</displayed-value>
-        <stored-value>nlpApplications</stored-value>
       </pair>
     </value-pairs>
 
@@ -1379,35 +1000,30 @@
         <stored-value>false</stored-value>
       </pair>
     </value-pairs>
-    <!-- taken from the metashare standard -->
-    <value-pairs value-pairs-name="metashare_sizeunitmult"
-      dc-term="">
-      <pair>
-        <displayed-value>N/A</displayed-value>
-        <stored-value></stored-value>
-      </pair>
-      <pair>
-        <displayed-value>unit</displayed-value>
-        <stored-value>unit</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>hundred</displayed-value>
-        <stored-value>hundred</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>kilo</displayed-value>
-        <stored-value>kilo</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>mega</displayed-value>
-        <stored-value>mega</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>tera</displayed-value>
-        <stored-value>tera</stored-value>
-      </pair>
-    </value-pairs>
 
   </form-value-pairs>
+
+  <form-complex-definitions>
+  <!-- currently only text and dropbox -->
+  	<definition name="contact_person">
+  		<input name="1_givenname" type="text" label="Provider's given name"/>
+  		<input name="2_surname" type="text" label="Provider's surname" help="Family name"/>
+  		<input name="3_email" type="text" label="Provider's email" regexp="[^@]+@[^\.@]+\.[^@]+"/>
+  		<input name="4_affiliation" type="text" label="Provider's institution name" autocomplete="solr-publisher_ac"/>
+  	</definition>
+
+  	<definition name="funding">
+  		<input name="1_orgname" type="text" label="Funding organization"/>
+  		<input name="2_code" type="text" label="Grant no. or funding project code"/>
+  		<input name="3_projname" type="text" label="Funding project name"/>
+  		<input name="4_type" type="dropdown" label="Funding type" pairs="metashare_funding"/>
+  	</definition>
+  	
+  <definition name="sizeInfo">
+  		<input name="1_size" type="text" regexp="\d+.?\d*"/>
+  		<input name="2_unit" type="dropdown" pairs="metashare_sizeunit" label="Unit"/>
+  </definition>
+  </form-complex-definitions>
+  
 
 </input-forms>
