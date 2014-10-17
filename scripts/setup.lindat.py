@@ -28,6 +28,7 @@ _settings = {
                    ".name",
                    ".id",
                    ".password",
+                   "lr.harvestable.assetstore",
         ),
     },
 

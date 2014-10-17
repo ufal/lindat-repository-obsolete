@@ -643,17 +643,19 @@ public class ShibAuthentication implements AuthenticationMethod
          * Register User in the UFAL license database
          *
          */
-        //if no email the registration is postponed after entering and confirming mail
+        //if no email the registration is postponed after entering and confirming mail        
         if(email != null){
-            try{
-                cz.cuni.mff.ufal.DSpaceApi.getFunctionalityManager().registerUser(
+        	functionalityManger.openSession();
+            try{            	
+            	functionalityManger.registerUser(
                         eperson.getID(), eperson.getEmail(), org, true);
                 eperson.setCanLogIn(false);
                 eperson.update();
             }catch(Exception e){
                 throw new AuthorizeException("User has not been added among registred users!") ;
             }
-        }
+            functionalityManger.closeSession();
+        }                
 
         /* </UFAL> */
 
@@ -990,3 +992,4 @@ public class ShibAuthentication implements AuthenticationMethod
     }
 
 }
+
