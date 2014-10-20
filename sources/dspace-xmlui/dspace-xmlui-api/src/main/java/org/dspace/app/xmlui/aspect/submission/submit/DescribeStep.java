@@ -489,14 +489,14 @@ public class DescribeStep extends AbstractSubmissionStep
                         else
                         {
                         	if(inputType.equals("complex")){
-                        		String[] fieldValues = displayValue.split(DCInput.ComplexDefinition.SEPARATOR);
-                        		describeSection.addItem();
+                        		displayValue = StringUtils.join(displayValue.split(DCInput.ComplexDefinition.SEPARATOR),";");
+                        		/*describeSection.addItem();
                         		for(String fVal : fieldValues){
-                        			describeSection.addItem(null, "label label-default").addContent(fVal);
-                        		}
-                        	} else{                        	
+                        			describeSection.addItem().addHighlight("label label-default").addContent(fVal);
+                        		}*/
+                        	} //else{                        	
                         		describeSection.addItem(displayValue);
-                        	}
+                        	//}
                         }
                     }
                 } // For each DCValue
