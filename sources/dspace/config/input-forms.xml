@@ -258,6 +258,7 @@
 			<label>Size</label>
 			<input-type complex-definition-ref="sizeInfo">complex</input-type>
 			<type-bind>corpus,languageDescription,lexicalConceptualResource</type-bind>
+			<hint>You can state the extent of the submitted data, eg. the number of tokens.</hint>
 		</field>
 
         <!-- Help field... different values based on resource type -->
