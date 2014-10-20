@@ -83,7 +83,7 @@ public class ItemUtil {
 			// mind the order in input forms, org;code;projname;type
 			Element[] elements = { organization, code, projName, fundsType };
 			for (int i = 0; i < values.length; i++) {
-				elements[i].setNodeValue(values[i]);
+				elements[i].appendChild(doc.createTextNode(values[i]));
 				el.appendChild(elements[i]);
 			}
 			return doc.getDocumentElement();
@@ -112,7 +112,7 @@ public class ItemUtil {
 
 			Element[] elements = { first, last, email, affil };
 			for (int i = 0; i < values.length; i++) {
-				elements[i].setNodeValue(values[i]);
+				elements[i].appendChild(doc.createTextNode(values[i]));
 				el.appendChild(elements[i]);
 			}
 			return doc.getDocumentElement();
@@ -139,7 +139,7 @@ public class ItemUtil {
 
 			Element[] elements = {size, unit};
 			for (int i = 0; i < values.length; i++) {
-				elements[i].setNodeValue(values[i]);
+				elements[i].appendChild(doc.createTextNode(values[i]));
 				el.appendChild(elements[i]);
 			}
 			return doc.getDocumentElement();
@@ -163,10 +163,11 @@ public class ItemUtil {
 			String[] values = mdValue
 					.split(",",2);
 
-			last.setNodeValue(values[0]);
+			last.appendChild(doc.createTextNode(values[0]));
 			el.appendChild(last);
 			if(values.length>1){
                 Element first = doc.createElementNS(ns, "firstName");
+                first.appendChild(doc.createTextNode(values[1]));
                 el.appendChild(first);
 			}
 			return doc.getDocumentElement();
