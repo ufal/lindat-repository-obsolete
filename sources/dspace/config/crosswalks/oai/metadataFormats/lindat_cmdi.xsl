@@ -242,7 +242,7 @@
 		<cmd:licenseInfo>
 			<xsl:for-each select="doc:metadata/doc:element[@name='dc']/doc:element[@name='rights']/doc:element[@name='uri']/doc:element/doc:field[@name='value']">
 				<cmd:license>
-					<cmd:uri><xsl:value-of select="doc:metadata/doc:element[@name='dc']/doc:element[@name='rights']/doc:element[@name='uri']/doc:element/doc:field[@name='value']"/></cmd:uri>
+					<cmd:uri><xsl:value-of select="."/></cmd:uri>
 				</cmd:license>
 			</xsl:for-each>
 		</cmd:licenseInfo>
