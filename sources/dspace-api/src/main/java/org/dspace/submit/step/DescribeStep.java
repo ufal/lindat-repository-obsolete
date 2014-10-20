@@ -87,6 +87,10 @@ public class DescribeStep extends AbstractProcessingStep
     // there were required fields that were not filled out
     public static final int STATUS_MISSING_REQUIRED_FIELDS = 2;
     
+    public static final int STATUS_REGEX_ERROR = 3;
+
+    private static final String REGEX_ERROR_ATTRIBUTE = "dspace.submit.regex_error";
+    
     // the metadata language qualifier
     public static final String LANGUAGE_QUALIFIER = getDefaultLanguageQualifier();
     
@@ -341,6 +345,14 @@ public class DescribeStep extends AbstractProcessingStep
                     // since this field is missing add to list of error fields
                     addErrorField(request, getFieldName(inputs[i]));
                 }
+                
+                // Check whether the value matches given regexp
+                //TODO: use regexp handling that was created for complex fields see addRegexError
+                for(DCValue dcval:values){
+                    if(!inputs[i].isAllowedValue(dcval.value)){
+                        addErrorField(request, getFieldName(inputs[i]));
+                    }
+                }         
             }
         }
 
@@ -355,6 +367,9 @@ public class DescribeStep extends AbstractProcessingStep
         if (moreInput)
         {
             return STATUS_MORE_INPUT_REQUESTED;
+        }
+        else if(getBrokenValues(request) != null && getBrokenValues(request).size() > 0){
+        	return STATUS_REGEX_ERROR;
         }
         // if one or more fields errored out, return
         else if (getErrorFields(request) != null && getErrorFields(request).size() > 0)
@@ -403,6 +418,7 @@ public class DescribeStep extends AbstractProcessingStep
         }
 
 
+        boolean error = false;
         //for all values
         for(int i = 0; i < valuesPerField; i++){
         	StringBuilder complexValue = new StringBuilder();
@@ -422,8 +438,8 @@ public class DescribeStep extends AbstractProcessingStep
         			++emptyFields;
         		}
                 String regex = definition.getInput(name).get("regexp");
-                if(!DCInput.isAllowedValue(value, regex)){
-                	addErrorField(request, name);
+                if(!value.isEmpty() && !DCInput.isAllowedValue(value, regex)){
+                	error = true;
                 }
         		complexValue.append(separator).append(value);
         		//non empty separator for the remaining iterations;
@@ -433,11 +449,13 @@ public class DescribeStep extends AbstractProcessingStep
         	//this checks whether one of the fields was empty
         	String finalValue = complexValue.toString();
         	if( emptyFields > 0 && emptyFields < definition.inputsCount()){
-        		addErrorField(request, metadataField);
+        		error = true;
         	}
-        	
-        	//if something was filled keep it (the submission might be continued at a later time)
-        	if(emptyFields < definition.inputsCount()){
+        	if(error){
+        		//incomplete as regex errors
+        		addRegexError(request,metadataField,finalValue);
+        	}else if(emptyFields != definition.inputsCount()){
+        		//add the final value only if it is not empty
         		item.addMetadata(schema, element, qualifier, null, finalValue);
         	}
         }
@@ -1181,6 +1199,39 @@ public class DescribeStep extends AbstractProcessingStep
                     string_list.add(i, splits[j].trim() );
                 }
             }
+        }
+    }
+    
+    public static final List<String> getBrokenValues(HttpServletRequest request){
+        return (List<String>) request.getAttribute(REGEX_ERROR_ATTRIBUTE);
+    }
+    
+    protected static final void addRegexError(HttpServletRequest request, String fieldName, String value)
+    {
+        //get current list
+        List<String> errorFields = getBrokenValues(request);
+        
+        if (errorFields == null)
+        {
+            errorFields = new ArrayList<String>();
+        }
+
+        //add this field
+        errorFields.add(fieldName);
+        errorFields.add(value);
+        
+        //save updated list
+        setRegexError(request, errorFields);
+    }
+    private static final void setRegexError(HttpServletRequest request, List<String> errorFields)
+    {
+        if(errorFields==null)
+        {
+            request.removeAttribute(REGEX_ERROR_ATTRIBUTE);
+        }
+        else
+        {
+            request.setAttribute(REGEX_ERROR_ATTRIBUTE, errorFields);
         }
     }
 }

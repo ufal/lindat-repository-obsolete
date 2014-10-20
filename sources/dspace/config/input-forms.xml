@@ -254,37 +254,11 @@
 			<dc-schema>local</dc-schema>
 			<dc-element>size</dc-element>
 			<dc-qualifier>info</dc-qualifier>
-			<repetable>true</repetable>
+			<repeatable>true</repeatable>
 			<label>Size</label>
 			<input-type complex-definition-ref="sizeInfo">complex</input-type>
 			<type-bind>corpus,languageDescription,lexicalConceptualResource</type-bind>
-			<required>Size is required</required>
 		</field>
-
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#ContentInfo</dc-element>
-          <dc-qualifier>mediaType</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Media type</label>
-          <type-bind>corpus,lexicalConceptualResource</type-bind>
-          <input-type value-pairs-name="metashare_media_corpus_lcr">dropdown</input-type>
-          <hint>Media type of the main content of the item e.g., "text" for
-            textual corpora or "audio" for audio recordings.</hint>
-          <required>Media type is required</required>
-        </field>
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#ContentInfo</dc-element>
-          <dc-qualifier>mediaType</dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Media type</label>
-          <type-bind>languageDescription</type-bind>
-          <input-type value-pairs-name="metashare_media_ld">dropdown</input-type>
-          <hint>Media type of the main content of the item e.g., "text" for
-            textual corpora or "audio" for audio recordings.</hint>
-          <required>Media type is required</required>
-        </field>
 
         <!-- Help field... different values based on resource type -->
         <field>
@@ -345,25 +319,6 @@
           <hint>A url with samples of the resource or, in the case of tools,
             of samples of the output.</hint>
           <required></required>
-        </field>
-        
-        <field>
-        	<dc-schema>dc</dc-schema>
-        	<dc-element>coverage</dc-element>
-        	<dc-qualifier>spatial</dc-qualifier>
-        	<repeatable>true</repeatable>
-        	<label>Country</label>
-        	<input-type>onebox</input-type>
-        	<hint>The country where the resource was created or originated.</hint>
-        </field>
-        
-        <field>
-        	<dc-schema>local</dc-schema>
-        	<dc-element>genre</dc-element>
-        	<repeatable>true</repeatable>
-        	<label>Genre</label>
-        	<input-type>onebox</input-type>
-        	<hint>???</hint>
         </field>
 
       </page>
@@ -601,51 +556,6 @@
       <pair>
         <displayed-value>False</displayed-value>
         <stored-value>False</stored-value>
-      </pair>
-    </value-pairs>
-
-    <!-- used for media types -->
-    <value-pairs value-pairs-name="metashare_media_corpus_lcr"
-      dc-term="">
-      <pair>
-        <displayed-value>N/A</displayed-value>
-        <stored-value></stored-value>
-      </pair>
-      <pair>
-        <displayed-value>text</displayed-value>
-        <stored-value>text</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>audio</displayed-value>
-        <stored-value>audio</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>video</displayed-value>
-        <stored-value>video</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>image</displayed-value>
-        <stored-value>image</stored-value>
-      </pair>
-    </value-pairs>
-
-    <value-pairs value-pairs-name="metashare_media_ld"
-      dc-term="">
-      <pair>
-        <displayed-value>N/A</displayed-value>
-        <stored-value></stored-value>
-      </pair>
-      <pair>
-        <displayed-value>text</displayed-value>
-        <stored-value>text</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>video</displayed-value>
-        <stored-value>video</stored-value>
-      </pair>
-      <pair>
-        <displayed-value>image</displayed-value>
-        <stored-value>image</stored-value>
       </pair>
     </value-pairs>
 

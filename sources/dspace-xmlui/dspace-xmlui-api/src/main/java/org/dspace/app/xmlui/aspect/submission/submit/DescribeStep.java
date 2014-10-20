@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +19,9 @@ import java.util.SortedMap;
 
 import javax.servlet.ServletException;
 
+import org.apache.avalon.framework.parameters.Parameters;
+import org.apache.cocoon.ProcessingException;
+import org.apache.cocoon.environment.SourceResolver;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dspace.app.util.DCInput;
@@ -110,6 +114,7 @@ public class DescribeStep extends AbstractSubmissionStep
      */
     protected static DCInputsReader INPUTS_READER = null;
     private static final Message T_vocabulary_link = message("xmlui.Submission.submit.DescribeStep.controlledvocabulary.link");
+    private java.util.Map<String,String> regexError = null;
     
     /**
      * Ensure that the inputs reader has been initialized, this method may be
@@ -170,6 +175,14 @@ public class DescribeStep extends AbstractSubmissionStep
                 {
                     throw new ServletException(e);
                 }
+        }
+        
+        public void setup(SourceResolver resolver, Map objectModel, String src, Parameters parameters)
+        		throws ProcessingException, SAXException, IOException
+        {
+        	super.setup(resolver, objectModel, src, parameters);
+			this.regexError = getRegexError(parameters);
+        	
         }
         
         public void addPageMeta(PageMeta pageMeta) throws SAXException, WingException,
@@ -475,7 +488,15 @@ public class DescribeStep extends AbstractSubmissionStep
                         }
                         else
                         {
-                            describeSection.addItem(displayValue);
+                        	if(inputType.equals("complex")){
+                        		String[] fieldValues = displayValue.split(DCInput.ComplexDefinition.SEPARATOR);
+                        		describeSection.addItem();
+                        		for(String fVal : fieldValues){
+                        			describeSection.addItem(null, "label label-default").addContent(fVal);
+                        		}
+                        	} else{                        	
+                        		describeSection.addItem(displayValue);
+                        	}
                         }
                     }
                 } // For each DCValue
@@ -1306,29 +1327,15 @@ public class DescribeStep extends AbstractSubmissionStep
                         }
 
                         // Setup the field's values
-                        if (dcInput.isRepeatable() || dcValues.length > 1) {
-                                for (DCValue dcValue : dcValues) {
-                                        java.util.List<String> values = split(dcValue.value);
-                                        if (StringUtils.splitByWholeSeparator(dcValue.value,
-                                                        DCInput.ComplexDefinition.SEPARATOR).length == definition
-                                                        .inputsCount()) {
-                                                // this is a complete field, proceed with another instance
-                                        		//unless there are invalid values
-                                        		boolean validValues = fill(fields,values,true,definition,fieldName);
-                                        		if(validValues){
-                                        			composite.addInstance().setValue(StringUtils.join(values.iterator(), "||"));
-                                        		} else{
-                                        			break;
-                                        		}
-                                        } else {
-                                                // partially fill the form
-                                        		fill(fields,values,false,definition,fieldName);
-                                        		break;
-                                        }
-                                }
-                        } else if (dcValues.length == 1) {
-                                // fill the values into the form, no extra instances
-                                java.util.List<String> values = split(dcValues[0].value);
+                        for (DCValue dcValue : dcValues) {
+                                java.util.List<String> values = split(dcValue.value);
+                                fill(fields,values,true,definition,fieldName);
+                                composite.addInstance().setValue(StringUtils.join(values.iterator(), ";"));
+                        }
+
+                         if(regexError.containsKey(fieldName)) {
+                                // partially fill the form
+                        	 	java.util.List<String> values = split(regexError.get(fieldName));
                                 fill(fields,values,false,definition,fieldName);
                         }
 
@@ -1338,7 +1345,7 @@ public class DescribeStep extends AbstractSubmissionStep
                         if (dcInput.isRequired()) {
                                 composite.setRequired();
                         }
-                        if (isFieldInError(fieldName)) {
+                        if (isFieldInError(fieldName) || regexError.containsKey(fieldName)) {
                                 if (dcInput.getWarning() != null
                                                 && dcInput.getWarning().length() > 0) {
                                         composite.addError(dcInput.getWarning());
@@ -1362,21 +1369,8 @@ public class DescribeStep extends AbstractSubmissionStep
 
         }
         
-        private boolean fill(java.util.List<Field> fields,
+		private void fill(java.util.List<Field> fields,
 				java.util.List<String> values, boolean addInstances, ComplexDefinition definition, String fieldName) throws WingException {
-        		boolean noErrors = true;
-        		//check for regex errors
-                for (int i = 0; i < fields.size(); i++) {
-                        Field field = fields.get(i);
-                        String inputName = StringUtils.difference(fieldName+"_", field.getName());
-                        if(isFieldInError(inputName)){
-                        	String regex = definition.getInput(inputName).get("regexp");
-                        	field.addError(String.format("The field doesn't match the required regular expression (format) \"%s\"",regex));
-                        	noErrors = false;
-                        	//keep the value in the form
-                        	addInstances = false;
-                        }
-                }
                 //fill the form
                 for (int i = 0; i < fields.size(); i++) {
                         Field field = fields.get(i);
@@ -1390,10 +1384,16 @@ public class DescribeStep extends AbstractSubmissionStep
                                         instance.setValue(value);
                                 }
                         } else{
+                        	//currently with error only
                                 field.setValue(value);
+                                String inputName = StringUtils.difference(fieldName+"_", field.getName());
+                                String regex = definition.getInput(inputName).get("regexp");
+                                if(!DCInput.isAllowedValue(value, regex)){
+                                	//attach the regex error to the right field
+                                	field.addError(String.format("The field doesn't match the required regular expression (format) \"%s\"",regex));
+                                }
                         }
                 }
-                return noErrors;
 		}
 
 		private java.util.List<String> split(String value) {
@@ -1677,4 +1677,22 @@ public class DescribeStep extends AbstractSubmissionStep
             return true;
         }
         
+    	public Map<String, String> getRegexError(Parameters parameters)
+    	{
+    		java.util.Map<String,String> fields = new HashMap<String,String>();
+    		
+    		String errors = parameters.getParameter("regex_error","");
+    		
+    		if (errors!=null && errors.length() > 0)
+    		{	
+    			String[] fvs = errors.split(",");
+    			for(int i=0; i<fvs.length; i+=2){
+    				String field = fvs[i];
+    				String value = fvs[i+1];
+    				fields.put(field, value);
+    			}
+    		}
+    		
+    		return fields;
+    	}
 }
