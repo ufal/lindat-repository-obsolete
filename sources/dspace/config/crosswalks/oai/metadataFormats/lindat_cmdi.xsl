@@ -163,10 +163,7 @@
 			</cmd:titles>
 			<cmd:authors>
 				<xsl:for-each select="doc:metadata/doc:element[@name='dc']/doc:element[@name='contributor']/doc:element[@name='author']/doc:element/doc:field[@name='value']">
-					<cmd:author>
-						<cmd:firstName><xsl:value-of select="substring-after(.,',')"/></cmd:firstName>
-						<cmd:lastName><xsl:value-of select="substring-before(.,',')"/></cmd:lastName>
-					</cmd:author>
+					<xsl:copy-of select="itemUtil:getAuthor(.)"/>
 				</xsl:for-each>
 			</cmd:authors>
 			<cmd:dates>

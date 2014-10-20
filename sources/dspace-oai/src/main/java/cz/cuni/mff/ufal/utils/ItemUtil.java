@@ -71,7 +71,7 @@ public class ItemUtil {
 			builder = factory.newDocumentBuilder();
 			Document doc = builder.newDocument();
 			Element el = doc.createElementNS(ns, "funding");
-			doc.getDocumentElement().appendChild(el);
+			doc.appendChild(el);
 			Element organization = doc.createElementNS(ns, "organization");
 			Element projName = doc.createElementNS(ns, "projectName");
 			Element code = doc.createElementNS(ns, "code");
@@ -101,7 +101,7 @@ public class ItemUtil {
 			builder = factory.newDocumentBuilder();
 			Document doc = builder.newDocument();
 			Element el = doc.createElementNS(ns, "contactPerson");
-			doc.getDocumentElement().appendChild(el);
+			doc.appendChild(el);
 			Element first = doc.createElementNS(ns, "firstName");
 			Element last = doc.createElementNS(ns, "lastName");
 			Element email = doc.createElementNS(ns, "email");
@@ -110,7 +110,6 @@ public class ItemUtil {
 			String[] values = mdValue
 					.split(DCInput.ComplexDefinition.SEPARATOR);
 
-			// mind the order in input forms, org;code;projname;type
 			Element[] elements = { first, last, email, affil };
 			for (int i = 0; i < values.length; i++) {
 				elements[i].setNodeValue(values[i]);
@@ -131,18 +130,44 @@ public class ItemUtil {
 			builder = factory.newDocumentBuilder();
 			Document doc = builder.newDocument();
 			Element el = doc.createElementNS(ns, "size");
-			doc.getDocumentElement().appendChild(el);
+			doc.appendChild(el);
 			Element size = doc.createElementNS(ns, "size");
 			Element unit = doc.createElementNS(ns, "unit");
 
 			String[] values = mdValue
 					.split(DCInput.ComplexDefinition.SEPARATOR);
 
-			// mind the order in input forms, org;code;projname;type
 			Element[] elements = {size, unit};
 			for (int i = 0; i < values.length; i++) {
 				elements[i].setNodeValue(values[i]);
 				el.appendChild(elements[i]);
+			}
+			return doc.getDocumentElement();
+		} catch (ParserConfigurationException e) {
+			return null;
+		}
+	}
+
+	public static Node getAuthor(String mdValue){
+		String ns = "http://www.clarin.eu/cmd/";
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setNamespaceAware(true);
+		DocumentBuilder builder;
+		try {
+			builder = factory.newDocumentBuilder();
+			Document doc = builder.newDocument();
+			Element el = doc.createElementNS(ns, "author");
+			doc.appendChild(el);
+			Element last = doc.createElementNS(ns, "lastName");
+
+			String[] values = mdValue
+					.split(",",2);
+
+			last.setNodeValue(values[0]);
+			el.appendChild(last);
+			if(values.length>1){
+                Element first = doc.createElementNS(ns, "firstName");
+                el.appendChild(first);
 			}
 			return doc.getDocumentElement();
 		} catch (ParserConfigurationException e) {
