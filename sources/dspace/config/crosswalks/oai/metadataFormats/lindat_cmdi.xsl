@@ -157,7 +157,7 @@
 			</xsl:if>
 			<cmd:titles>
 				<cmd:title>
-					<xsl:attribute name="xml:lang">eng</xsl:attribute>
+					<xsl:attribute name="xml:lang">en</xsl:attribute>
 					<xsl:value-of select="doc:metadata/doc:element[@name='dc']/doc:element[@name='title']/doc:element/doc:field[@name='value']"/>
 				</cmd:title>
 			</cmd:titles>
