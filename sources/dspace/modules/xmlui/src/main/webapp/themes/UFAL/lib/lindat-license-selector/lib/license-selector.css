@@ -47,10 +47,22 @@
   cursor: not-allowed;
 }
 
+.ls-license-name {
+  display: block;
+}
+
 .ls-history {
   height: 20px;
   line-height: 20px;
   margin-bottom: 15px;
+}
+
+.ls-history > button {
+  margin: 0 2px;
+}
+
+.ls-history > button:first-child {
+  margin: 0 2px 0 0;
 }
 
 .license-selector .ls-restart, .license-selector .ls-history-next, .license-selector .ls-history-prev {
@@ -129,7 +141,8 @@
   border-radius: 4px;
 }
 
-.ls-question-error h4 {
+.ls-question-error h4, .ls-not-found h4 {
+  color: #a94442;
   font-weight: bold;
   margin: 5px 0 5px 0;
 }
@@ -178,6 +191,7 @@
   border-radius: 4px;
   padding: 5px 10px;
   margin: 5px 0;
+  cursor: pointer;
 }
 
 .ls-license-list h4 {
@@ -192,7 +206,7 @@
   color: #777;
 }
 
-.ls-license-list li button {
+.ls-license-list li button, .ls-license-list li .ls-button {
   display: none;
   padding: 1px 5px;
   font-size: 12px;
@@ -201,7 +215,7 @@
   vertical-align: middle;
 }
 
-.ls-license-list li:hover button, .ls-license-list li.ls-active button {
+.ls-license-list li:hover button, .ls-license-list li.ls-active button, .ls-license-list li:hover .ls-button, .ls-license-list li.ls-active .ls-button {
   display: inline-block;
 }
 
