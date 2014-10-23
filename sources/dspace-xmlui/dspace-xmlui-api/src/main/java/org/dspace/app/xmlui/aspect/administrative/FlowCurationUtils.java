@@ -187,8 +187,10 @@ public class FlowCurationUtils
     }
     
     public static FlowResult processRunAll(Context context, Request request){
-    	//String objHandle = request.getParameter("identifier");
-    	String objHandle = Site.getSiteHandle();
+    	String objHandle = request.getParameter("identifier");
+    	if (objHandle == null || objHandle.equals("")) {
+    		objHandle = Site.getSiteHandle();	
+    	}    	
     	setupCurationTasks();
         Curator curator = new Curator();
         List<String> taskNames = new ArrayList<String>();
