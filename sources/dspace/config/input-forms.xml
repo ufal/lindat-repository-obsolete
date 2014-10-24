@@ -261,6 +261,31 @@
 			<hint>You can state the extent of the submitted data, eg. the number of tokens.</hint>
 		</field>
 
+        <field>
+          <dc-schema>metashare</dc-schema>
+          <dc-element>ResourceInfo#ContentInfo</dc-element>
+          <dc-qualifier>mediaType</dc-qualifier>
+          <repeatable>false</repeatable>
+          <label>Media type</label>
+          <type-bind>corpus,lexicalConceptualResource</type-bind>
+          <input-type value-pairs-name="metashare_media_corpus_lcr">dropdown</input-type>
+          <hint>Media type of the main content of the item e.g., "text" for
+            textual corpora or "audio" for audio recordings.</hint>
+          <required>Media type is required</required>
+        </field>
+        <field>
+          <dc-schema>metashare</dc-schema>
+          <dc-element>ResourceInfo#ContentInfo</dc-element>
+          <dc-qualifier>mediaType</dc-qualifier>
+          <repeatable>false</repeatable>
+          <label>Media type</label>
+          <type-bind>languageDescription</type-bind>
+          <input-type value-pairs-name="metashare_media_ld">dropdown</input-type>
+          <hint>Media type of the main content of the item e.g., "text" for
+            textual corpora or "audio" for audio recordings.</hint>
+          <required>Media type is required</required>
+        </field>
+
         <!-- Help field... different values based on resource type -->
         <field>
           <dc-schema>metashare</dc-schema>
@@ -557,6 +582,51 @@
       <pair>
         <displayed-value>False</displayed-value>
         <stored-value>False</stored-value>
+      </pair>
+    </value-pairs>
+
+    <!-- used for media types -->
+    <value-pairs value-pairs-name="metashare_media_corpus_lcr"
+      dc-term="">
+      <pair>
+        <displayed-value>N/A</displayed-value>
+        <stored-value></stored-value>
+      </pair>
+      <pair>
+        <displayed-value>text</displayed-value>
+        <stored-value>text</stored-value>
+      </pair>
+      <pair>
+        <displayed-value>audio</displayed-value>
+        <stored-value>audio</stored-value>
+      </pair>
+      <pair>
+        <displayed-value>video</displayed-value>
+        <stored-value>video</stored-value>
+      </pair>
+      <pair>
+        <displayed-value>image</displayed-value>
+        <stored-value>image</stored-value>
+      </pair>
+    </value-pairs>
+
+    <value-pairs value-pairs-name="metashare_media_ld"
+      dc-term="">
+      <pair>
+        <displayed-value>N/A</displayed-value>
+        <stored-value></stored-value>
+      </pair>
+      <pair>
+        <displayed-value>text</displayed-value>
+        <stored-value>text</stored-value>
+      </pair>
+      <pair>
+        <displayed-value>video</displayed-value>
+        <stored-value>video</stored-value>
+      </pair>
+      <pair>
+        <displayed-value>image</displayed-value>
+        <stored-value>image</stored-value>
       </pair>
     </value-pairs>
 
