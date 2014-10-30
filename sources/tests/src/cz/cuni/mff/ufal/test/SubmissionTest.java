@@ -32,6 +32,10 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.click("id=cz_cuni_mff_ufal_dspace_app_xmlui_aspect_submission_submit_SelectCollectionStep_field_submit");
 		selenium.waitForPageToLoad("30000");
 		
+		// Step 2: Basic info
+		selenium.type("id=aspect_submission_StepTransformer_field_dc_title", "Automatic Test Item " + d.getTime());
+		selenium.type("id=aspect_submission_StepTransformer_field_dc_date_issued", new SimpleDateFormat("yyyy-MM-dd").format(d));
+		
 		// select dc.type (random)
 		int typeIndex = randGen.nextInt(DCTYPE_VALUES.length);
 		selenium.click("//a[@id='type_" + DCTYPE_VALUES[typeIndex] +   "']");
@@ -43,11 +47,9 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.click("//input[@name='local_hidden' and @value='false']");
 		selenium.click("//input[@name='local_hasMetadata' and @value='false']");
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
-		selenium.waitForPageToLoad("30000");		
-
-		// Step 2: Describe 
-		// title, author
-		selenium.type("id=aspect_submission_StepTransformer_field_dc_title", "Automatic Test Item " + d.getTime());
+		selenium.waitForPageToLoad("30000");
+		
+		// Step 2: Who's involved
 		selenium.type("id=aspect_submission_StepTransformer_field_dc_contributor_author_last", "TAuthorLN");
 		selenium.type("id=aspect_submission_StepTransformer_field_dc_contributor_author_first", "TAuthorFN");
 		selenium.click("name=submit_dc_contributor_author_add");
@@ -56,22 +58,38 @@ public class SubmissionTest extends BaseTestCase {
 			if (second >= 60) AssertJUnit.fail("timeout");
 			try { if (selenium.isElementPresent("//span[@class='ds-interpreted-field' and text()='TAuthorLN, TAuthorFN']")) break; } catch (Exception e) {}
 			Thread.sleep(1000);
-		}		
-		selenium.type("id=aspect_submission_StepTransformer_field_dc_date_issued", new SimpleDateFormat("yyyy-MM-dd").format(d));
-		selenium.type("id=aspect_submission_StepTransformer_field_dc_description", "Automatic Test description filling only required fileds.");
-		selenium.type("id=aspect_submission_StepTransformer_field_dc_publisher", "Auto Testing publisher");
-		selenium.type("id=aspect_submission_StepTransformer_field_dc_language_iso", "eng");
-		selenium.click("name=submit_dc_language_iso_add");
-		selenium.waitForPageToLoad("30000");
-		for (int second = 0;; second++) {
-			if (second >= 60) AssertJUnit.fail("timeout");
-			try { if (selenium.isElementPresent("//input[@name='dc_language_iso_selected']")) break; } catch (Exception e) {}
-			Thread.sleep(1000);
 		}
-		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
+		selenium.type("id=aspect_submission_StepTransformer_field_dc_publisher", "Auto Testing publisher");
+		selenium.type("id=aspect_submission_StepTransformer_field_local_contact_person_1_givenname", "Provider FN");
+		selenium.type("id=aspect_submission_StepTransformer_field_local_contact_person_2_surname", "Provider LN");
+		selenium.type("id=aspect_submission_StepTransformer_field_local_contact_person_3_email", "dspace-test-admin@ufal-point-dev.ms.mff.cuni.cz");
+		selenium.type("id=aspect_submission_StepTransformer_field_local_contact_person_4_affiliation", "Provider's institute");
+		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");		
+		selenium.waitForPageToLoad("30000");
+
+		// Step 3: Describe
+		selenium.type("id=aspect_submission_StepTransformer_field_dc_description", "Automatic Test description filling only required fileds.");
+		selenium.type("id=aspect_submission_StepTransformer_field_dc_language_iso", "eng");
+		
+		if (DCTYPE_VALUES[typeIndex].equals("lexicalConceptualResource")) {
+			// required fields: detailed type
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
+		
+		}
+		else if (DCTYPE_VALUES[typeIndex].equals("languageDescription")) {
+			// required fields: detailed type 
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
+		}
+		else if (DCTYPE_VALUES[typeIndex].equals("toolService")) {
+			// required fields: detailed type, language independent
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
+			selenium.click("//input[@name='metashare_ResourceInfo#ResourceComponentType#ToolServiceInfo_languageDependent' and @value='true']");
+		}
+		
+		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");		
 		selenium.waitForPageToLoad("30000");
 		
-		// Step 3: Upload 
+		// Step 4: Upload 
 /*		selenium.type("id=aspect_submission_StepTransformer_field_file", prop.getProperty("lr.dspace.source.dir") + "/tests/test_upload.txt");
 		for (int second = 0;; second++) {
 			if (second >= 60) AssertJUnit.fail("timeout");
@@ -122,42 +140,8 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
 		selenium.waitForPageToLoad("30000");			
 		
-		// Step 4: License
+		// Step 5: License
 		selenium.click("name=decision");
-		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
-		selenium.waitForPageToLoad("30000");
-		
-		// Step 5: Details
-		selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContactInfo#PersonInfo_surname", "Provider-A");
-		selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContactInfo#PersonInfo#OrganizationInfo#CommunicationInfo_email", "lindat-technical@ufal.mff.cuni.cz");
-		
-		if (DCTYPE_VALUES[typeIndex].equals("corpus")) {
-			// required data characteristics: size, size unit, media type
-			selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_size", "1");
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_sizeUnit", "label=files");
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "label=text");
-			
-		}
-		else if (DCTYPE_VALUES[typeIndex].equals("lexicalConceptualResource")) {
-			// required fields: size, size unit, media type, detailed type
-			selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_size", "1");
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_sizeUnit", "label=files");
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "label=text");
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
-		}
-		else if (DCTYPE_VALUES[typeIndex].equals("languageDescription")) {
-			// required fields: size, size unit, media type, detailed type 
-			selenium.type("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_size", "1");
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#TextInfo#SizeInfo_sizeUnit", "label=files");
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "label=text");
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
-		}
-		else if (DCTYPE_VALUES[typeIndex].equals("toolService")) {
-			// required fields: detailed type, language independent
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "label=other");
-			selenium.click("//input[@name='metashare_ResourceInfo#ResourceComponentType#ToolServiceInfo_languageDependent' and @value='true']");
-		}
-		
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
 		selenium.waitForPageToLoad("30000");
 		
@@ -169,8 +153,7 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.click("id=aspect_submission_StepTransformer_field_submit_next");
 		selenium.waitForPageToLoad("30000");
 		
-		AssertJUnit.assertTrue(selenium.isTextPresent("Your submission will now go through the review process for this collection."));	
-		
+		AssertJUnit.assertTrue(selenium.isTextPresent("Your submission will now go through the review process for this collection."));
 	}
 	
 	
