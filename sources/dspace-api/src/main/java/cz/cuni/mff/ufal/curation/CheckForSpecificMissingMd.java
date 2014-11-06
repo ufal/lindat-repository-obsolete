@@ -49,6 +49,7 @@ public class CheckForSpecificMissingMd extends AbstractCurationTask {
 				} else {
 					try {
 						checkForTheMissingMd(item, dcs, results);
+                        status = Curator.CURATE_SUCCESS;
 					} catch (CurateException exc) {
 						err_str = exc.getMessage();
 						status = exc.err_code;
