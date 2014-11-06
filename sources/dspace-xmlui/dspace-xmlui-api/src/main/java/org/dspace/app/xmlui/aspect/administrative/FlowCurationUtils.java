@@ -20,15 +20,14 @@ import java.util.Map;
 
 import org.apache.cocoon.environment.Request;
 import org.apache.log4j.Logger;
-
 import org.dspace.content.Collection;
 import org.dspace.content.DSpaceObject;
+import org.dspace.content.Site;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.curate.Curator;
 import org.dspace.handle.HandleManager;
-
 import org.dspace.app.xmlui.wing.Message;
 import org.dspace.app.xmlui.wing.WingException;
 import org.dspace.app.xmlui.wing.element.Select;
@@ -189,7 +188,9 @@ public class FlowCurationUtils
     
     public static FlowResult processRunAll(Context context, Request request){
     	String objHandle = request.getParameter("identifier");
-    	
+    	if (objHandle == null || objHandle.equals("")) {
+    		objHandle = Site.getSiteHandle();	
+    	}    	
     	setupCurationTasks();
         Curator curator = new Curator();
         List<String> taskNames = new ArrayList<String>();
@@ -253,7 +254,6 @@ public class FlowCurationUtils
         String task = request.getParameter("curate_task");
         String objHandle = request.getParameter("identifier");
         Curator curator = FlowCurationUtils.getCurator(task);
-
         FlowResult result = null;
         try
         {
