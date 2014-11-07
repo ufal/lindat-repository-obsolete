@@ -5,7 +5,7 @@
 
 	<parameter name="ufal.properties" value="../../config/local.conf" />
 
-<!-- 	<test name="Test for Download of Files in Items">
+	<test name="Test for Download of Files in Items">
 		<classes>
 			<class name="cz.cuni.mff.ufal.test.DownloadTest">
 				<methods>
@@ -14,9 +14,9 @@
 			</class>
 		</classes>
 	</test>
- -->
 
-<!-- 	<test name="Test Basic Page Loading" preserve-order="true">
+
+	<test name="Test Basic Page Loading" preserve-order="true">
 		<classes>
 			<class name="cz.cuni.mff.ufal.test.PageLoadTest">
 				<methods>
@@ -35,9 +35,9 @@
 				</methods>
 			</class>
 		</classes>
-	</test> -->
+	</test>
 
-<!-- 	<test name="Test Search with Login" preserve-order="true">
+	<test name="Test Search with Login" preserve-order="true">
 		<classes>
 			<class name="cz.cuni.mff.ufal.test.LoginTest">
 				<methods>
@@ -82,7 +82,7 @@
 				</methods>
 			</class>
 		</classes>
-	</test> -->
+	</test> 
 
 	<test name="OAI Test" preserve-order="true">
 		<classes>
