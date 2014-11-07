@@ -318,16 +318,18 @@ update_lindat_common: check_lindat_common
 #
 
 # Command starts all running services to provide webserver (to fully $(MAKE) them run)
-start:  start_tomcat \
+start:  start_postgres \
+		start_tomcat \
         start_shibboleth \
         start_handle_server \
         start_apache
 
 # Command stops all running services to provide webserver (to fully dislocate them)
-stop:   stop_apache \
+stop:	stop_apache \
         stop_handle_server \
         stop_shibboleth \
-        stop_tomcat
+        stop_tomcat \
+        stop_postgres
 
 # This command just restart all the services that are needed to fully reload the apache, tomcat and shibboleth
 restart:
@@ -361,6 +363,14 @@ start_shibboleth:
 stop_shibboleth:
 	@echo "Stopping shibboleth"
 	@sh $(BASE)/stop.shibboleth.sh
+
+stop_postgres:
+	@echo "Stopping postgres"
+	@sh $(POSTGRES) stop
+	
+start_postgres:
+	@echo "Starting postgres"
+	@sh $(POSTGRES) start
 
 start_handle_server:
 	@if [[ -r $(HANDLE_SERVER) ]]; then echo "Starting handle server"; sh $(HANDLE_SERVER) start; else echo "Handle server not present - ignoring start command"; fi
