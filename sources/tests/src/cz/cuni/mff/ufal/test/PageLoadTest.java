@@ -13,7 +13,9 @@ public class PageLoadTest extends BaseTestCase {
 		AssertJUnit.assertTrue(selenium.isElementPresent("//div[@id='layerslider']"));
 		AssertJUnit.assertTrue(selenium.isElementPresent("//form[@class='form-search']"));
 		AssertJUnit.assertTrue(selenium.isElementPresent("//div[@id='facet-box']"));
-		AssertJUnit.assertTrue(selenium.isElementPresent("//div[@id='recent-submissions']"));
+		if (!selenium.isTextPresent("No Recent Items !")) {
+			AssertJUnit.assertTrue(selenium.isElementPresent("//div[@id='recent-submissions']"));			
+		}
 		AssertJUnit.assertTrue(selenium.isElementPresent("//div[@id='top-items']"));		
 		AssertJUnit.assertTrue(selenium.isElementPresent("//div[@id='options-menu']"));		
 	}
