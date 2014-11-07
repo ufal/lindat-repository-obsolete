@@ -89,9 +89,9 @@
 			<class name="cz.cuni.mff.ufal.test.OAIRequestTest">
 				<methods>
 					<include name="testCMDIRequest" />
-<!-- 					<include name="testBibtexRequest" /> -->
+					<include name="testBibtexRequest" />
 					<include name="testCMDIClick" />
-<!-- 					<include name="testBibtexClick" /> -->
+					<include name="testBibtexClick" />
 				</methods>
 			</class>
 		</classes>
