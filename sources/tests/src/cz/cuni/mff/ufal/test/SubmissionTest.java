@@ -74,6 +74,7 @@ public class SubmissionTest extends BaseTestCase {
 		if (DCTYPE_VALUES[typeIndex].equals("corpus")) {
 			selenium.type("id=aspect_submission_StepTransformer_field_local_size_info_1_size", "0");
 			selenium.select("id=aspect_submission_StepTransformer_field_local_size_info_2_unit", "index=2");			
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "index=2");
 		}
 		else if (DCTYPE_VALUES[typeIndex].equals("lexicalConceptualResource")) {
 			selenium.type("id=aspect_submission_StepTransformer_field_local_size_info_1_size", "0");
@@ -239,6 +240,7 @@ public class SubmissionTest extends BaseTestCase {
 		if (DCTYPE_VALUES[typeIndex].equals("corpus")) {
 			selenium.type("id=aspect_submission_StepTransformer_field_local_size_info_1_size", "0");
 			selenium.select("id=aspect_submission_StepTransformer_field_local_size_info_2_unit", "index=2");			
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "index=2");
 		}
 		else if (DCTYPE_VALUES[typeIndex].equals("lexicalConceptualResource")) {
 			selenium.type("id=aspect_submission_StepTransformer_field_local_size_info_1_size", "0");
