@@ -5,7 +5,7 @@
 
 	<parameter name="ufal.properties" value="../../config/local.conf" />
 
-	<test name="Test for Download of Files in Items">
+<!-- 	<test name="Test for Download of Files in Items">
 		<classes>
 			<class name="cz.cuni.mff.ufal.test.DownloadTest">
 				<methods>
@@ -65,7 +65,7 @@
 				</methods>
 			</class>
 		</classes>
-	</test>
+	</test> -->
 
 	<test name="Test Item Submission with Admin" preserve-order="true">
 		<parameter name="user" value="admin" />
@@ -84,7 +84,7 @@
 		</classes>
 	</test> 
 
-	<test name="OAI Test" preserve-order="true">
+<!-- 	<test name="OAI Test" preserve-order="true">
 		<classes>
 			<class name="cz.cuni.mff.ufal.test.OAIRequestTest">
 				<methods>
@@ -95,6 +95,6 @@
 				</methods>
 			</class>
 		</classes>
-	</test>
+	</test> -->
 
 </suite>

@@ -79,15 +79,15 @@ public class SubmissionTest extends BaseTestCase {
 		else if (DCTYPE_VALUES[typeIndex].equals("lexicalConceptualResource")) {
 			selenium.type("id=aspect_submission_StepTransformer_field_local_size_info_1_size", "0");
 			selenium.select("id=aspect_submission_StepTransformer_field_local_size_info_2_unit", "index=2");			
-			// required fields: detailed type
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "index=2");
-		
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "index=2");
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "index=2");		
 		}
 		else if (DCTYPE_VALUES[typeIndex].equals("languageDescription")) {
 			selenium.type("id=aspect_submission_StepTransformer_field_local_size_info_1_size", "0");
 			selenium.select("id=aspect_submission_StepTransformer_field_local_size_info_2_unit", "index=2");			
-			// required fields: detailed type 
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "index=2");
 			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "index=2");
+			
 		}
 		else if (DCTYPE_VALUES[typeIndex].equals("toolService")) {
 			// required fields: detailed type, language independent
@@ -236,7 +236,6 @@ public class SubmissionTest extends BaseTestCase {
 		selenium.type("id=aspect_submission_StepTransformer_field_dc_language_iso", "eng");
 		selenium.type("id=aspect_submission_StepTransformer_field_dc_subject", "test, full submission");
 		
-		
 		if (DCTYPE_VALUES[typeIndex].equals("corpus")) {
 			selenium.type("id=aspect_submission_StepTransformer_field_local_size_info_1_size", "0");
 			selenium.select("id=aspect_submission_StepTransformer_field_local_size_info_2_unit", "index=2");			
@@ -245,15 +244,15 @@ public class SubmissionTest extends BaseTestCase {
 		else if (DCTYPE_VALUES[typeIndex].equals("lexicalConceptualResource")) {
 			selenium.type("id=aspect_submission_StepTransformer_field_local_size_info_1_size", "0");
 			selenium.select("id=aspect_submission_StepTransformer_field_local_size_info_2_unit", "index=2");			
-			// required fields: detailed type
-			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "index=2");
-		
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "index=2");
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "index=2");		
 		}
 		else if (DCTYPE_VALUES[typeIndex].equals("languageDescription")) {
 			selenium.type("id=aspect_submission_StepTransformer_field_local_size_info_1_size", "0");
 			selenium.select("id=aspect_submission_StepTransformer_field_local_size_info_2_unit", "index=2");			
-			// required fields: detailed type 
+			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_mediaType", "index=2");
 			selenium.select("id=aspect_submission_StepTransformer_field_metashare_ResourceInfo#ContentInfo_detailedType", "index=2");
+			
 		}
 		else if (DCTYPE_VALUES[typeIndex].equals("toolService")) {
 			// required fields: detailed type, language independent
