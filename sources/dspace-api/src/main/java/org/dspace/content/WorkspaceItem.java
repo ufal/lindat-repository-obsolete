@@ -250,7 +250,7 @@ public class WorkspaceItem implements InProgressSubmission
         }
 
 
-        i.addMetadata("local", "branding", null, null, coll.getName());
+        i.addMetadata("local", "branding", null, null, coll.getPrincipalCommunity().getName());
         
         i.update();
 

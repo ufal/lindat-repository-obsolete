@@ -55,6 +55,8 @@ public class FlowWorkflowUtils {
         // change collection in workflow item  
         if(!wfi.getCollection().equals(targetCollection)) {
             wfi.setCollection(targetCollection);
+	    wfi.getItem().clearMetadata("local", "branding", null, null);
+            wfi.getItem().addMetadata("local", "branding", null, null, targetCollection.getPrincipalCommunity().getName());
             wfi.update();
         }
 
