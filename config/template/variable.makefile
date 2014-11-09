@@ -21,6 +21,7 @@ DIRECTORY_POSTGRESQL:=/var/lib/postgresql
 APACHE:=/etc/init.d/apache2
 SHIB:=/etc/init.d/shibboleth
 TOMCAT:=/etc/init.d/$(TOMCAT_USER)
+POSTGRES:=/etc/init.d/postgresql-8.4
 HANDLE_SERVER:=/etc/init.d/handle-server
 BACKUP2l:=/usr/sbin/backup2l
 
