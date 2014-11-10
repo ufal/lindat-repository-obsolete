@@ -135,7 +135,6 @@ def safe_unlink(file_path):
 
           On some systems (i.e., Windows) the process can still `somehow` have the file opened.
     """
-    assert isinstance( file_path, basestring )
     max_loops = 10
     while 0 < max_loops:
         try:

@@ -22,19 +22,19 @@ _logger = logging.getLogger( 'common' )
 import subprocess
 
 
+# noinspection PyBroadException
 try:
     import magic
 except:
     print "Have you installed python-magic?"
-    sys.exit(1)
+    sys.exit( 1 )
 
 
-
-#=======================================
+# =======================================
 # check_files
 #=======================================
 
-def find_file_type( file_str ):
+def find_file_type(file_str):
     """
         Not working on windows.
     """
@@ -43,10 +43,10 @@ def find_file_type( file_str ):
         #    'file --mime-type %s' % file_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         #output, errors = p.communicate()
         #return file_str, output.split(" ")[-1].strip(), errors
-        mime = magic.from_file(file_str, mime=True)
+        mime = magic.from_file( file_str, mime=True )
         return file_str, mime, ""
     except Exception, e:
-        return file_str, "unknown", repr(e)
+        return file_str, "unknown", repr( e )
 
 
 def verify(cmd, f):
@@ -57,9 +57,9 @@ def verify(cmd, f):
         cmd = cmd % f
         #_logger.info( "Popen verify started" )
         p = subprocess.Popen(
-        #    cmd, shell=True, stdout=None, stderr=None)
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, errors = p.communicate()
+            #    cmd, shell=True, stdout=None, stderr=None)
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+        output, errors = p.communicate( )
         #p.communicate()
         #_logger.info( "Popen verify ended [%d]", p.returncode )
         #_logger.info( "Popen verify ended" )
@@ -67,7 +67,7 @@ def verify(cmd, f):
         #return p.returncode, ""
         #return 0, ""
     except Exception, e:
-        return -1, repr(e)
+        return -1, repr( e )
 
 
 #noinspection PyBroadException
@@ -79,16 +79,16 @@ def db_assetstore(env):
 
     # try local.config
     for dspace_cfg in env["config_dist_relative"]:
-      dspace_cfg = os.path.join(os.getcwd(), dspace_cfg)
-      if os.path.exists(dspace_cfg):
-        env["config_dist_relative"][0] = dspace_cfg
-        break
-    dspace_cfg, prefix = os.path.join(os.getcwd(), env["config_dist_relative"][0]), "ufal."
-    if not os.path.exists(dspace_cfg):
+        dspace_cfg = os.path.join( os.getcwd( ), dspace_cfg )
+        if os.path.exists( dspace_cfg ):
+            env["config_dist_relative"][0] = dspace_cfg
+            break
+    dspace_cfg, prefix = os.path.join( os.getcwd( ), env["config_dist_relative"][0] ), "ufal."
+    if not os.path.exists( dspace_cfg ):
         _logger.info( "Could not find [%s]", dspace_cfg )
-        dspace_cfg, prefix = os.path.join(os.getcwd(), env["dspace_cfg_relative"]), ""
+        dspace_cfg, prefix = os.path.join( os.getcwd( ), env["dspace_cfg_relative"] ), ""
         # try dspace.cfg
-        if not os.path.exists(dspace_cfg):
+        if not os.path.exists( dspace_cfg ):
             _logger.info( "Could not find [%s]", dspace_cfg )
             dspace_cfg = None
 
@@ -102,64 +102,67 @@ def db_assetstore(env):
     db_username = None
     db_pass = None
     db_table = None
-    if os.path.exists(dspace_cfg):
-        lls = open(dspace_cfg, "r").readlines()
+    if os.path.exists( dspace_cfg ):
+        lls = open( dspace_cfg, "r" ).readlines( )
         for l in lls:
-            l = l.strip()
-            if l.startswith(prefix + "db.username"):
-                db_username = l.strip().split("=")[1].strip()
-            if l.startswith(prefix + "db.password"):
-                db_pass = l.strip().split("=")[1].strip()
-            if db_table is None and l.startswith(prefix + "db.url"):
-                db_table = l.strip().split("/")[-1].strip()
-            if l.startswith(prefix + "database ") or l.startswith(prefix + "database="):
-                db_table = l.strip().split("=")[1].split("/")[-1].strip()
+            l = l.strip( )
+            if l.startswith( prefix + "db.username" ):
+                db_username = l.strip( ).split( "=" )[1].strip( )
+            if l.startswith( prefix + "db.password" ):
+                db_pass = l.strip( ).split( "=" )[1].strip( )
+            if db_table is None and l.startswith( prefix + "db.url" ):
+                db_table = l.strip( ).split( "/" )[-1].strip( )
+            if l.startswith( prefix + "database " ) or l.startswith( prefix + "database=" ):
+                db_table = l.strip( ).split( "=" )[1].split( "/" )[-1].strip( )
 
     _logger.info( "Trying to connect to [%s] under [%s]",
-                  db_table, db_username)
+                  db_table, db_username )
 
     # get the db table
     import bpgsql
+
     try:
         con = bpgsql.connect(
-            username=db_username, password=db_pass, host="127.0.0.1", dbname=db_table)
-        cursor = con.cursor()
+            username=db_username, password=db_pass, host="127.0.0.1", dbname=db_table )
+        cursor = con.cursor( )
         cursor.execute( "select name, internal_id from bitstream" )
-        objs = cursor.fetchall()
+        objs = cursor.fetchall( )
         # better explicitly
-        cursor.close()
-        con.close()
-        return dict( [ (y, x) for x, y in objs ] )
+        cursor.close( )
+        con.close( )
+        return dict( [(y, x) for x, y in objs] )
     except Exception, e:
-        _logger.exception("No connection could be made")
+        _logger.exception( "No connection could be made" )
 
 
 _OK = 0
+
+
 def check_files(env):
     """
         Check all files.
     """
     badbad = []
     unchecked = []
-    assetstore_pairs = db_assetstore(env)
-    files_to_check = [ os.path.abspath(x) for x in glob.glob(env["input_dir"]) ]
-    _logger.info( "Checking [%d] files", len(files_to_check) )
-    for pos, f in enumerate(files_to_check):
-        base_f = os.path.basename(f)
+    assetstore_pairs = db_assetstore( env )
+    files_to_check = [os.path.abspath( x ) for x in glob.glob( env["input_dir"] )]
+    _logger.info( "Checking [%d] files", len( files_to_check ) )
+    for pos, f in enumerate( files_to_check ):
+        base_f = os.path.basename( f )
         _1, mime_type, _2 = find_file_type( f )
-        file_name = assetstore_pairs.get(base_f, "")
-        if file_name is None or 0 == len(file_name):
+        file_name = assetstore_pairs.get( base_f, "" )
+        if file_name is None or 0 == len( file_name ):
             _logger.warn( "Could not find file [%s] in assetstore_pairs", base_f )
             continue
-        _logger.info("#%d. %s | %s\n\t%s", pos, base_f, file_name, mime_type)
+        _logger.info( "#%d. %s | %s\n\t%s", pos, base_f, file_name, mime_type )
 
         if mime_type in env["mime_type"]:
             verificator = env["mime_type"][mime_type]
-            if callable(verificator):
-                ret, msg = verificator(f)
+            if callable( verificator ):
+                ret, msg = verificator( f )
             else:
-                ret, msg = verify(verificator, f)
-            _logger.info( "checked: [%s] [%d]...", msg[:min(len(msg), 200)], ret )
+                ret, msg = verify( verificator, f )
+            _logger.info( "checked: [%s] [%d]...", msg[:min( len( msg ), 200 )], ret )
             #_logger.info( "checked: return code [%d]...", ret )
             if ret != _OK:
                 badbad.append( (f, msg) )
@@ -168,9 +171,9 @@ def check_files(env):
             unchecked.append( (f, mime_type) )
 
     msg_unchecked = "Unchecked files: [%d], [%s]" % (
-        len(unchecked),
-        ", ".join(list(set([ y for x, y in unchecked ]))))
-    msg_problematic = "Problematic files: [%d]" % len(badbad)
+        len( unchecked ),
+        ", ".join( list( set( [y for x, y in unchecked] ) ) ))
+    msg_problematic = "Problematic files: [%d]" % len( badbad )
 
     _logger.info( msg_unchecked )
     _logger.info( msg_problematic )
@@ -180,7 +183,7 @@ def check_files(env):
     print msg_problematic
     print 40 * "="
 
-    return len(badbad)
+    return len( badbad )
 
 
 #=======================================
@@ -208,7 +211,7 @@ def parse_command_line(env):
                    "check",
                    "version",
                    "dir=",
-                   ]
+        ]
         input_options = sys.argv[1:]
         opts, _ = getopt.getopt( input_options, "", options )
     except getopt.GetoptError:
@@ -225,7 +228,7 @@ def parse_command_line(env):
         if option == "--check":
             what_to_do = check_files
         if option == "--dir":
-            env["input_dir"] = os.path.join(param, env["input_dir_glob"])
+            env["input_dir"] = os.path.join( param, env["input_dir_glob"] )
 
     if what_to_do:
         return what_to_do
@@ -240,9 +243,9 @@ def parse_command_line(env):
 #=======================================
 
 if __name__ == "__main__":
-    lasted = time.time()
+    lasted = time.time( )
 
-    _logger.info( u"Starting at " + utils.host_info() )
+    _logger.info( u"Starting at " + utils.host_info( ) )
 
     # do what was specified or default
     ret_code = 0
@@ -253,6 +256,6 @@ if __name__ == "__main__":
         _logger.critical( "An exception occurred, ouch:\n%s", e_inst )
         raise
     finally:
-        lasted = time.time() - lasted
+        lasted = time.time( ) - lasted
         _logger.info( "Stopping after [%f] secs.", lasted )
-    sys.exit(ret_code)
+    sys.exit( ret_code )
