@@ -52,9 +52,11 @@ def do( cursor ):
     for k, v in items.iteritems():
         v["metadata"] = item2metadata(cursor, k)
 
-    for i, (k, v) in enumerate(items.iteritems()):
-        if i > 10:
+    for i, k in enumerate( sorted(items, key=lambda x: len(items[x]["metadata"])) ):
+        if i > 100:
             break
+        v = items[k]
+        print 20 * "="
         print k, v["submitter"], v["collection"]
         for k, v in v["metadata"].iteritems():
             print "\t", k, v
