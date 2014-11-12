@@ -46,7 +46,7 @@ function getObjectModel()
  */
 function getDSContext()
 {
-	return ContextUtil.obtainContext(getObjectModel());
+    return ContextUtil.obtainContext(getObjectModel());
 }
 
 
@@ -55,17 +55,17 @@ function getDSContext()
  */
 function getHttpRequest()
 {
-	//return getObjectModel().get(HttpEnvironment.HTTP_REQUEST_OBJECT)
+    //return getObjectModel().get(HttpEnvironment.HTTP_REQUEST_OBJECT)
 
-	// Cocoon's request object handles form encoding, thus if the users enters
-	// non-ascii characters such as those found in foreign languages they will
-	// come through corrupted if they are not obtained through the cocoon request
-	// object. However, since the dspace-api is built to accept only HttpServletRequest
-	// a wrapper class HttpServletRequestCocoonWrapper has bee built to translate
-	// the cocoon request back into a servlet request. This is not a fully complete
-	// translation as some methods are unimplemented. But it is enough for our
-	// purposes here.
-	return new HttpServletRequestCocoonWrapper(getObjectModel());
+    // Cocoon's request object handles form encoding, thus if the users enters
+    // non-ascii characters such as those found in foreign languages they will
+    // come through corrupted if they are not obtained through the cocoon request
+    // object. However, since the dspace-api is built to accept only HttpServletRequest
+    // a wrapper class HttpServletRequestCocoonWrapper has bee built to translate
+    // the cocoon request back into a servlet request. This is not a fully complete
+    // translation as some methods are unimplemented. But it is enough for our
+    // purposes here.
+    return new HttpServletRequestCocoonWrapper(getObjectModel());
 }
 
 /**
@@ -74,7 +74,7 @@ function getHttpRequest()
  */
 function getHttpResponse()
 {
-	return getObjectModel().get(HttpEnvironment.HTTP_RESPONSE_OBJECT);
+    return getObjectModel().get(HttpEnvironment.HTTP_RESPONSE_OBJECT);
 }
 
 /**
@@ -109,10 +109,10 @@ function doMoveWorkflowItem(handle, workflowID)
         if (!collectionID)
         {
             throw "Unable to find collection, no collection id supplied.";
-        }                       
+        }
 
         return FlowWorkflowUtils.processMoveWorkflowItem(getDSContext(), workflowID, collectionID);
-    }    
+    }
 }
 
 
@@ -147,12 +147,14 @@ function doWorkflow()
         throw "Unable to find workflow, no workflow id supplied.";
     }
 
-    // Get the collection handle for this item.
-    var handle = WorkflowItem.find(getDSContext(), workflowID).getCollection().getHandle();    
-    var rawWorkflowID = workflowID;
     // Specify that we are working with workflows.
     //(specify "W" for workflow item, for FlowUtils.findSubmission())
-    workflowID = "W"+workflowID;
+    if(workflowID.substr(0,1) != "W")
+    {
+        workflowID = "W"+workflowID;
+    }
+    // Get the collection handle for this item.
+    var handle = FlowUtils.findWorkflow(getDSContext(), workflowID).getCollection().getHandle();
 
     do
     {
@@ -211,7 +213,7 @@ function doWorkflow()
         {
 
             var contextPath = cocoon.request.getContextPath();
-            cocoon.redirectTo(contextPath+"/handle/"+handle+"/workflow_edit_metadata?"+"workflowID=W"+workflowID, true);
+            cocoon.redirectTo(contextPath+"/handle/"+handle+"/workflow_edit_metadata?"+"workflowID="+workflowID, true);
             getDSContext().complete();
             cocoon.exit();
         }
@@ -226,26 +228,41 @@ function doWorkflow()
         else if (cocoon.request.get("submit_move"))
         {
             // UFAL - Move this workflow item to another collection
-            var reclaimed = doMoveWorkflowItem(handle, rawWorkflowID);
+            var reclaimed = doMoveWorkflowItem(handle, workflowID);
 
-            if (reclaimed == null) {
+            if (reclaimed == null)
+            {
                 // cancelled
             }
-            else if (reclaimed) {
-                handle = WorkflowItem.find(getDSContext(), rawWorkflowID).getCollection().getHandle();
-                var contextPath = cocoon.request.getContextPath();
-                cocoon.redirectTo(contextPath+"/handle/"+handle+"/workflow?workflowID="+rawWorkflowID,true);
-                getDSContext().complete();
-                cocoon.exit();
+            else if (reclaimed)
+            {
+                var workflowItem = FlowUtils.findWorkflow(getDSContext(), workflowID)
+                if(workflowItem == null)
+                {
+                    // item submitted upon moving to collection with no workflow steps
+                    var contextPath = cocoon.request.getContextPath();
+                    cocoon.redirectTo(contextPath+"/submissions",true);
+                    getDSContext().complete();
+                    cocoon.exit();
+                }
+                else
+                {
+                    handle = workflowItem.getCollection().getHandle();
+                    var contextPath = cocoon.request.getContextPath();
+                    cocoon.redirectTo(contextPath+"/handle/"+handle+"/workflow?workflowID="+workflowID,true);
+                    getDSContext().complete();
+                    cocoon.exit();
+                }
             }
-            else {
+            else
+            {
                 var contextPath = cocoon.request.getContextPath();
                 cocoon.redirectTo(contextPath+"/submissions",true);
                 getDSContext().complete();
                 cocoon.exit();
             }
         }
- 
+
     } while (1==1)
 
 
