@@ -27,14 +27,14 @@ import org.dspace.workflow.WorkflowManager;
 /**
  * Utility methods to processes additional actions on worflow item. These methods are used
  * exclusively from the workflow flow scripts.
- * 
+ *
  * @author Michal Josífko
  * modified for LINDAT/CLARIN
  */
 public class FlowWorkflowUtils {
 
     private static final Logger log = Logger.getLogger(FlowWorkflowUtils.class);
-   
+
     /**
      * Move workflow item to another collection
      *
@@ -43,16 +43,16 @@ public class FlowWorkflowUtils {
      * @param id The unique ID of the target collection
      * @param request The current request object
      */
-    public static boolean processMoveWorkflowItem(Context context, int workflowID, int collectionID) throws SQLException, UIException, ServletException, AuthorizeException, IOException
+    public static boolean processMoveWorkflowItem(Context context, String workflowID, String collectionID) throws SQLException, UIException, ServletException, AuthorizeException, IOException
     {
         boolean reclaimed = false;
-        WorkflowItem wfi = WorkflowItem.find(context, workflowID);
+        WorkflowItem wfi = FlowUtils.findWorkflow(context, workflowID);
         Collection sourceCollection = wfi.getCollection();
         Item item = wfi.getItem();
-        Collection targetCollection = Collection.find(context, collectionID);
+        Collection targetCollection = Collection.find(context, Integer.parseInt(collectionID));
         EPerson e = context.getCurrentUser();
-        
-        // change collection in workflow item  
+
+        // change collection in workflow item
         if(!wfi.getCollection().equals(targetCollection)) {
             wfi.setCollection(targetCollection);
             wfi.getItem().clearMetadata("local", "branding", null, null);
@@ -64,7 +64,7 @@ public class FlowWorkflowUtils {
         WorkflowManager.unclaim(context, wfi, e);
         try {
             // try to reclaim the task back
-            FlowUtils.authorizeWorkflowItem(context, String.valueOf(workflowID));
+            FlowUtils.authorizeWorkflowItem(context, workflowID);
             WorkflowManager.claim(context, wfi, e);
             reclaimed = true;
         }
@@ -76,7 +76,7 @@ public class FlowWorkflowUtils {
         context.commit();
 
         // Workflow item moved.  Log this information
-        log.info(LogManager.getHeader(context, "move_workflow_item", "workflow_item_id=" + wfi.getID() 
+        log.info(LogManager.getHeader(context, "move_workflow_item", "workflow_item_id=" + wfi.getID()
                 + ", item_id=" + item.getID()
                 + ", source collection_id=" + sourceCollection.getID()
                 + ", target collection_id=" + targetCollection.getID()

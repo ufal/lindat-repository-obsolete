@@ -20,7 +20,6 @@ import java.util.ResourceBundle;
 import javax.mail.MessagingException;
 
 import org.apache.log4j.Logger;
-
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.AuthorizeManager;
 import org.dspace.content.Collection;
@@ -44,26 +43,26 @@ import org.dspace.storage.rdbms.TableRowIterator;
 
 /**
  * Workflow state machine
- * 
+ *
  * Notes:
- * 
+ *
  * Determining item status from the database:
- * 
+ *
  * When an item has not been submitted yet, it is in the user's personal
  * workspace (there is a row in PersonalWorkspace pointing to it.)
- * 
+ *
  * When an item is submitted and is somewhere in a workflow, it has a row in the
  * WorkflowItem table pointing to it. The state of the workflow can be
  * determined by looking at WorkflowItem.getState()
- * 
+ *
  * When a submission is complete, the WorkflowItem pointing to the item is
  * destroyed and the archive() method is called, which hooks the item up to the
  * archive.
- * 
+ *
  * Notification: When an item enters a state that requires notification,
  * (WFSTATE_STEP1POOL, WFSTATE_STEP2POOL, WFSTATE_STEP3POOL,) the workflow needs
  * to notify the appropriate groups that they have a pending task to claim.
- * 
+ *
  * Revealing lists of approvers, editors, and reviewers. A method could be added
  * to do this, but it isn't strictly necessary. (say public List
  * getStateEPeople( WorkflowItem wi, int state ) could return people affected by
@@ -138,7 +137,7 @@ public class WorkflowManager
     /**
      * startWorkflow() begins a workflow - in a single transaction do away with
      * the PersonalWorkspace entry and turn it into a WorkflowItem.
-     * 
+     *
      * @param c
      *            Context
      * @param wsi
@@ -153,7 +152,7 @@ public class WorkflowManager
         Collection collection = wsi.getCollection();
 
         log.info(LogManager.getHeader(c, "start_workflow", "workspace_item_id="
-                + wsi.getID() + "item_id=" + myitem.getID() + "collection_id="
+                + wsi.getID() + ", item_id=" + myitem.getID() + ", collection_id="
                 + collection.getID()));
 
         // record the start of the workflow w/provenance message
@@ -176,7 +175,7 @@ public class WorkflowManager
 
         // now get the workflow started
         wfi.setState(WFSTATE_SUBMIT);
-        advance(c, wfi, null); 
+        advance(c, wfi, null);
 
         // Return the workflow item
         return wfi;
@@ -201,7 +200,7 @@ public class WorkflowManager
      * getOwnedTasks() returns a List of WorkflowItems containing the tasks
      * claimed and owned by an EPerson. The GUI displays this info on the
      * MyDSpace page.
-     * 
+     *
      * @param e
      *            The EPerson we want to fetch owned tasks for.
      */
@@ -212,7 +211,7 @@ public class WorkflowManager
 
         String myquery = "SELECT * FROM WorkflowItem WHERE owner= ? ";
 
-        TableRowIterator tri = DatabaseManager.queryTable(c, 
+        TableRowIterator tri = DatabaseManager.queryTable(c,
         		"workflowitem", myquery,e.getID());
 
         try
@@ -236,7 +235,7 @@ public class WorkflowManager
     /**
      * getPooledTasks() returns a List of WorkflowItems an EPerson could claim
      * (as a reviewer, etc.) for display on a user's MyDSpace page.
-     * 
+     *
      * @param e
      *            The Eperson we want to fetch the pooled tasks for.
      */
@@ -265,10 +264,10 @@ public class WorkflowManager
                 tri.close();
             }
         }
-        
+
         return mylist;
     }
-        
+
     /**
      * getAllPooledTasks() returns a List of all WorkflowItems that could be claimed
      *
@@ -298,13 +297,13 @@ public class WorkflowManager
                 tri.close();
             }
         }
-        
+
         return mylist;
     }
 
     /**
      * claim() claims a workflow task for an EPerson
-     * 
+     *
      * @param wi
      *            WorkflowItem to do the claim on
      * @param e
@@ -343,10 +342,10 @@ public class WorkflowManager
         }
 
         log.info(LogManager.getHeader(c, "claim_task", "workflow_item_id="
-                + wi.getID() + "item_id=" + wi.getItem().getID()
-                + "collection_id=" + wi.getCollection().getID()
-                + "newowner_id=" + wi.getOwner().getID() + "old_state="
-                + taskstate + "new_state=" + wi.getState()));
+                + wi.getID() + ", item_id=" + wi.getItem().getID()
+                + ", collection_id=" + wi.getCollection().getID()
+                + ", newowner_id=" + (wi.getOwner() != null ? wi.getOwner().getID() : "") + ", old_state="
+                + taskstate + ", new_state=" + wi.getState()));
     }
 
     /**
@@ -355,7 +354,7 @@ public class WorkflowManager
      * the item arrives at the submit state, then remove the WorkflowItem and
      * call the archive() method to put it in the archive, and email notify the
      * submitter of a successful submission
-     * 
+     *
      * @param c
      *            Context
      * @param wi
@@ -368,26 +367,26 @@ public class WorkflowManager
     {
         advance(c, wi, e, true, true);
     }
-    
+
     /**
      * advance() sends an item forward in the workflow (reviewers,
      * approvers, and editors all do an 'approve' to move the item forward) if
      * the item arrives at the submit state, then remove the WorkflowItem and
      * call the archive() method to put it in the archive, and email notify the
      * submitter of a successful submission
-     * 
+     *
      * @param c
      *            Context
      * @param wi
      *            WorkflowItem do do the approval on
      * @param e
      *            EPerson doing the approval
-     * 
+     *
      * @param curate
      *            boolean indicating whether curation tasks should be done
-     * 
+     *
      * @param record
-     *            boolean indicating whether to record action 
+     *            boolean indicating whether to record action
      */
     public static boolean advance(Context c, WorkflowItem wi, EPerson e,
                                   boolean curate, boolean record)
@@ -395,17 +394,17 @@ public class WorkflowManager
     {
         int taskstate = wi.getState();
         boolean archived = false;
-        
+
         // perform curation tasks if needed
         if (curate && WorkflowCurator.needsCuration(wi))
         {
             if (! WorkflowCurator.doCuration(c, wi)) {
                 // don't proceed - either curation tasks queued, or item rejected
                 log.info(LogManager.getHeader(c, "advance_workflow",
-                        "workflow_item_id=" + wi.getID() + ",item_id="
-                        + wi.getItem().getID() + ",collection_id="
-                        + wi.getCollection().getID() + ",old_state="
-                        + taskstate + ",doCuration=false"));
+                        "workflow_item_id=" + wi.getID() + ", item_id="
+                        + wi.getItem().getID() + ", collection_id="
+                        + wi.getCollection().getID() + ", old_state="
+                        + taskstate + ", doCuration=false"));
                 return archived;
             }
         }
@@ -414,9 +413,9 @@ public class WorkflowManager
         {
         case WFSTATE_SUBMIT:
             archived = doState(c, wi, WFSTATE_STEP1POOL, e);
-            
+
             break;
-            
+
         case WFSTATE_STEP1:
 
             // authorize DSpaceActions.SUBMIT_REVIEW
@@ -454,16 +453,16 @@ public class WorkflowManager
         }
 
         log.info(LogManager.getHeader(c, "advance_workflow",
-                "workflow_item_id=" + wi.getID() + ",item_id="
-                        + wi.getItem().getID() + ",collection_id="
-                        + wi.getCollection().getID() + ",old_state="
-                        + taskstate + ",new_state=" + wi.getState()));
+                "workflow_item_id=" + wi.getID() + ", item_id="
+                        + wi.getItem().getID() + ", collection_id="
+                        + wi.getCollection().getID() + ", old_state="
+                        + taskstate + ", new_state=" + wi.getState()));
         return archived;
     }
 
     /**
      * unclaim() returns an owned task/item to the pool
-     * 
+     *
      * @param c
      *            Context
      * @param wi
@@ -504,17 +503,17 @@ public class WorkflowManager
         }
 
         log.info(LogManager.getHeader(c, "unclaim_workflow",
-                "workflow_item_id=" + wi.getID() + ",item_id="
-                        + wi.getItem().getID() + ",collection_id="
-                        + wi.getCollection().getID() + ",old_state="
-                        + taskstate + ",new_state=" + wi.getState()));
+                "workflow_item_id=" + wi.getID() + ", item_id="
+                        + wi.getItem().getID() + ", collection_id="
+                        + wi.getCollection().getID() + ", old_state="
+                        + taskstate + ", new_state=" + wi.getState()));
     }
 
     /**
      * abort() aborts a workflow, completely deleting it (administrator do this)
      * (it will basically do a reject from any state - the item ends up back in
      * the user's PersonalWorkspace
-     * 
+     *
      * @param c
      *            Context
      * @param wi
@@ -536,8 +535,8 @@ public class WorkflowManager
         deleteTasks(c, wi);
 
         log.info(LogManager.getHeader(c, "abort_workflow", "workflow_item_id="
-                + wi.getID() + "item_id=" + wi.getItem().getID()
-                + "collection_id=" + wi.getCollection().getID() + "eperson_id="
+                + wi.getID() + ", item_id=" + wi.getItem().getID()
+                + ", collection_id=" + wi.getCollection().getID() + ", eperson_id="
                 + e.getID()));
 
         // convert into personal workspace
@@ -570,7 +569,7 @@ public class WorkflowManager
             {
                 // get a list of all epeople in group (or any subgroups)
                 EPerson[] epa = Group.allMembers(c, mygroup);
-                
+
                 // there were reviewers, change the state
                 //  and add them to the list
                 createTasks(c, wi, epa);
@@ -612,7 +611,7 @@ public class WorkflowManager
             {
                 //get a list of all epeople in group (or any subgroups)
                 EPerson[] epa = Group.allMembers(c, mygroup);
-                
+
                 // there were approvers, change the state
                 //  timestamp, and add them to the list
                 createTasks(c, wi, epa);
@@ -649,7 +648,7 @@ public class WorkflowManager
             {
                 // get a list of all epeople in group (or any subgroups)
                 EPerson[] epa = Group.allMembers(c, mygroup);
-                
+
                 // there were editors, change the state
                 //  timestamp, and add them to the list
                 createTasks(c, wi, epa);
@@ -719,7 +718,7 @@ public class WorkflowManager
      * Commit the contained item to the main archive. The item is associated
      * with the relevant collection, added to the search index, and any other
      * tasks such as assigning dates are performed.
-     * 
+     *
      * @return the fully archived item.
      */
     private static Item archive(Context c, WorkflowItem wfi)
@@ -730,14 +729,14 @@ public class WorkflowManager
         Collection collection = wfi.getCollection();
 
         log.info(LogManager.getHeader(c, "archive_item", "workflow_item_id="
-                + wfi.getID() + "item_id=" + item.getID() + "collection_id="
+                + wfi.getID() + ", item_id=" + item.getID() + ", collection_id="
                 + collection.getID()));
 
         InstallItem.installItem(c, wfi);
 
         // Log the event
         log.info(LogManager.getHeader(c, "install_item", "workflow_id="
-                + wfi.getID() + ", item_id=" + item.getID() + "handle=FIXME"));
+                + wfi.getID() + ", item_id=" + item.getID() + ", handle=FIXME"));
 
         return item;
     }
@@ -755,7 +754,7 @@ public class WorkflowManager
             // Get the Locale
             Locale supportedLocale = I18nUtil.getEPersonLocale(ep);
             Email email = ConfigurationManager.getEmail(I18nUtil.getEmailFilename(supportedLocale, "submit_archive"));
-            
+
             // Get the item handle to email to user
             String handle = HandleManager.findHandle(c, i);
 
@@ -785,14 +784,14 @@ public class WorkflowManager
         catch (MessagingException e)
         {
             log.error(LogManager.getHeader(c, "notifyOfArchive",
-                    "cannot email user" + " item_id=" + i.getID()), e);
+                    "cannot email user" + ", item_id=" + i.getID()), e);
         }
     }
 
     /**
      * Return the workflow item to the workspace of the submitter. The workflow
      * item is removed, and a workspace item created.
-     * 
+     *
      * @param c
      *            Context
      * @param wfi
@@ -823,7 +822,7 @@ public class WorkflowManager
 
         //myitem.update();
         log.info(LogManager.getHeader(c, "return_to_workspace",
-                "workflow_item_id=" + wfi.getID() + "workspace_item_id="
+                "workflow_item_id=" + wfi.getID() + ", workspace_item_id="
                         + wi.getID()));
 
         // Now remove the workflow object manually from the database
@@ -837,7 +836,7 @@ public class WorkflowManager
      * rejects an item - rejection means undoing a submit - WorkspaceItem is
      * created, and the WorkflowItem is removed, user is emailed
      * rejection_message.
-     * 
+     *
      * @param c
      *            Context
      * @param wi
@@ -875,8 +874,8 @@ public class WorkflowManager
         notifyOfReject(c, wi, e, rejection_message);
 
         log.info(LogManager.getHeader(c, "reject_workflow", "workflow_item_id="
-                + wi.getID() + "item_id=" + wi.getItem().getID()
-                + "collection_id=" + wi.getCollection().getID() + "eperson_id="
+                + wi.getID() + ", item_id=" + wi.getItem().getID()
+                + ", collection_id=" + wi.getCollection().getID() + ", eperson_id="
                 + e.getID()));
 
         return wsi;
@@ -903,10 +902,10 @@ public class WorkflowManager
     static void deleteTasks(Context c, WorkflowItem wi) throws SQLException
     {
         String myrequest = "DELETE FROM TaskListItem WHERE workflow_id= ? ";
-       
+
         DatabaseManager.updateQuery(c, myrequest, wi.getID());
     }
-    
+
     // send notices of curation activity
     public static void notifyOfCuration(Context c, WorkflowItem wi, EPerson[] epa,
            String taskName, String action, String message) throws SQLException, IOException
@@ -939,8 +938,8 @@ public class WorkflowManager
         }
         catch (MessagingException e)
         {
-            log.error(LogManager.getHeader(c, "notifyOfCuration", "cannot email users" + 
-                                          " of workflow_item_id" + wi.getID()), e);
+            log.error(LogManager.getHeader(c, "notifyOfCuration", "cannot email users" +
+                                          ", workflow_item_id=" + wi.getID()), e);
         }
     }
 
@@ -985,17 +984,17 @@ public class WorkflowManager
                     {
                         case WFSTATE_STEP1POOL:
                             message = messages.getString("org.dspace.workflow.WorkflowManager.step1");
-                            
+
                             break;
-                            
+
                         case WFSTATE_STEP2POOL:
                             message = messages.getString("org.dspace.workflow.WorkflowManager.step2");
-                            
+
                             break;
-                            
+
                         case WFSTATE_STEP3POOL:
                             message = messages.getString("org.dspace.workflow.WorkflowManager.step3");
-                            
+
                             break;
                     }
                     email.addArgument(message);
@@ -1009,8 +1008,8 @@ public class WorkflowManager
                 String gid = (mygroup != null) ?
                              String.valueOf(mygroup.getID()) : "none";
                 log.error(LogManager.getHeader(c, "notifyGroupofTask",
-                        "cannot email user" + " group_id" + gid
-                                + " workflow_item_id" + wi.getID()), e);
+                        "cannot email user" + ", group_id=" + gid
+                                + ", workflow_item_id=" + wi.getID()), e);
             }
         }
     }
@@ -1049,9 +1048,9 @@ public class WorkflowManager
         {
             // log this email error
             log.error(LogManager.getHeader(c, "notify_of_reject",
-                    "cannot email user" + " eperson_id" + e.getID()
-                            + " eperson_email" + e.getEmail()
-                            + " workflow_item_id" + wi.getID()), re);
+                    "cannot email user" + ", eperson_id=" + e.getID()
+                            + ", eperson_email=" + e.getEmail()
+                            + ", workflow_item_id=" + wi.getID()), re);
 
             throw re;
         }
@@ -1059,9 +1058,9 @@ public class WorkflowManager
         {
             // log this email error
             log.error(LogManager.getHeader(c, "notify_of_reject",
-                    "cannot email user" + " eperson_id" + e.getID()
-                            + " eperson_email" + e.getEmail()
-                            + " workflow_item_id" + wi.getID()));
+                    "cannot email user" + ", eperson_id=" + e.getID()
+                            + ", eperson_email=" + e.getEmail()
+                            + ", workflow_item_id=" + wi.getID()));
         }
     }
 
@@ -1076,7 +1075,7 @@ public class WorkflowManager
 
     /**
      * get the title of the item in this workflow
-     * 
+     *
      * @param wi  the workflow item object
      */
     public static String getItemTitle(WorkflowItem wi) throws SQLException
@@ -1097,7 +1096,7 @@ public class WorkflowManager
 
     /**
      * get the name of the eperson who started this workflow
-     * 
+     *
      * @param wi  the workflow item
      */
     public static String getSubmitterName(WorkflowItem wi) throws SQLException
