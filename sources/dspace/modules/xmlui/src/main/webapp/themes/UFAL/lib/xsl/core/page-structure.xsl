@@ -140,11 +140,6 @@
                 <link rel="stylesheet" href="{$theme-path}/lib/css/jquery.fileupload-ui.css"> </link>
 	    </xsl:if>
 	    
-	    <!-- license selector -->
-        <xsl:if test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='include-library'][@qualifier='licenseselect']">
-            <link rel="stylesheet" href="{$theme-path}/lib/lindat-license-selector/lib/license-selector.css"> </link>
-        </xsl:if>
-	    
 
 	    <!-- jquery-ui -->
             <xsl:if test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='include-library'][@qualifier='jquery-ui']">
@@ -577,12 +572,6 @@
             <script type="text/javascript" src="{$theme-path}/lib/js/ufal-select-collection.js">&#160;</script>
         </xsl:if>
         
-        <xsl:if test="/dri:document/dri:meta/dri:pageMeta/dri:metadata[@element='include-library'][@qualifier='licenseselect']">            
-            <script type="text/javascript" src="{$theme-path}/lib/lindat-license-selector/vendor/lodash.js">&#160;</script>
-			<script type="text/javascript" src="{$theme-path}/lib/lindat-license-selector/lib/license-selector.js">&#160;</script>            
-        </xsl:if>
-        
-
 
         <script type="text/javascript">
             runAfterJSImports.execute();
@@ -605,6 +594,5 @@
     </xsl:template>
 
 </xsl:stylesheet>
-
 
 
