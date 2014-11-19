@@ -258,6 +258,31 @@ harvesterInfo.anchorName = LINDAT_CLARIN_digital_library_at_Institute_of_Formal_
 # whether to show language field in user profile
 lr.xmlui.user.showlanguage = false
 
-lr.repository.identifier = lindat.mff.cuni.cz
-
 #mind the documentation for oai/cite and the respective apache rewrite
+lr.repository.identifier = lindat.mff.cuni.cz 
+
+############################################
+#
+# Tracker configuration
+#
+# Enable or disable tracker
+#lr.tracker.enabled = true
+#
+## Type of the tracker. Currently only the Piwik tracker is supported
+#lr.tracker.type = piwik
+#
+# Tracker API URL to which tracking information is being sent
+#lr.tracker.api.url = https://host/piwik/piwik.php
+#
+# Site ID under which OAI requests are filed
+#lr.tracker.oai.site_id = 5
+#
+# Site ID under which Bitstream downloads are filed
+#lr.tracker.bitstream.site_id = 5
+#
+############################################
+lr.tracker.enabled = true
+lr.tracker.type = piwik
+lr.tracker.api.url = https://ufal.mff.cuni.cz/piwik/piwik.php
+lr.tracker.oai.site_id = 5
+lr.tracker.bitstream.site_id = 5
