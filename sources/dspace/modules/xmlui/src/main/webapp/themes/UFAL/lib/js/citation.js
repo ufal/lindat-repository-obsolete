@@ -48,7 +48,7 @@ ufal.citation = {
 						"</span>" +
 					"</a>").appendTo(textDiv);					
 			
-			var citeText = jQuery("<div class='cite-text linkify'></div>").appendTo(textDiv);
+			var citeText = jQuery("<div class='cite-text linkify'><i class='fa fa-spinner fa-spin fa-2x'> </i></div>").appendTo(textDiv);
 			
 			jQuery.ajax(
 				{
@@ -60,8 +60,17 @@ ufal.citation = {
 			.done(
 					function(data) {
 						var jdata_html = data;
-						jdata_html = ufal.citation.extract_metadata_html(jdata_html);
-						citeText.html(ufal.citation.convert_metadata_to_html(jdata_html, "extract_metadata_html"));
+						if(data.indexOf("<error code=")>0) {
+							citeText.html("<a href='" + URI + "'>" + URI + "</a>")
+						}else{
+							jdata_html = ufal.citation.extract_metadata_html(jdata_html);
+							citeText.html(ufal.citation.convert_metadata_to_html(jdata_html, "extract_metadata_html"));
+						}
+					}
+			)
+			.fail(
+					function(data) {
+						citeText.html("<a href='" + URI + "'>" + URI + "</a>")
 					}
 			);
 						
@@ -200,3 +209,4 @@ jQuery(document).ready(function (){
 		ufal.citation.citationBox(jQuery(this));
 	});
 });
+
