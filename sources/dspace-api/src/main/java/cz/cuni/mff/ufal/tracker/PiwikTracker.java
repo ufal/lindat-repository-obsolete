@@ -112,9 +112,9 @@ public class PiwikTracker implements Tracker
     protected String getIpAddress(HttpServletRequest request)
     {
         String ip = "";
-        String header = request.getHeader("HTTP_X_FORWARDED_FOR");
+        String header = request.getHeader("X-Forwarded-For");
         if(header == null) {
-            header = request.getHeader("REMOTE_ADDR");
+            header = request.getRemoteAddr();
         }
         if(header != null) {
             String[] ips = header.split(", ");
