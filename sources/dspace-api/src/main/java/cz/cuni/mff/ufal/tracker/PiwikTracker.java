@@ -17,7 +17,7 @@ public class PiwikTracker implements Tracker
     /** log4j category */
     private static Logger log = Logger.getLogger(PiwikTracker.class);
 
-    protected SimplePiwikTracker tracker;    
+    protected SimplePiwikTracker tracker;
 
     PiwikTracker()
     {
@@ -28,9 +28,16 @@ public class PiwikTracker implements Tracker
     {
         String apiURL = ConfigurationManager.getProperty("lr",
                 "lr.tracker.api.url");
+        String authToken = ConfigurationManager.getProperty("lr",
+                "lr.tracker.api.auth.token");
+
         try
         {
             tracker = new SimplePiwikTracker(apiURL);
+            if (authToken != null && !authToken.isEmpty())
+            {
+                tracker.setTokenAuth(authToken);
+            }
         }
         catch (PiwikException e)
         {
@@ -40,19 +47,19 @@ public class PiwikTracker implements Tracker
 
     public void trackPage(HttpServletRequest request, String pageName)
     {
-        
+
         String pageURL = getFullURL(request);
         tracker.setPageUrl(pageURL);
-        
-        preTrack(request);               
+
+        preTrack(request);
         URL url = tracker.getPageTrackURL(pageName);
-        sendTrackingRequest(url);        
+        sendTrackingRequest(url);
     }
 
     public void trackDownload(HttpServletRequest request)
     {
         String downloadURL = getFullURL(request);
-        
+
         preTrack(request);
         URL url = tracker.getDownloadTrackURL(downloadURL);
         sendTrackingRequest(url);
@@ -62,11 +69,11 @@ public class PiwikTracker implements Tracker
     {
         try
         {
-            HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.connect();            
+            conn.connect();
             int responseCode = conn.getResponseCode();
-            
+
             if (responseCode != 200)
             {
                 log.error("Invalid response code from Piwik tracker API: "
@@ -99,6 +106,21 @@ public class PiwikTracker implements Tracker
 
     protected void preTrack(HttpServletRequest request)
     {
+        tracker.setIp(getIpAddress(request));
+    }
+
+    protected String getIpAddress(HttpServletRequest request)
+    {
+        String ip = "";
+        String header = request.getHeader("HTTP_X_FORWARDED_FOR");
+        if(header == null) {
+            header = request.getHeader("REMOTE_ADDR");
+        }
+        if(header != null) {
+            String[] ips = header.split(", ");
+            ip = ips.length > 0 ? ips[0] : "";
+        }
+        return ip;
     }
 
 }

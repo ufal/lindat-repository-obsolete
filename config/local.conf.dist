@@ -274,6 +274,9 @@ lr.repository.identifier = lindat.mff.cuni.cz
 # Tracker API URL to which tracking information is being sent
 #lr.tracker.api.url = https://host/piwik/piwik.php
 #
+# Tracker API authentication token
+#lr.tracker.api.auth.token = 
+#
 # Site ID under which OAI requests are filed
 #lr.tracker.oai.site_id = 5
 #
@@ -284,6 +287,7 @@ lr.repository.identifier = lindat.mff.cuni.cz
 lr.tracker.enabled = true
 lr.tracker.type = piwik
 lr.tracker.api.url = https://ufal.mff.cuni.cz/piwik/piwik.php
+lr.tracker.api.auth.token =
 lr.tracker.oai.site_id = 5
 lr.tracker.bitstream.site_id = 5
 
