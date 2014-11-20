@@ -14,6 +14,7 @@ public class PiwikBitstreamTracker extends PiwikTracker
 
     @Override
     protected void preTrack(HttpServletRequest request) {
+        super.preTrack(request);
         tracker.setIdSite(getIdSite());
         try
         {
