@@ -20,6 +20,8 @@ handle-server
 .idea
 local.conf
 sources/dspace/config/modules/lr.cfg
+*.iml
+**/overlays
 
 #don't ignore
 !config/local.conf.dist

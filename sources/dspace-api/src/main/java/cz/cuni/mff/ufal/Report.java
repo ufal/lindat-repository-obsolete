@@ -135,10 +135,10 @@ public class Report {
         reports_.put( "OAI-PMH validation", new report_oaipmh_validator() );
         reports_.put( "Server resources info", new report_vm_bean_counters() );
         reports_.put( "Assetstore verify file validity", new report_assetstore_validity() );
-        reports_.put( "Shibboleth curation tasks", new report_shibd_curation() );
-        reports_.put( "Logs curation tasks", new report_logs_curation(start_date_, end_date_) );
         reports_.put( "Handle(s) info", new report_handle_info() );
         reports_.put( "Handle resolution statistics", new report_handle_resolution_statistics(start_date_, end_date_) );
+        reports_.put( "Shibboleth curation tasks", new report_shibd_curation() );
+        reports_.put( "Logs curation tasks", new report_logs_curation(start_date_, end_date_) );
     }
 
     // helpers
@@ -1084,12 +1084,12 @@ class report_curator implements simple_report
         //int[] goodStates = {Curator.CURATE_SUCCESS, Curator.CURATE_SKIP};                   
         // all curation
         for (String task_name : new String[] {
-                "profileformats",
-                "checkhandles", 
-                "checklinks", 
-                "requiredmetadata", 
-                "checkmetadata",
-                } )
+            "profileformats",
+            "requiredmetadata",
+            "fastchecklinks",
+            "checkhandles",
+            "checkmetadata"
+        } )
         {
             try {
                 ret += String.format("=================\n\nTask %s", task_name);
@@ -1275,7 +1275,8 @@ class report_discojuice_info implements simple_report
             ret += String.format("Using these static discojuice feeds [%s] as source.\n",feedsConfig);
             //Try to download our feeds file, so the proper action is triggered
             StringWriter writer = new StringWriter();
-            org.apache.commons.io.IOUtils.copy(new URL(ConfigurationManager.getProperty("dspace.url")+"/discojuice/feeds").openStream(), writer);
+            org.apache.commons.io.IOUtils.copy(new URL(
+                ConfigurationManager.getProperty("dspace.url")+"/discojuice/feeds").openStream(), writer);
             String jsonp = writer.toString();
             //end download
             String json = jsonp.substring(jsonp.indexOf("(") + 1, jsonp.lastIndexOf(")")); //strip the dj_md_1()
@@ -1291,7 +1292,9 @@ class report_discojuice_info implements simple_report
                 entities.add(entityID);
             }
             int idCount = entities.size();
-            ret += String.format("Our feeds file contains %d entities out of which %d are unique.\nThis number should be around 370 (374 on 10.12.2013). The number displayed in discojuice gui should be around 410 (407 non unique + 3 inlined). These can vary.", counter, idCount);
+            ret += String.format("Our feeds file contains %d entities out of which %d are unique.\n" +
+                "This number should be around 1200?? (20.11.2014).",
+                counter, idCount);
         } catch (Exception e){
             e.printStackTrace();
         }
