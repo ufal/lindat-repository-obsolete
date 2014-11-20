@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 import org.dspace.content.Community;
+import org.dspace.content.DCValue;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.Item;
 import org.dspace.curate.AbstractCurationTask;
@@ -31,12 +32,30 @@ public class AddBrandingMetadata extends AbstractCurationTask {
         	try {
 	            Item item = (Item)dso;	            
 	            Community c[] = item.getCommunities();
-	            if(c!=null && c.length>0) {
+	            if ( c!=null && c.length>0) {
 	            	String cName = c[0].getName();
-	            	item.clearMetadata("local", "branding", null, Item.ANY);
-	            	item.addMetadata("local", "branding", null, null, cName);
-		            item.update();
+
+					DCValue[] oldLocalBrandings = item.getMetadata("local", "branding", null, Item.ANY);
+					String oldCName = ( 1 == oldLocalBrandings.length ) ? oldLocalBrandings[0].value : "";
+					if ( !cName.equals(oldCName) ) {
+						String oldBranding = oldCName;
+
+						if ( 1 < oldLocalBrandings.length ) {
+							oldBranding = "<< multiple local.branding >>";
+						}else if ( 0 == oldLocalBrandings.length ) {
+							oldBranding = "<< no local.branding >>";
+						}
+
+						results.append(
+							String.format("Item [%s] had different branding [%s], changed to [%s]",
+								item.getHandle(), oldBranding, cName)
+						);
+						item.clearMetadata("local", "branding", null, Item.ANY);
+						item.addMetadata("local", "branding", null, null, cName);
+						item.update();
+					}
 	            }
+				status = Curator.CURATE_SUCCESS;
         	} catch (Exception ex) {
         		status = Curator.CURATE_FAIL;
         		results.append(ex.getLocalizedMessage()).append("\n");
