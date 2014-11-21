@@ -1,13 +1,22 @@
 language: java
 
+python:
+  - "2.7"
+
 env:
   - MAVEN_OPTS=-Xmx1024M
 
+
 before_install:
+  - whoami
+  - java -version
+  - python --version
+  - "cd config && cp local.conf.dist local.conf"
 
 
 install:
-  - "echo 'Skipping install stage, dependencies will be downloaded during build and test stages.'"
+
+before_script:
 
 script:
   - "cd scripts && make compile"
