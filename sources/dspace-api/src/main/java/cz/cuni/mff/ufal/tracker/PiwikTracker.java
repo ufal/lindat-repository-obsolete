@@ -96,8 +96,7 @@ public class PiwikTracker implements Tracker
         url.append("http".equals(request.getScheme())
                 && request.getServerPort() == 80
                 || "https".equals(request.getScheme())
-                && request.getServerPort() == 443 ? "" : ":");
-        url.append(request.getServerPort());
+                && request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
         url.append(request.getRequestURI());
         url.append(request.getQueryString() != null ? "?"
                 + request.getQueryString() : "");
