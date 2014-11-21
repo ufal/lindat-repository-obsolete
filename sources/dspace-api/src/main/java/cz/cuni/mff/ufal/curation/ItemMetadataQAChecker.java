@@ -34,7 +34,8 @@ import com.google.gson.GsonBuilder;
  */
 @SuppressWarnings("deprecation")
 public class ItemMetadataQAChecker extends AbstractCurationTask {
-    
+
+    public static final int CURATE_WARNING = -1000;
     /** Expected types. */
     private static final String[] DCTYPE_VALUES = { 
         "corpus", "lexicalConceptualResource", "languageDescription", "toolService" };
@@ -165,9 +166,18 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
             }
             
             // format the error if any
-            if ( status != Curator.CURATE_SUCCESS ) {
-                results.append( String.format("ERROR! [%s] reason: %s",
-                                get_handle(item), err_str) );
+            switch (status)
+            {
+                case Curator.CURATE_SUCCESS:
+                    break;
+                case CURATE_WARNING:
+                    results.append( String.format("Warning: [%s] reason: %s",
+                        get_handle(item), err_str) );
+                    break;
+                default:
+                    results.append( String.format("ERROR! [%s] reason: %s",
+                        get_handle(item), err_str) );
+                    break;
             }
         }
 
@@ -420,7 +430,7 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
             if ( null == vals || 0 == vals.length ) {
                 throw new CurateException(
                     String.format("does not contain any [%s] values", md),
-                    Curator.CURATE_FAIL);
+                    CURATE_WARNING);
             }
         }
     }
@@ -435,8 +445,9 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
         {
             DCValue[] vals = item.getMetadata(md);
             if ( null != vals && vals.length > 0 ) {
-                results.append( 
-                    String.format("Item [%s] contains suspicious [%s] metadata", get_handle(item), md) );
+                throw new CurateException(
+                    String.format("contains suspicious [%s] metadata", md),
+                    Curator.CURATE_FAIL);
             }
         }
     }
