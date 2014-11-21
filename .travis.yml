@@ -2,7 +2,7 @@ language: java
 
 addons:
   postgresql: "9.3"
-  
+
 python:
   - "2.7"
 
@@ -11,10 +11,10 @@ env:
 
 
 before_install:
-  - echo whoami
-  - echo java -version
-  - echo python --version
-  - echo `pwd`
+  - whoami
+  - java -version
+  - python --version
+  - pwd
   - "cd config && cp local.conf.dist local.conf && cd .."
   - "cd scripts"
   - make create_databases
