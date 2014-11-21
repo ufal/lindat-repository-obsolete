@@ -427,7 +427,7 @@ generate_handle_list:
 	@sudo -u $(DSPACE_USER) psql $(DATABASE_NAME) -c "select handle from handle where resource_id in (select item_id from item where in_archive = 't' and withdrawn = 'f');" | tail -n +3 | head -n -2
 
 update_openaire_cache:
-	@sudo -u $(TOMCAT_USER) $(DIR_INSTALLATION)/bin/openaire-refresh-list
+	$(DIR_INSTALLATION)/bin/openaire-refresh-list
 
 
 #======================================================

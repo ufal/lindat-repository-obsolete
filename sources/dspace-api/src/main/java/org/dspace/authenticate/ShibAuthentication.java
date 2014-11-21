@@ -218,7 +218,10 @@ public class ShibAuthentication implements AuthenticationMethod
         } catch (Throwable t) {
             // Log the error, and undo the authentication before returning a failure.
             log.error("Unable to successfully authenticate using shibboleth for user because of an exception.",t);
-            DSpaceApi.getFunctionalityManager().setErrorMessage("We couldn't finish the authentication because of an exception\n.");
+            String errorMessage = DSpaceApi.getFunctionalityManager().getErrorMessage();
+            if(errorMessage==null || errorMessage.equals("")) {
+            	DSpaceApi.getFunctionalityManager().setErrorMessage("We couldn't finish the authentication because of an exception\n.");
+            }
             context.setCurrentUser(null);
             return AuthenticationMethod.NO_SUCH_USER;
         }

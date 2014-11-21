@@ -258,6 +258,7 @@ harvesterInfo.anchorName = LINDAT_CLARIN_digital_library_at_Institute_of_Formal_
 # whether to show language field in user profile
 lr.xmlui.user.showlanguage = false
 
+#mind the documentation for oai/cite and the respective apache rewrite
 lr.repository.identifier = lindat.mff.cuni.cz 
 
 ############################################
@@ -300,6 +301,3 @@ lr.tracker.bitstream.site_id = 5
 # that should be ignored while checking for required metadata.
 # Leave it empty if you want to check everything.
 lr.curation.metadata.checkrequired.ignore = metashare.*
-
-
-#mind the documentation for oai/cite and the respective apache rewrite

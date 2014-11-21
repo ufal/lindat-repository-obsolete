@@ -20,7 +20,7 @@
 			<Format ref="dim" />
 			<Format ref="ore" />
 			<Format ref="mods" />
-			<Format ref="qdc" />
+			<!--Format ref="qdc" /-->
 			<Format ref="bibtex" />
 			<Format ref="oai_metasharev2" />
 			<Format ref="cmdi" />

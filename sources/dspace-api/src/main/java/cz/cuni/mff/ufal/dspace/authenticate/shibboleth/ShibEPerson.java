@@ -2,7 +2,6 @@
 package cz.cuni.mff.ufal.dspace.authenticate.shibboleth;
 
 import java.sql.SQLException;
-import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
@@ -196,10 +195,8 @@ public class ShibEPerson
                     String oldIdp = oldNetid.substring( delimiter+1, oldNetid.length()-1);
                     oldNetid = oldNetid.substring(0, delimiter);
                     functionalityManager.setErrorMessage(
-                            String.format("Your email is already associated with userid %s and that " +
-                                    "person logged in from %s.\nYou are logging in using %s. " +
-                                    "Is it the same IDP as the last time?\nContact the Help Desk " +
-                                    "in case of problems.", oldNetid, oldIdp, org_));
+                            String.format("Your email (%s) is already associated with a different user. " +
+                            		"It is also possible that you used a different identity provider to login before.", email));
                     //eperson=null;
                     throw new AuthorizeException("The identified EPerson based upon Shibboleth email header, " +
                             "'"+emailHeader+"'='"+email+"', is locked to another netid: '"+eperson.getNetid()+"'. " +

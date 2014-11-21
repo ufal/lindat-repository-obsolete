@@ -17,10 +17,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.dspace.content.DCValue;
-import org.dspace.content.DSpaceObject;
-import org.dspace.content.Item;
-import org.dspace.content.MetadataSchema;
+import org.dspace.content.*;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Context;
 import org.dspace.curate.AbstractCurationTask;
@@ -37,7 +34,8 @@ import com.google.gson.GsonBuilder;
  */
 @SuppressWarnings("deprecation")
 public class ItemMetadataQAChecker extends AbstractCurationTask {
-    
+
+    public static final int CURATE_WARNING = -1000;
     /** Expected types. */
     private static final String[] DCTYPE_VALUES = { 
         "corpus", "lexicalConceptualResource", "languageDescription", "toolService" };
@@ -95,11 +93,9 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
 			//log.info("LanguageMap:" + _language_name_code_map);
 
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+            log.error( "problems fetching iso_langs.json", e );
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+            log.error( "problems fetching iso_langs.json", e );
 		}
 	}
 
@@ -148,7 +144,13 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
                         validate_duplicate_metadata(item, dcs, results);
                         //
                         validate_strange_metadata(item, dcs, results);
-                        
+                        //
+                        validate_branding_consistency(item, dcs, results);
+                        //
+                        validate_rights_labels(item, dcs, results);
+                        //
+                        validate_highly_recommended_metadata(item, dcs, results);
+
                         status = Curator.CURATE_SUCCESS;
                     }catch(CurateException exc) {
                         err_str = exc.getMessage();
@@ -164,9 +166,18 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
             }
             
             // format the error if any
-            if ( status != Curator.CURATE_SUCCESS ) {
-                results.append( String.format("ERROR! [%s] reason: %s",
-                                get_handle(item), err_str) );
+            switch (status)
+            {
+                case Curator.CURATE_SUCCESS:
+                    break;
+                case CURATE_WARNING:
+                    results.append( String.format("Warning: [%s] reason: %s",
+                        get_handle(item), err_str) );
+                    break;
+                default:
+                    results.append( String.format("ERROR! [%s] reason: %s",
+                        get_handle(item), err_str) );
+                    break;
             }
         }
 
@@ -264,44 +275,53 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
                     throws CurateException
     {
         Context context = null;
+        String handle_prefix = ConfigurationManager.getProperty("handle.canonical.prefix");
         try {
-            DCValue[] dcs_replaced = item.getMetadata("dc.relation.isreplacedby");
-                if (dcs_replaced.length == 0 ) {
+            for ( String[] two_way_relation : new String[][] {
+                new String[] {
+                    "dc.relation.isreplacedby",
+                    "dc.relation.replaces"
+                },
+            })
+            {
+                String lhs_relation = two_way_relation[0];
+                String rhs_relation = two_way_relation[1];
+
+                DCValue[] dcs_replaced = item.getMetadata(lhs_relation);
+                if (dcs_replaced.length == 0) {
                     return;
                 }
-                
-            int status = Curator.CURATE_FAIL;
-            context = new Context();
-            for ( DCValue dc : dcs_replaced ) 
-            {
-                String handle = dc.value.replaceAll(
-                    ConfigurationManager.getProperty("handle.canonical.prefix"), "");
-                DSpaceObject dso_mentioned = HandleManager.resolveToObject(context, handle);
-                if ( dso_mentioned instanceof Item ) 
-                {
-                    Item item_mentioned = (Item) dso_mentioned;
-                    DCValue[] dcs_mentioned = item_mentioned.getMetadata("dc.relation.replaces");
-                    for ( DCValue dc_mentioned : dcs_mentioned ) {
-                        String handle_mentioned = dc_mentioned.value.replaceAll(
-                            ConfigurationManager.getProperty("handle.canonical.prefix"), "");
-                        // compare the handles
-                        if ( handle_mentioned.equals(item.getHandle()) ) 
-                        {
-                            status = Curator.CURATE_SUCCESS;
-                            results.append( 
-                                String.format("Item [%s] meets relation requirements", get_handle(item)) );
-                            break;
+
+                int status = Curator.CURATE_FAIL;
+                context = new Context();
+                for (DCValue dc : dcs_replaced) {
+                    String handle = dc.value.replaceAll(handle_prefix, "");
+                    DSpaceObject dso_mentioned = HandleManager.resolveToObject(context, handle);
+                    if (dso_mentioned instanceof Item) {
+                        Item item_mentioned = (Item) dso_mentioned;
+                        DCValue[] dcs_mentioned = item_mentioned.getMetadata(rhs_relation);
+                        for (DCValue dc_mentioned : dcs_mentioned) {
+                            String handle_mentioned = dc_mentioned.value.replaceAll(
+                                handle_prefix, "");
+                            // compare the handles
+                            if (handle_mentioned.equals(item.getHandle())) {
+                                status = Curator.CURATE_SUCCESS;
+                                results.append(
+                                    String.format("Item [%s] meets relation requirements", get_handle(item)));
+                                break;
+                            }
                         }
                     }
                 }
-            }
-            
-            // indicate fail
-            if ( status != Curator.CURATE_SUCCESS ) {
-                throw new CurateException(
-                    String.format("Item [%s] contains dc.relation.isreplacedby but the " +
-                        "referenced object does not contain dc.relation.replaces or does not point " +
-                        "to the item itself!\n", get_handle(item)), status );
+
+                // indicate fail
+                if (status != Curator.CURATE_SUCCESS) {
+                    throw new CurateException(
+                        String.format("contains %s but the referenced object " +
+                            "does not contain %s or does not point to the item itself!\n",
+                            lhs_relation, rhs_relation, get_handle(item)),
+                        status);
+                }
             }
         
             context.complete();
@@ -310,7 +330,7 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
             if ( context != null ) {
                 context.abort();
             }
-            throw new CurateException(e.toString(), Curator.CURATE_FAIL);
+            throw new CurateException(e.getMessage(), Curator.CURATE_FAIL);
         }
     }
     
@@ -331,26 +351,92 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
             }
         }
     }
-    
-    private void validate_duplicate_metadata(Item item, DCValue[] dcs, StringBuilder results) 
-                    throws CurateException
+
+    private void validate_duplicate_metadata(Item item, DCValue[] dcs, StringBuilder results)
+        throws CurateException
     {
         for ( String no_duplicate : new String[] {
             "local.branding",
             "dc.type",
             "dc.accessioned"
-        }) 
+        })
         {
             DCValue[] vals = item.getMetadata(no_duplicate);
             if ( null != vals && vals.length > 1 ) {
                 throw new CurateException(
-                    String.format("value [%s] is prsent multiple times", no_duplicate), 
+                    String.format("value [%s] is present multiple times", no_duplicate),
                     Curator.CURATE_FAIL);
             }
         }
     }
-    
-    private void validate_strange_metadata(Item item, DCValue[] dcs, StringBuilder results) 
+
+    private void validate_branding_consistency(Item item, DCValue[] dcs, StringBuilder results)
+        throws CurateException
+    {
+        try {
+            Community c[] = item.getCommunities();
+            if ( c!=null && c.length>0) {
+                String c_name = c[0].getName();
+                DCValue[] brandings = item.getMetadata("local", "branding", null, Item.ANY);
+                if ( 1 != brandings.length ) {
+                    throw new CurateException(
+                        String.format("local.branding present [%d] count", brandings.length),
+                            Curator.CURATE_FAIL);
+                }
+                if (!c_name.equals(brandings[0].value)) {
+                    throw new CurateException(
+                        String.format("local.branding [%s] does not match community [%s]",
+                            brandings[0].value, c_name),
+                        Curator.CURATE_FAIL);
+                }
+            }
+        } catch (SQLException e) {
+            throw new CurateException(
+                String.format("has invalid community [%s]", e.getMessage()),
+                Curator.CURATE_FAIL);
+
+        }
+    }
+
+    private void validate_rights_labels(Item item, DCValue[] dcs, StringBuilder results)
+        throws CurateException
+    {
+        DCValue[] dcvs = item.getMetadata("dc", "rights", "label", Item.ANY);
+        try {
+            if (null != item.getHandle() && !item.hasUploadedFiles() && dcvs != null && dcvs.length > 0) {
+                StringBuilder labels = new StringBuilder();
+                for (DCValue label : dcvs) {
+                    labels.append(label.value).append(" ");
+                }
+                throw new CurateException(
+                    String.format("has labels [%s] but no files", labels.toString()),
+                    Curator.CURATE_FAIL);
+            }
+        } catch (SQLException e) {
+            throw new CurateException(
+                String.format("has internal problems [%s]", e.getMessage()),
+                Curator.CURATE_FAIL);
+        }
+    }
+
+    private void validate_highly_recommended_metadata(Item item, DCValue[] dcs, StringBuilder results)
+        throws CurateException
+    {
+        for ( String md : new String[] {
+            "dc.subject",
+        })
+        {
+            DCValue[] vals = item.getMetadata(md);
+            if ( null == vals || 0 == vals.length ) {
+                throw new CurateException(
+                    String.format("does not contain any [%s] values", md),
+                    CURATE_WARNING);
+            }
+        }
+    }
+
+
+    private void validate_strange_metadata(Item item, DCValue[] dcs, StringBuilder results)
                     throws CurateException
     {
         for ( String md : new String[] {
@@ -359,8 +445,9 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
         {
             DCValue[] vals = item.getMetadata(md);
             if ( null != vals && vals.length > 0 ) {
-                results.append( 
-                    String.format("Item [%s] contains suspicious [%s] metadata", get_handle(item), md) );
+                throw new CurateException(
+                    String.format("contains suspicious [%s] metadata", md),
+                    Curator.CURATE_FAIL);
             }
         }
     }

@@ -210,13 +210,11 @@ public class RequiredMetadata extends AbstractCurationTask
                 
                 if (count == 0)
                 {
-                    sb.append(" has all required fields");
-                    report(sb.toString());
-                    setResult(sb.toString());
-                } else {
-                    report(sb.toString());
-                    setResult(sb.toString());
+                    sb = new StringBuilder();
                 }
+
+                report(sb.toString());
+                setResult(sb.toString());
             }
             catch (DCInputsReaderException dcrE)
             {

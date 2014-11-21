@@ -8,9 +8,7 @@
 package org.dspace.ctask.general;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
-import java.net.URL;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -410,8 +408,19 @@ public class BasicLinkChecker extends AbstractCurationTask
         // loop over possible chain of redirections
         while (redirectionResponseStatus.isRedirection())
         {
-            url = redirectionResponseStatus.getRedirectionURL();
-            responseStatus.setRedirectionURL(url);
+            String redirected_to_url = redirectionResponseStatus.getRedirectionURL();
+            try {
+                final URI u = new URI(redirected_to_url);
+                if ( !u.isAbsolute() ) {
+                    redirected_to_url = new URL( new URL(url),
+                        redirected_to_url ).toExternalForm();
+                }
+            } catch (URISyntaxException e) {
+            } catch (MalformedURLException e) {
+            }
+
+
+            responseStatus.setRedirectionURL(redirected_to_url);
 
             if (processedURLs.contains(redirectionResponseStatus
                     .getRedirectionURL()))
@@ -420,8 +429,8 @@ public class BasicLinkChecker extends AbstractCurationTask
                 break;
             }
 
-            redirectionResponseStatus = getRealResponseStatus(url);
-            processedURLs.add(url);
+            redirectionResponseStatus = getRealResponseStatus(redirected_to_url);
+            processedURLs.add(redirected_to_url);
 
             if (isHandle)
             {
@@ -481,6 +490,7 @@ public class BasicLinkChecker extends AbstractCurationTask
 
             // get response code
             int code = connection.getResponseCode();
+
             responseStatus.setCode(code);
             if (responseStatus.isRedirection())
             {
