@@ -8,10 +8,11 @@ env:
 
 
 before_install:
-  - whoami
-  - java -version
-  - python --version
-  - "cd config && cp local.conf.dist local.conf"
+  - echo whoami
+  - echo java -version
+  - echo python --version
+  - echo `pwd`
+  - "cd config && cp local.conf.dist local.conf && cd .."
 
 
 install:
@@ -19,4 +20,5 @@ install:
 before_script:
 
 script:
+  - echo `pwd`
   - "cd scripts && make compile"
