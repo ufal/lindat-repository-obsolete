@@ -1,5 +1,8 @@
 language: java
 
+addons:
+  postgresql: "9.3"
+  
 python:
   - "2.7"
 
@@ -13,7 +16,10 @@ before_install:
   - echo python --version
   - echo `pwd`
   - "cd config && cp local.conf.dist local.conf && cd .."
-
+  - "cd scripts"
+  - make create_databases
+  - make setup
+  - make new_deploy
 
 install:
 
@@ -21,4 +27,4 @@ before_script:
 
 script:
   - echo `pwd`
-  - "cd scripts && make compile"
+  - "make compile"
