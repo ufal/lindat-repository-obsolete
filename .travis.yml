@@ -15,16 +15,27 @@ before_install:
   - java -version
   - python --version
   - pwd
+  - sudo apt-get install -qq cloc
+  - echo "Initialising default settings"
+  - sed -i'' 's/tomcat.(TOMCAT_VERSION)/travis/' ./config/template/variable.makefile
+  - sed -i'' 's/lr.common.theme = /lr.common.theme = \/tmp\/dspace/' ./config/local.conf.dist
+  - sed -i'' 's/lr.dspace.dir = /lr.dspace.dir = \/tmp\/dspace/' ./config/local.conf.dist
   - "cd config && cp local.conf.dist local.conf && cd .."
   - "cd scripts"
+  - echo "Creating dspace DB user and databases"
+  - sudo -u postgres createuser --superuser dspace
   - make create_databases
+  - echo "Installing prerequisites"
   - make setup
-  - make new_deploy
 
 install:
 
 before_script:
 
 script:
-  - echo `pwd`
-  - "make compile"
+  - make new_deploy
+  - cloc ../
+  - make print_message
+  - make test_dspace_database
+  - make test_utilities_database
+  - make selenium_tests || echo "Tests failed"
