@@ -1,0 +1,13 @@
+language: java
+
+env:
+  - MAVEN_OPTS=-Xmx1024M
+
+before_install:
+
+
+install:
+  - "echo 'Skipping install stage, dependencies will be downloaded during build and test stages.'"
+
+script:
+  - "cd scripts && make compile"
