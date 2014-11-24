@@ -651,7 +651,7 @@
           <repeatable>true</repeatable>
           <label>Replaces</label>
           <input-type>onebox</input-type>
-          <hint>A related resource that is supplanted, displaced, or superseded by the described resource.</hint>
+          <hint>URL to a related resource that is supplanted, displaced, or superseded by the described resource.</hint>
           <autocomplete>solr-handle</autocomplete>
           <required></required>
           <collapsible>Special fields</collapsible>
