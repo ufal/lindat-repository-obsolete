@@ -10,7 +10,10 @@ package org.dspace.content;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import cz.cuni.mff.ufal.dspace.content.Handle;
+import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeException;
+import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.embargo.EmbargoManager;
@@ -26,6 +29,8 @@ import org.dspace.handle.HandleManager;
  */
 public class InstallItem
 {
+    private static final Logger log = Logger.getLogger(Item.class);
+
     /**
      * Take an InProgressSubmission and turn it into a fully-archived Item,
      * creating a new Handle.
@@ -136,7 +141,7 @@ public class InstallItem
         // are not set then set them to today.
         DCDate now = DCDate.getCurrent();
         
-        // If the item dosn't have a date.accessioned create one.
+        // If the item doesn't have a date.accessioned create one.
         DCValue[] dateAccessioned = item.getDC("date", "accessioned", Item.ANY);
         if (dateAccessioned.length == 0)
         {
@@ -196,13 +201,48 @@ public class InstallItem
 
         // create issue date if not present
         DCValue[] currentDateIssued = item.getDC("date", "issued", Item.ANY);
-
         if (currentDateIssued.length == 0)
         {
             DCDate issued = new DCDate(now.getYear(),now.getMonth(),now.getDay(),-1,-1,-1);
             item.addDC("date", "issued", null, issued.toString());
         }
 
+        // check replaced by
+        DCValue[] replaces = item.getDC( "relation", "replaces", Item.ANY );
+        if ( replaces.length == 1 ) {
+            String handle_prefix = ConfigurationManager.getProperty(
+                "handle.canonical.prefix" );
+            String url_of_replaced = replaces[0].value;
+            String handle_of_replaced = url_of_replaced.replaceAll( handle_prefix, "" );
+            Item replaced_item = (Item) HandleManager.resolveToObject( c, handle_of_replaced );
+            if ( null != replaced_item )
+            {
+                if (!item.isReplacedBy())
+                {
+                    String url_of_item = String.format(
+                        "%s%s", handle_prefix, item.getHandle());
+                    replaced_item.addMetadata(
+                            MetadataSchema.DC_SCHEMA, "relation", "isreplacedby", Item.ANY, url_of_item);
+                    replaced_item.update();
+
+                    log.info(String.format("Adding isreplacedby to [%s] from [%s]",
+                        replaced_item.getHandle(), item.getHandle()));
+
+                } else {
+                    log.warn(String.format("Not adding isreplacedby to [%s] from [%s] " +
+                            "because a value already exists!",
+                        replaced_item.getHandle(), item.getHandle()));
+                }
+
+            }else {
+                log.warn(String.format("Not adding isreplacedby to [%s] from [%s] " +
+                        "because the replaced item could not be found!",
+                    handle_of_replaced, item.getHandle()));
+            }
+        }
+
+
+        // provenance
         StringBuilder provDescription = new StringBuilder();
         provDescription.append("Made available in DSpace ").append(
                         item.get_provenance_header(c.getCurrentUser()));
