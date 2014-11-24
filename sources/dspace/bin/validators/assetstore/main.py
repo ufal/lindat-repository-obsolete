@@ -83,7 +83,8 @@ def db_assetstore(env):
         if os.path.exists( dspace_cfg ):
             env["config_dist_relative"][0] = dspace_cfg
             break
-    dspace_cfg, prefix = os.path.join( os.getcwd( ), env["config_dist_relative"][0] ), "ufal."
+    dspace_cfg = os.path.join( os.getcwd( ), env["config_dist_relative"][0] )
+    prefix = "lr."
     if not os.path.exists( dspace_cfg ):
         _logger.info( "Could not find [%s]", dspace_cfg )
         dspace_cfg, prefix = os.path.join( os.getcwd( ), env["dspace_cfg_relative"] ), ""
@@ -145,6 +146,9 @@ def check_files(env):
     badbad = []
     unchecked = []
     assetstore_pairs = db_assetstore( env )
+    if assetstore_pairs is None:
+        _logger.critical( "Problems fetching assetstore file extensions" ) 
+        return -1
     files_to_check = [os.path.abspath( x ) for x in glob.glob( env["input_dir"] )]
     _logger.info( "Checking [%d] files", len( files_to_check ) )
     for pos, f in enumerate( files_to_check ):

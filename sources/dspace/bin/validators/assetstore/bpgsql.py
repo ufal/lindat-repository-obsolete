@@ -935,7 +935,7 @@ class Connection(object):
             cpwd = crypt.crypt(self.__passwd, salt)
             self.__send(_pack('!i', len(cpwd)+5) + cpwd + '\0')
         elif code == 5:
-            import hashlib
+            import md5 as hashlib
 
             m = hashlib.new(self.__passwd + self.__userid).hexdigest()
             m = hashlib.new(m + self.__read_bytes(4)).hexdigest()
