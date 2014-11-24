@@ -3,7 +3,7 @@
 
     <command>
         <name>ufal-info</name>
-        <description>Generate statistics and information from UFAL</description>
+        <description>Create repository report</description>
         <step>
             <class>cz.cuni.mff.ufal.Report</class>
         </step>
