@@ -453,8 +453,13 @@ public class DSpaceApi {
         manager.close();
 		return true;
 	}
-	
-    public static void load_dspace()
+
+	public static void load_dspace() {
+		load_dspace("./config/dspace.cfg");
+	}
+
+
+    public static void load_dspace(String explicit_file)
     {
         try {
         	ConfigurationManager.getProperty("dspace.url");
@@ -471,7 +476,7 @@ public class DSpaceApi {
 	    }
 
         // last option
-        ConfigurationManager.loadConfig("./config/dspace.cfg");
+        ConfigurationManager.loadConfig(explicit_file);
     }
     
     public static String convertBytesToHumanReadableForm(long bytes) {
