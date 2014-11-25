@@ -61,6 +61,12 @@ public class ReplicationManager {
 	
 	static ReplicationService replicationService = null;
 	
+	public static final List<String> inProgress = new ArrayList<String>();
+	public static final Map<String, Exception> failed = new HashMap<String, Exception>();
+	
+	
+	private static boolean replicateAll = ConfigurationManager.getBooleanProperty("lr", "lr.replication.eudat.replicateall", false);
+	
 	// mandatory from CINES: EUDAT_ROR, OTHER_From, OTHER_AckEmail
 	public enum MANDATORY_METADATA {
 		EUDAT_ROR,
@@ -77,6 +83,10 @@ public class ReplicationManager {
 		replicationService = new ReplicationServiceIRODSImpl();
 		res = replicationService.initialize(config);
 		overrideJargonProperties(((ReplicationServiceIRODSImpl)replicationService).getSettableJargonProperties());
+		
+		// run the replicate all background thread 
+		ReplicateAllBackgroundThread.initiate();
+		
 		return res;
 	}
 	
@@ -148,9 +158,8 @@ public class ReplicationManager {
 
 	public static void replicateMissing(Context c, int max) throws Exception {
 		for (String handle : listMissingReplicas()) {
-			
-			if (max-- <= 0) return;
-			
+			if(failed.containsKey(handle) || inProgress.contains(handle)) continue;
+			if (max-- <= 0) return;						
 			DSpaceObject dso = HandleManager.resolveToObject(c, handle);
 			replicate(c, handle, (Item) dso);
 		}
@@ -315,6 +324,18 @@ public class ReplicationManager {
     	return info;
     }
     
+    public static void setReplicateAll(boolean status) {
+    	replicateAll = status;
+    	if(status==true) {
+    		// this will start the thread if not already running
+    		ReplicateAllBackgroundThread.initiate();
+    	}
+    }
+    
+    public static boolean isReplicateAllOn() {
+    	return replicateAll;
+    }
+    
 } // class
 
 @SuppressWarnings("deprecation")
@@ -384,7 +405,9 @@ class ReplicationThread implements Runnable {
 
 			// AIP failure
 			if (!file.exists()) {
-				throw new IOException(String.format("AIP package has not been created [%s]", file.getCanonicalPath()));
+				Exception e = new IOException(String.format("AIP package has not been created [%s]", file.getCanonicalPath()));
+				ReplicationManager.failed.put(handle, e);
+				throw e;
 			}
 
 			// replicate
@@ -397,9 +420,15 @@ class ReplicationThread implements Runnable {
 			metadata.put(MANDATORY_METADATA.EUDAT_ROR.name(), itemUrl);
 			metadata.put(MANDATORY_METADATA.OTHER_From.name(), ReplicationManager.WHO);
 			metadata.put(MANDATORY_METADATA.OTHER_AckEmail.name(), ReplicationManager.NOTIFICATION_EMAIL);
+			
+			if(ReplicationManager.failed.containsKey(handle)) ReplicationManager.failed.remove(handle);
+			ReplicationManager.inProgress.add(handle);			
 			ReplicationManager.getReplicationSerice().replicate(file.getAbsolutePath(), metadata, force);
-		} catch (Exception e) {
+			ReplicationManager.inProgress.remove(handle);
+		} catch (Exception e) {			
 			ReplicationManager.log.error(String.format("Could not replicate [%s] [%s]", this.handle, e.toString()), e);
+			ReplicationManager.inProgress.remove(handle);
+			ReplicationManager.failed.put(handle, e);
 		}
 
 		try {
@@ -421,4 +450,58 @@ class ReplicationThread implements Runnable {
 		file.createNewFile();
 		return file;
 	}
+}
+
+
+class ReplicateAllBackgroundThread extends Thread {
+
+	private static ReplicateAllBackgroundThread currentThread = null;	
+	
+	private Context context = null;
+	
+	private ReplicateAllBackgroundThread() {
+		try {
+			this.context = new Context();
+			this.context.setCurrentUser(EPerson.find(context, 1));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void initiate() {
+		if(currentThread==null) {
+			currentThread = new ReplicateAllBackgroundThread();
+			currentThread.start();
+		}
+	}
+	
+	@Override
+	public void run() {
+		while(true) {
+			
+			try {
+				//After every 10 minutes resume the replication
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				currentThread = null;
+			}
+			
+			if(!ReplicationManager.isReplicationOn() || !ReplicationManager.isReplicateAllOn()) {
+				currentThread = null;
+				break;
+			}
+			
+			try {
+				
+				ReplicationManager.replicateMissing(context, 1);
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+	}
+	
 }

@@ -8,48 +8,23 @@ import org.apache.cocoon.environment.Request;
 import org.dspace.app.xmlui.aspect.administrative.AbstractControlPanelTab;
 import org.dspace.app.xmlui.wing.WingException;
 import org.dspace.app.xmlui.wing.element.Division;
-import org.dspace.app.xmlui.wing.element.List;
 
-import cz.cuni.mff.ufal.dspace.b2safe.ReplicationManager;
+public class ControlPanelReplicationTab extends AbstractControlPanelTab {
 	
-	public class ControlPanelReplicationTab extends AbstractControlPanelTab {
+	private Request request;
+
+	@Override
+	public void addBody(Map objectModel, Division mainDiv) throws WingException {
 		
-		private Request request;
-	
-		@Override
-		public void addBody(Map objectModel, Division mainDiv) throws WingException {
-			
-			request = ObjectModelHelper.getRequest(objectModel);
-	
-			Division div = mainDiv.addDivision("irods_div");
-			
-			String commandOutput = ControlPanelReplicationTabHelper.executeCommand(request, context);
-			
-			ControlPanelReplicationTabHelper.showConfiguration(div);
-			
-			if (!ReplicationManager.isReplicationOn()) {
-				return;
-			}
-	
-			ControlPanelReplicationTabHelper.addForm(div);
-	
-			if (ControlPanelReplicationTabHelper.shouldListReplicas(request)) {
-				div = mainDiv.addDivision("result_div", "itemlist");
-				try {
-					commandOutput = ControlPanelReplicationTabHelper.listReplicas(div, request, context);
-				} catch (Exception e) {
-					commandOutput = e.getLocalizedMessage();
-				}
-			}
-			
-			if (commandOutput != null) {			
-				div = mainDiv.addDivision("result_div", "itemlist");
-				div.setHead("Result");
-				div.addDivision("result", "alert alert-info")
-						.addPara("programs-output", "programs-result linkify")
-						.addContent(commandOutput);
-			}
-		}			
+		request = ObjectModelHelper.getRequest(objectModel);
+
+		Division div = mainDiv.addDivision("replication_div");
 		
-	}
+		div.setHead("Replication Service");
+		
+		ControlPanelReplicationTabHelper.showTabs(div, request, context);		
+
+	}			
+	
+}
 
