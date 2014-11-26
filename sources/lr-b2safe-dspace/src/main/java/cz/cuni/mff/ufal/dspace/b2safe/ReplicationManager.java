@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.dspace.authorize.AuthorizeManager;
@@ -61,11 +63,15 @@ public class ReplicationManager {
 	
 	static ReplicationService replicationService = null;
 	
+	public static final List<String> replicationQueue = new ArrayList();
 	public static final List<String> inProgress = new ArrayList<String>();
 	public static final Map<String, Exception> failed = new HashMap<String, Exception>();
 	
 	
 	private static boolean replicateAll = ConfigurationManager.getBooleanProperty("lr", "lr.replication.eudat.replicateall", false);
+	
+	//only one replication job at a time
+	private static ExecutorService executor = Executors.newFixedThreadPool(1);
 	
 	// mandatory from CINES: EUDAT_ROR, OTHER_From, OTHER_AckEmail
 	public enum MANDATORY_METADATA {
@@ -258,6 +264,10 @@ public class ReplicationManager {
 	}
 
 	public static void replicate(Context context, String handle, Item item, boolean force) throws UnsupportedOperationException, SQLException {
+		
+		//If replication queue still contains this handle remove it
+		ReplicationManager.replicationQueue.remove(handle);
+		
 		// not set up
 		if (!replicationService.isInitialized()) {
 			String msg = String.format("Replication not set up - [%s] will not be processed", handle);
@@ -277,11 +287,13 @@ public class ReplicationManager {
 			log.warn(msg);
 			throw new UnsupportedOperationException(msg);
 		}
-
-		Thread runner = new Thread(new ReplicationThread(context.getCurrentUser(), handle, item, force));
+		
+		Thread runner = new Thread(new ReplicationThread(context, handle, item, force));
 		runner.setPriority(Thread.MIN_PRIORITY);
 		runner.setDaemon(true);
-		runner.start();
+		
+		executor.submit(runner);
+
 	}
 
     public static String handleToFileName(String handle) {
@@ -329,11 +341,19 @@ public class ReplicationManager {
     	if(status==true) {
     		// this will start the thread if not already running
     		ReplicateAllBackgroundThread.initiate();
+    	} else {
+    		replicationQueue.clear();
     	}
     }
     
     public static boolean isReplicateAllOn() {
     	return replicateAll;
+    }
+    
+    @Override
+    protected void finalize() throws Throwable {
+    	super.finalize();
+    	executor.shutdown();
     }
     
 } // class
@@ -342,14 +362,14 @@ public class ReplicationManager {
 class ReplicationThread implements Runnable {
 	
 	String handle;
-	int itemId;
-	int epersonId;
+	int itemId;	
 	boolean force;
-
-	public ReplicationThread(EPerson eperson, String handle, Item item, boolean force) {
+	Context context;
+	
+	public ReplicationThread(Context context, String handle, Item item, boolean force) {
+		this.context = context;
 		this.handle = handle;
 		this.itemId = item.getID();
-		this.epersonId = eperson.getID();
 		this.force = force;
 	}
 
@@ -376,10 +396,13 @@ class ReplicationThread implements Runnable {
 	}
 
 	public void run() {
-		Context context = null;
 		try {
-			context = new Context();
-			context.setCurrentUser(EPerson.find(context, this.epersonId));
+			
+			//If retrying a failed item removed from failed
+			if(ReplicationManager.failed.containsKey(handle)) ReplicationManager.failed.remove(handle);						
+			ReplicationManager.inProgress.add(handle);
+			ReplicationManager.log.info("Replication started for item: " + handle);			
+			
 			context.turnOffAuthorisationSystem();
 			ReplicationManager.log.info("Replicating to IRODS");
 
@@ -421,10 +444,9 @@ class ReplicationThread implements Runnable {
 			metadata.put(MANDATORY_METADATA.OTHER_From.name(), ReplicationManager.WHO);
 			metadata.put(MANDATORY_METADATA.OTHER_AckEmail.name(), ReplicationManager.NOTIFICATION_EMAIL);
 			
-			if(ReplicationManager.failed.containsKey(handle)) ReplicationManager.failed.remove(handle);
-			ReplicationManager.inProgress.add(handle);			
 			ReplicationManager.getReplicationSerice().replicate(file.getAbsolutePath(), metadata, force);
-			ReplicationManager.inProgress.remove(handle);
+			ReplicationManager.log.info("Replication finished: " + handle);
+			ReplicationManager.inProgress.remove(handle);			
 		} catch (Exception e) {			
 			ReplicationManager.log.error(String.format("Could not replicate [%s] [%s]", this.handle, e.toString()), e);
 			ReplicationManager.inProgress.remove(handle);
@@ -434,7 +456,7 @@ class ReplicationThread implements Runnable {
 		try {
 			if (context != null) {
 				context.restoreAuthSystemState();
-				context.complete();
+				context.commit();
 			}
 		} catch (SQLException e) {
 		}
@@ -477,31 +499,56 @@ class ReplicateAllBackgroundThread extends Thread {
 	
 	@Override
 	public void run() {
-		while(true) {
-			
-			try {
-				//After every 10 minutes resume the replication
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				currentThread = null;
-			}
-			
-			if(!ReplicationManager.isReplicationOn() || !ReplicationManager.isReplicateAllOn()) {
-				currentThread = null;
-				break;
-			}
-			
-			try {
-				
-				ReplicationManager.replicateMissing(context, 1);
-				
-			} catch (SQLException e) {
-				e.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			
+		if(!ReplicationManager.isReplicationOn() || !ReplicationManager.isReplicateAllOn()) {
+			currentThread = null;
+			return;
 		}
+
+		try {
+			ReplicationManager.replicationQueue.addAll(ReplicationManager.listMissingReplicas());
+		} catch (Exception e) {
+			ReplicationManager.log.error(e);
+			currentThread = null;			
+			return;
+		}
+		
+		while (!ReplicationManager.replicationQueue.isEmpty()) {
+		
+			try {
+				
+				String handle = ReplicationManager.replicationQueue.remove(0);
+				
+				if(ReplicationManager.failed.containsKey(handle) || ReplicationManager.inProgress.contains(handle)) continue;
+				DSpaceObject dso = HandleManager.resolveToObject(context, handle);
+				ReplicationManager.replicate(context, handle, (Item) dso);
+				
+				try {
+					//wait for few seconds before starting next item 
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+				}
+				
+				// test again if the replication service and replicate all is still on
+				if(!ReplicationManager.isReplicationOn() || !ReplicationManager.isReplicateAllOn()) {
+					currentThread = null;
+					break;
+				}
+										
+			} catch (SQLException e) {
+				ReplicationManager.log.error(e);
+			} catch (Exception e) {
+				ReplicationManager.log.error(e);
+			}
+		}
+		
+		try {
+			context.complete();
+		} catch (SQLException e) {
+			ReplicationManager.log.error(e);
+		}
+		currentThread = null;		
+		ReplicationManager.setReplicateAll(false);
+		
 	}
 	
 }

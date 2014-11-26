@@ -2,6 +2,7 @@ package cz.cuni.mff.ufal.dspace.app.xmlui.aspect.administrative;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -35,6 +36,7 @@ public class ControlPanelReplicationTabHelper {
 		String action = request.getParameter("action");
 		if(action==null || action.equals("") || action.equals("toggle_on_off")) action = "show_info";
 		if(action.equals("replicate_specific") || action.equals("replicate_all_off") || action.equals("replicate_all_on")) action="repl_tobe";
+		if(action.equals("Delete")) action = "list_replicas";
 		List tabs = div.addList("replication_tabs");
 		
 		executeCommand(div, request, context);
@@ -177,6 +179,38 @@ public class ControlPanelReplicationTabHelper {
 			return;
 		}
 		
+		if(action.equals("Delete")) {
+			Map<String, String> params = request.getParameters();
+			
+			ArrayList<String> todel = new ArrayList<String>();
+	
+			for (String key : params.keySet()) {
+				if (key.startsWith(delete_prefix)) {
+					String path = params.get(key);
+					todel.add(path);
+				}
+			}
+			
+			if(!todel.isEmpty()) {
+				Division m = div.addDivision("message", "alert alert-success bold");
+				for(String path : todel) {
+					try {
+						if(ReplicationManager.delete(path)) {
+							m.addPara().addContent("Deleted Successfully " + path);
+						} else {
+							m.addPara(null, "text-error").addContent("Unable to delete " + path);
+						}
+					} catch (Exception e) {
+						m.addPara(null, "text-error").addContent("Unable to delete " + path + " " + e.getLocalizedMessage());
+					}
+				}
+			} else {
+				Division m = div.addDivision("message", "alert alert-error");
+				m.addPara("Please select an item to delete.");
+			}
+			action = "list_replicas";
+		}
+		
 		if(action.equals("replicate_all_on")) {
 			ReplicationManager.setReplicateAll(true);
 			action = "repl_tobe";
@@ -185,7 +219,7 @@ public class ControlPanelReplicationTabHelper {
 			ReplicationManager.setReplicateAll(false);
 			action = "repl_tobe";
 		}
-		
+				
 		if (!ReplicationManager.isReplicationOn()) return;
 				
 		if(action.equals("show_info")) {
@@ -205,34 +239,6 @@ public class ControlPanelReplicationTabHelper {
 			showCannotReplicate(div, request, context);
 		}
 		
-		// Delete path
-		//
-		else if (request.getParameter("submit_repl_delete") != null) {
-			try {
-				String param = request.getParameter("submit_repl_delete_filepath");
-				if (null == param || 0 == param.length()) {
-					
-					@SuppressWarnings("unchecked")
-					Map<String, String> params = request.getParameters();
-					
-					
-					for (String key : params.keySet()) {
-						if (key.startsWith(delete_prefix)) {
-							param = params.get(key);							
-						}
-					}
-
-				} else {
-					if(ReplicationManager.delete(param)) {
-						//message = "Successfully deleted " + param;
-					}
-				}
-			} catch (Exception e) {
-				//message += "Could not delete path: " + e.toString();
-			}
-
-		}
-
 		// Download path
 		//
 		else if (request.getParameter("submit_repl_download") != null) {
@@ -269,9 +275,9 @@ public class ControlPanelReplicationTabHelper {
 				m.addPara().addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=replicate_all_on", "REPLICATE ALL DAEMON: OFF", "label label-warning btn btn-sm pull-right");
 			}
 			
-			m.addPara().addContent(String.format("All items (%d), public: (%d)\n", size, ReplicationManager.getPublicItemHandles().size()));			
+			m.addPara().addContent(String.format("All items (%d), Public (%d)\n", size, ReplicationManager.getPublicItemHandles().size()));			
 			java.util.List<String> tobe = ReplicationManager.listMissingReplicas();
-			m.addPara().addContent(String.format("Tobe replicated (%d):\n", tobe.size()));
+			m.addPara().addContent(String.format("Tobe replicated (%d)", tobe.size()));
 			
 			Table tobeTable = div.addTable("tobe_replicated", 1, 3);
 			
@@ -293,7 +299,12 @@ public class ControlPanelReplicationTabHelper {
 						c.addHighlight("label label-important").addContent("ERROR");
 						c.addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=replicate_specific" +
 								"&handle=" + handle , "", "fa fa-repeat label label-important");						
-					}else {
+					} else
+					if(ReplicationManager.replicationQueue.contains(handle)){
+						c.addHighlight("label label-warning").addContent("QUEUED");
+						c.addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=replicate_specific" +
+								"&handle=" + handle , "", "fa fa-plus label label-primary");						
+					} else {
 						c.addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=replicate_specific" +
 								"&handle=" + handle , "", "fa fa-plus label label-primary");
 					}
@@ -318,7 +329,7 @@ public class ControlPanelReplicationTabHelper {
 			java.util.List<String> nonPubItems = ReplicationManager.getNonPublicItemHandles();
 			
 			Division m = div.addDivision("message", "alert alert-info");
-			m.addPara().addContent(String.format("All items (%d), public: (%d)", size, pubItems.size()));
+			m.addPara().addContent(String.format("All items (%d), Public (%d)", size, pubItems.size()));
 			m.addPara().addContent(String.format("NOT going to be replicated (%d)", nonPubItems.size()));			
 
 			Table nottobeTable = div.addTable("tobe_replicated", 1, 2);
@@ -387,6 +398,8 @@ public class ControlPanelReplicationTabHelper {
 		
 		Division msg = div.addDivision("message", "alert alert-info");
 		
+		msg.addPara().addHighlight("pull-right").addButton("action", "label label-important btn btn-sm btn-danger").setValue("Delete");
+		
 		// display it
 		Table table = div.addTable("replica_items", 1, 6);
 		Row head = table.addRow(Row.ROLE_HEADER);
@@ -395,7 +408,7 @@ public class ControlPanelReplicationTabHelper {
 		head.addCellContent("ITEM");
 		head.addCellContent("SIZE REP/ORIG");
 		head.addCellContent("INFO");
-		head.addCellContent("DEL");
+		head.addCell("DEL_COL", null, null).addContent("DEL");
 
 		int pos = 0;
 		long all_file_size = 0;
@@ -403,7 +416,7 @@ public class ControlPanelReplicationTabHelper {
 		for (String name : list) {
 
 			Row row = table.addRow(Row.ROLE_DATA);
-			row.addCellContent(String.valueOf(pos + 1));
+			row.addCellContent(String.valueOf(++pos));
 							
 			Map<String, String> metadata;
 			try {
@@ -421,7 +434,9 @@ public class ControlPanelReplicationTabHelper {
 			} else if (adminStatus!=null && adminStatus.startsWith("Error")) {
 				rend_status += "label-important";
 			} else {
-				rend_status += "label-warning";
+				row.addCell().addHighlight("label label-warning").addHighlight("fa fa-spinner fa-spin");
+				row.addCell(1, 4).addContent(name);
+				continue;
 			}
 						
 			row.addCell().addHighlight(rend_status).addContent(adminStatus);
@@ -474,7 +489,7 @@ public class ControlPanelReplicationTabHelper {
 			c.addHighlight(rend_status).addContent(" " + md5);
 			c.addHighlight("label label-default fa fa-clock-o bold").addContent(" " + metadata.get("INFO_TimeOfTransfer"));
 			
-			CheckBox r = row.addCell("todelete", Row.ROLE_DATA, null).addCheckBox(String.format("%s-%d", delete_prefix, ++pos));
+			CheckBox r = row.addCell("todelete", Row.ROLE_DATA, "todelete").addCheckBox(delete_prefix + "_" + pos);
 			r.addOption(name);
 
 		}
