@@ -2,6 +2,7 @@ package cz.cuni.mff.ufal.dspace.app.xmlui.aspect.administrative;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -10,6 +11,7 @@ import org.apache.cocoon.environment.Request;
 import org.apache.commons.io.FileUtils;
 import org.dspace.app.xmlui.wing.WingException;
 import org.dspace.app.xmlui.wing.element.Button;
+import org.dspace.app.xmlui.wing.element.Cell;
 import org.dspace.app.xmlui.wing.element.CheckBox;
 import org.dspace.app.xmlui.wing.element.Division;
 import org.dspace.app.xmlui.wing.element.List;
@@ -29,22 +31,39 @@ public class ControlPanelReplicationTabHelper {
 	
 	private final static String delete_prefix = "checkbox-delete";
 	private final static String url_hdl_prefix = ConfigurationManager.getProperty("handle.canonical.prefix");
+		
+	public static void showTabs(Division div, Request request, Context context) throws WingException {
+		String action = request.getParameter("action");
+		if(action==null || action.equals("") || action.equals("toggle_on_off")) action = "show_info";
+		if(action.equals("replicate_specific") || action.equals("replicate_all_off") || action.equals("replicate_all_on")) action="repl_tobe";
+		if(action.equals("Delete")) action = "list_replicas";
+		List tabs = div.addList("replication_tabs");
+		
+		executeCommand(div, request, context);
+		
+		tabs.addItem(action.equals("show_info")?"active":"", "").addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=show_info", "Info");
+		if (ReplicationManager.isReplicationOn()) {			
+			tabs.addItem(action.equals("list_replicas")?"active":"", "").addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=list_replicas", "Replicas");
+			tabs.addItem(action.equals("repl_tobe")?"active":"", "").addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=repl_tobe", "Missing");
+			tabs.addItem(action.equals("repl_not_tobe")?"active":"", "").addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=repl_not_tobe", "Cannot Replicate");
+		}
+		
+	}
 
-	public static void showConfiguration(Division mainDiv) throws WingException {
-		
-		Division div = mainDiv.addDivision("replication_div", "itemlist");
-		div.addPara("", "header").addContent("CONFIGURATION");
-		Table table = div.addTable("irods_config", 1, 2, "font_smaller");
-		
-		Row row_tmp = null;
+	public static void showConfiguration(Division mainDiv, Request request, Context context) throws WingException {
 		
 		boolean isReplicationOn = ReplicationManager.isReplicationOn();
-		row_tmp = table.addRow(null, Row.ROLE_DATA, isReplicationOn ? "alert alert-success" : "alert alert-error");
-		row_tmp.addCellContent("Replication Service Status");
-		row_tmp.addCellContent(isReplicationOn ? "on" : "off");
-		row_tmp = table.addRow(null, Row.ROLE_DATA, isReplicationOn ? "alert alert-success" : "alert alert-error");
-		row_tmp.addCellContent("Replication On/Off");
-		row_tmp.addCell().addButton("submit_repl_on_toggle").setValue("Turn on/off");
+		
+		List statusList = mainDiv.addList("status");
+
+		statusList.addLabel("Replication Service Status");
+		String css = isReplicationOn ? "label label-success" : "label label-important";
+		String status = isReplicationOn ? "ON" : "OFF";
+		String onoff = isReplicationOn ? " TURN OFF" : " TURN ON";		
+		statusList.addItem().addHighlight(css).addContent(status);
+		statusList.addLabel();
+		css = isReplicationOn ? "btn btn-sm btn-danger " : "btn btn-sm btn-primary ";
+		statusList.addItem().addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=toggle_on_off", onoff, css + "fa fa-power-off");
 
 		if(isReplicationOn) {
 			
@@ -66,38 +85,32 @@ public class ControlPanelReplicationTabHelper {
 				serverInfo = new HashMap<String, String>();
 			}
 			
-			row_tmp = table.addRow(Row.ROLE_DATA);
-			row_tmp.addCellContent("IRODS Server API Version");
-			row_tmp.addCellContent(serverInfo.get("API_VERSION"));
+			statusList.addLabel("IRODS Server API Version");
+			statusList.addItem(serverInfo.get("API_VERSION"));
 			
-			row_tmp = table.addRow(Row.ROLE_DATA);		
-			row_tmp.addCellContent("IRODS Server Boot Time");
-			row_tmp.addCellContent(serverInfo.get("SERVER_BOOT_TIME"));
+			statusList.addLabel("IRODS Server Boot Time");
+			statusList.addItem(serverInfo.get("SERVER_BOOT_TIME"));
 			
-			row_tmp = table.addRow(Row.ROLE_DATA);		
-			row_tmp.addCellContent("IRODS Server Rel Version");
-			row_tmp.addCellContent(serverInfo.get("REL_VERSION"));
+			statusList.addLabel("IRODS Server Rel Version");
+			statusList.addItem(serverInfo.get("REL_VERSION"));
 			
-			row_tmp = table.addRow(Row.ROLE_DATA);		
-			row_tmp.addCellContent("IRODS Zone");
-			row_tmp.addCellContent(serverInfo.get("RODS_ZONE"));
+			statusList.addLabel("IRODS Zone");
+			statusList.addItem(serverInfo.get("RODS_ZONE"));
 			
-			row_tmp = table.addRow(Row.ROLE_DATA);		
-			row_tmp.addCellContent("IRODS Server Initialize Date");
-			row_tmp.addCellContent(serverInfo.get("INITIALIZE_DATE"));
+			statusList.addLabel("IRODS Server Initialize Date");
+			statusList.addItem(serverInfo.get("INITIALIZE_DATE"));
 	
 			Properties config = ReplicationManager.getConfiguration();
 	
 			for (CONFIGURATION configElement : CONFIGURATION.values()) {
 				if (configElement.equals(CONFIGURATION.PASSWORD))
 					continue;
-				Row row = table.addRow(Row.ROLE_DATA);
-				row.addCellContent(configElement.name());
+				statusList.addLabel(configElement.name());
 				String value = config.getProperty(configElement.name());
 				if (value == null) {
 					value = "N/A";
 				}
-				row.addCellContent(value);
+				statusList.addItem(value);
 			}
 	
 			/*
@@ -110,7 +123,7 @@ public class ControlPanelReplicationTabHelper {
 		}
 	}
 	
-	public static void addForm(Division div) throws WingException {
+	public static void addForm(Division div, Request request) throws WingException {
 		
 		List form = div.addList("standalone-programs", List.TYPE_FORM, "cp-programs");
 		org.dspace.app.xmlui.wing.element.Item item_row = form.addItem();
@@ -120,6 +133,8 @@ public class ControlPanelReplicationTabHelper {
 		item_row.addButton("submit_repl_tobe").setValue("Tobe Replicated");
 		item_row.addButton("submit_repl_not_tobe").setValue("Cannot Replicate");
 
+		form = div.addList("standalone-programs-input", List.TYPE_FORM, "cp-programs");
+		
 		org.dspace.app.xmlui.wing.element.Item form_item = null;
 
 		form_item = form.addItem(null, "prog-param");
@@ -152,95 +167,78 @@ public class ControlPanelReplicationTabHelper {
 		
 	}
 
-	public static boolean shouldListReplicas(Request request) {
-		return request.getParameter("submit_repl_list_replicas") != null
-				|| request.getParameter("submit_repl_delete") != null;
-	}
+	public static void executeCommand(Division div, Request request, Context context) throws WingException {
 
-	public static String executeCommand(Request request, Context context) {
-		String message = null;
+		String action = request.getParameter("action");
+		if(action==null || action.equals("")) action = "show_info";
 
-		if (request.getParameter("submit_repl_list_home") != null) {
-			message = "Files in home directory:\n\n";
-			try {
-				for (String f : ReplicationManager.list()) {
-					message += f + "\n";
-				}
-			} catch (Exception e) {
-				message = e.getLocalizedMessage();
-			}
-		}
-
-		else if (request.getParameter("submit_repl_on_toggle") != null) {
+		if(action.equals("toggle_on_off")) {
 			boolean on = ReplicationManager.isReplicationOn();
 			ReplicationManager.setReplicationOn(!on);
-			message = String.format("Replication turned %s", !on ? "on" : "off");
+			showConfiguration(div, request, context);
+			return;
 		}
-
-		else if (request.getParameter("submit_repl_tobe") != null) {
-			message = showTobeReplicated(context);
-		}
-
-		else if (request.getParameter("submit_repl_not_tobe") != null) {
-			message = showCannotReplicate(context);
-		}
-
-		// Replicate specific handle
-		//
-		else if (request.getParameter("submit_repl_replicate") != null) {
-			message = replicate(request, context);
-		}
-
-		// Replicate missing items async.
-		//
-		else if (request.getParameter("submit_repl_missing") != null) {
-			try {
-				String param = request.getParameter("submit_repl_missing_count");
-				int count = 10;
-				try {
-					count = Integer.valueOf(param);
-				} catch (Exception e) {
+		
+		if(action.equals("Delete")) {
+			Map<String, String> params = request.getParameters();
+			
+			ArrayList<String> todel = new ArrayList<String>();
+	
+			for (String key : params.keySet()) {
+				if (key.startsWith(delete_prefix)) {
+					String path = params.get(key);
+					todel.add(path);
 				}
-				ReplicationManager.replicateMissing(context, count);
-				message = String.format("Replication of [%s] items started", count);
-			} catch (Exception e) {
-				message = "Could not replicate missing: " + e.toString();
 			}
-
-		}
-
-		// Delete path
-		//
-		else if (request.getParameter("submit_repl_delete") != null) {
-			try {
-				String param = request.getParameter("submit_repl_delete_filepath");
-				if (null == param || 0 == param.length()) {
-					
-					@SuppressWarnings("unchecked")
-					Map<String, String> params = request.getParameters();
-					
-					message = "";
-					
-					for (String key : params.keySet()) {
-						if (key.startsWith(delete_prefix)) {
-							param = params.get(key);							
-							message += String.format("Deleting [%s] ... ", param);
-							message += ReplicationManager.delete(param);
-							message += "\n";
+			
+			if(!todel.isEmpty()) {
+				Division m = div.addDivision("message", "alert alert-success bold");
+				for(String path : todel) {
+					try {
+						if(ReplicationManager.delete(path)) {
+							m.addPara().addContent("Deleted Successfully " + path);
+						} else {
+							m.addPara(null, "text-error").addContent("Unable to delete " + path);
 						}
-					}
-
-				} else {
-					if(ReplicationManager.delete(param)) {
-						message = "Successfully deleted " + param;
+					} catch (Exception e) {
+						m.addPara(null, "text-error").addContent("Unable to delete " + path + " " + e.getLocalizedMessage());
 					}
 				}
-			} catch (Exception e) {
-				message += "Could not delete path: " + e.toString();
+			} else {
+				Division m = div.addDivision("message", "alert alert-error");
+				m.addPara("Please select an item to delete.");
 			}
-
+			action = "list_replicas";
 		}
-
+		
+		if(action.equals("replicate_all_on")) {
+			ReplicationManager.setReplicateAll(true);
+			action = "repl_tobe";
+		} else
+		if(action.equals("replicate_all_off")) {
+			ReplicationManager.setReplicateAll(false);
+			action = "repl_tobe";
+		}
+				
+		if (!ReplicationManager.isReplicationOn()) return;
+				
+		if(action.equals("show_info")) {
+			showConfiguration(div, request, context);
+		} else
+		if(action.equals("list_replicas")) {
+			listReplicas(div, request, context);
+		} else
+		if(action.equals("repl_tobe")){
+			showTobeReplicated(div, request, context);
+		} else
+		if(action.equals("replicate_specific")) {
+			replicate(div, request, context);
+			showTobeReplicated(div, request, context);
+		} else
+		if(action.equals("repl_not_tobe")) {
+			showCannotReplicate(div, request, context);
+		}
+		
 		// Download path
 		//
 		else if (request.getParameter("submit_repl_download") != null) {
@@ -252,18 +250,16 @@ public class ControlPanelReplicationTabHelper {
 					file.delete();
 				}
 				ReplicationManager.retriveFile(remPath, file.getAbsolutePath());
-				message = "file retrived and stored to " + file.getAbsolutePath();
+				//message = "file retrived and stored to " + file.getAbsolutePath();
 			} catch (Exception e) {
-				message += "Could not download path: " + e.toString();
+				//message += "Could not download path: " + e.toString();
 			}
 
 		}
 
-		return message;
 	}
 
-	public static String showTobeReplicated(Context context) {
-		String message = "Replicas to be replicated:\n";
+	public static void showTobeReplicated(Division div, Request request, Context context) throws WingException {		
 		int size = 0;
 		ItemIterator it;
 		try {
@@ -271,95 +267,148 @@ public class ControlPanelReplicationTabHelper {
 			while (null != it.next()) {
 				++size;
 			}
-			message += String.format("All items (%d), public: (%d)\n", size,
-					ReplicationManager.getPublicItemHandles().size());
+			Division m = div.addDivision("message", "alert alert-info");
+
+			if(ReplicationManager.isReplicateAllOn()) {
+				m.addPara().addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=replicate_all_off", "REPLICATE ALL DAEMON: ON", "label label-success btn btn-sm pull-right active");
+			} else {
+				m.addPara().addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=replicate_all_on", "REPLICATE ALL DAEMON: OFF", "label label-warning btn btn-sm pull-right");
+			}
+			
+			m.addPara().addContent(String.format("All items (%d), Public (%d)\n", size, ReplicationManager.getPublicItemHandles().size()));			
 			java.util.List<String> tobe = ReplicationManager.listMissingReplicas();
-			message += String.format("Tobe replicated (%d):\n", tobe.size());
-			for (String f : tobe)
-				message += String.format("%s (%s%s)\n", f, url_hdl_prefix, f);
-		} catch (Exception e) {
-			message += "Could not get list of all items: " + e.toString();
-		}
-		return message;
-	}
-
-	public static String showCannotReplicate(Context context) {
-		String message = "Replicas to be replicated:\n";
-		int size = 0;
-		ItemIterator it;
-		try {
-			java.util.List<String> pubItems = ReplicationManager.getPublicItemHandles();
-			java.util.List<String> nonPubItems = ReplicationManager.getNonPublicItemHandles();
-			message += String.format("All items (%d), public: (%d)\n", size, pubItems.size());
-			message += String.format("NOT going to be replicated (%d):\n", nonPubItems.size());
-
-			it = Item.findAll(context);
-			while (it.next() != null) {
-				size++;
-				for (String f : nonPubItems) {
-					//message += String.format("%s (%s%s)\n", f, url_hdl_prefix, f);
+			m.addPara().addContent(String.format("Tobe replicated (%d)", tobe.size()));
+			
+			Table tobeTable = div.addTable("tobe_replicated", 1, 3);
+			
+			Row head = tobeTable.addRow(Row.ROLE_HEADER);
+			head.addCellContent("#");
+			head.addCellContent("ITEM");
+			head.addCellContent("REPLICATE");
+	
+			int i = 1;
+			for (String handle : tobe) {
+				Row row = tobeTable.addRow(Row.ROLE_DATA);
+				row.addCell().addContent(i++);
+				row.addCell().addXref(request.getContextPath() + "/handle/" + handle, handle);
+				if(ReplicationManager.inProgress.contains(handle)) {
+					row.addCell().addHighlight("fa fa-spinner fa-spin");
+				} else {
+					Cell c = row.addCell();
+					if(ReplicationManager.failed.containsKey(handle)) {
+						c.addHighlight("label label-important").addContent("ERROR");
+						c.addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=replicate_specific" +
+								"&handle=" + handle , "", "fa fa-repeat label label-important");						
+					} else
+					if(ReplicationManager.replicationQueue.contains(handle)){
+						c.addHighlight("label label-warning").addContent("QUEUED");
+						c.addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=replicate_specific" +
+								"&handle=" + handle , "", "fa fa-plus label label-primary");						
+					} else {
+						c.addXref(request.getContextPath() + "/admin/panel?tab=IRODs Replication&action=replicate_specific" +
+								"&handle=" + handle , "", "fa fa-plus label label-primary");
+					}
 				}
 			}
-		} catch (SQLException e) {
-			message += "Could not get list of all items: " + e.toString();
+				
+		} catch (Exception e) {
+			div.addPara("", "alert alert-error").addContent("Could not get list of all items: " + e.toString());
 		}
-		return message;
 	}
 
-	public static String replicate(Request request, Context context) {
-		String message = "Replicating...\n";
+	public static void showCannotReplicate(Division div, Request request, Context context) throws WingException {
+		int size = 0;
+		ItemIterator it;		
+		try {
+			it = Item.findAll(context);
+			while (null != it.next()) {
+				++size;
+			}
+			
+			java.util.List<String> pubItems = ReplicationManager.getPublicItemHandles();
+			java.util.List<String> nonPubItems = ReplicationManager.getNonPublicItemHandles();
+			
+			Division m = div.addDivision("message", "alert alert-info");
+			m.addPara().addContent(String.format("All items (%d), Public (%d)", size, pubItems.size()));
+			m.addPara().addContent(String.format("NOT going to be replicated (%d)", nonPubItems.size()));			
+
+			Table nottobeTable = div.addTable("tobe_replicated", 1, 2);
+
+			Row head = nottobeTable.addRow(Row.ROLE_HEADER);
+			head.addCellContent("#");
+			head.addCellContent("ITEM");
+			
+			int i = 1;
+			for (String handle : nonPubItems) {
+				Row row = nottobeTable.addRow(Row.ROLE_DATA);
+				row.addCell().addContent(i++);
+				row.addCell().addXref(request.getContextPath() + "/handle/" + handle, handle);
+			}
+		} catch (SQLException e) {
+			div.addPara("", "alert alert-error").addContent("Could not get list of all items: " + e.toString());
+		}
+	}
+
+	public static void replicate(Division div, Request request, Context context) throws WingException {
 		try {
 			String handle = null;
-			if (null != request.getParameter("submit_repl_replicate_handle")) {
-				handle = request.getParameter("submit_repl_replicate_handle");
+			if (null != request.getParameter("handle")) {
+				handle = request.getParameter("handle");
 				if (handle.length() == 0) {
 					handle = null;
+					Division msg = div.addDivision("message", "alert alert-error");
+					msg.addPara().addContent("Handle is not provided.");
+					return;
 				}
 			}
 			if (handle != null) {
 				Item item = (Item) HandleManager.resolveToObject(context, handle);
 				if (item != null) {
 					try {
+						Division msg = div.addDivision("message", "alert alert-success");
 						ReplicationManager.replicate(context, handle, item, true);
-						message += "Replication started...";
+						msg.addPara().addContent("Replication started successfully for item " + handle);
 					} catch (Exception e) {
-						message += "Replication failed - " + e.toString();
+						Division msg = div.addDivision("message", "alert alert-error");
+						msg.addPara().addContent("Replication Failed for handle " + handle);
+						msg.addPara().addContent(e.toString());
 					}
 
 				} else {
-					message = String.format("Invalid handle [%s] supplied - cannot find the handle!", handle);
+					Division msg = div.addDivision("message", "alert alert-error");
+					msg.addPara().addContent(String.format("Invalid handle [%s] supplied - cannot find the handle!", handle));
 				}
-			} else {
-				message = "No handle supplied!";
 			}
 		} catch (Exception e) {
-			message += "Could not replicate item: " + e.toString();
+			Division msg = div.addDivision("message", "alert alert-error");
+			msg.addPara().addContent("Replication Failed");
+			msg.addPara().addContent(e.toString());
 		}
-
-		return message;
 	}
 
-	public static String listReplicas(Division div, Request request, Context context) throws Exception {
-		String message = null;
+	public static void listReplicas(Division div, Request request, Context context) throws WingException {
 		java.util.List<String> list = null;
 		try {
-			//Map<String, String> metadata = new HashMap<String, String>();
-			//metadata.put(ReplicationManager.MANDATORY_METADATA.EUDAT_ROR.name(), null);
-			//list = ReplicationManager.search(metadata);
 			list = ReplicationManager.list(true);
 		} catch (Exception e) {
-			message = e.getLocalizedMessage();
-			return message;
+			Division msg = div.addDivision("message", "alert alert-error");
+			msg.addPara().addContent("Replication Failed");
+			msg.addPara().addContent(e.getLocalizedMessage());			
 		}
+		
+		Division msg = div.addDivision("message", "alert alert-info");
+		
+		msg.addPara().addHighlight("pull-right").addButton("action", "label label-important btn btn-sm btn-danger").setValue("Delete");
+		
 		// display it
-		Table table = div.addTable("replica_items", 1, 3, "font_smaller");
+		Table table = div.addTable("replica_items", 1, 6);
 		Row head = table.addRow(Row.ROLE_HEADER);
 		head.addCellContent("#");
 		head.addCellContent("STATUS");
 		head.addCellContent("ITEM");
-		head.addCellContent("SIZE REPLICA/ORIG");
+		head.addCellContent("SIZE REP/ORIG");
 		head.addCellContent("INFO");
-		head.addCellContent("Delete");
+		head.addCell("DEL_COL", null, null).addContent("DEL");
 
 		int pos = 0;
 		long all_file_size = 0;
@@ -367,42 +416,51 @@ public class ControlPanelReplicationTabHelper {
 		for (String name : list) {
 
 			Row row = table.addRow(Row.ROLE_DATA);
-			row.addCellContent(String.valueOf(pos + 1));
+			row.addCellContent(String.valueOf(++pos));
 							
-			Map<String, String> metadata = ReplicationManager.getMetadataOfDataObject(name);
-				
-			
-			String adminStatus = metadata.get("ADMIN_Status");
-			
-			String rend_status = "notok";
-			if (adminStatus!=null && adminStatus.equals("Archive_ok")) {
-				rend_status = "ok";
-			} else if (adminStatus!=null && !adminStatus.startsWith("Error")) {
-				rend_status = "running";
+			Map<String, String> metadata;
+			try {
+				metadata = ReplicationManager.getMetadataOfDataObject(name);
+			} catch (Exception e) {
+				throw new WingException(e);
 			}
+							
+			String adminStatus = metadata.get("ADMIN_Status");
+			if(adminStatus==null) adminStatus = "NA";
 			
-			row.addCell("status", Row.ROLE_DATA, "replica_status " + rend_status).addContent(adminStatus);
+			String rend_status = "label ";
+			if (adminStatus!=null && adminStatus.equals("Archive_ok")) {
+				rend_status += "label-success fa fa-check bold";
+			} else if (adminStatus!=null && adminStatus.startsWith("Error")) {
+				rend_status += "label-important";
+			} else {
+				row.addCell().addHighlight("label label-warning").addHighlight("fa fa-spinner fa-spin");
+				row.addCell(1, 4).addContent(name);
+				continue;
+			}
+						
+			row.addCell().addHighlight(rend_status).addContent(adminStatus);
 			
 			String eudatPID = metadata.get("EUDAT_PID");
 			if (eudatPID!=null) {
 				eudatPID = "http://hdl.handle.net" + eudatPID;
 			}
 
-			row.addCell().addXref(eudatPID, name);
+			row.addCell().addXref(eudatPID, metadata.get("EUDAT_ROR"));
 			
 			// check md5 too
 			String md5 = metadata.get("INFO_Checksum");
 			String original_md5 = metadata.get("OTHER_original_checksum");
 			long orig_file_size = -1;
 			try {
-			 orig_file_size = Long.valueOf(metadata.get("OTHER_original_filesize"));
+				orig_file_size = Long.valueOf(metadata.get("OTHER_original_filesize"));
 			} catch(NumberFormatException e) {
 				
 			}
 			
 			String itemHandle = metadata.get("EUDAT_ROR");
 							
-			String sizes = orig_file_size < 0 ? "N/A" : FileUtils.byteCountToDisplaySize(orig_file_size);
+			String sizes = orig_file_size < 0 ? "NA" : FileUtils.byteCountToDisplaySize(orig_file_size);
 			sizes += " / ";
 			all_file_size += orig_file_size;
 
@@ -415,30 +473,33 @@ public class ControlPanelReplicationTabHelper {
 				}					
 			}
 			
-			row.addCellContent(sizes);
+			row.addCell().addHighlight("label label-info").addContent(sizes);
 			
 			// are md5 ok?
-			if (rend_status.equals("ok") && (original_md5 == null || md5 == null)) {
-				rend_status = "notok";
+			if (!adminStatus.equals("Archive_ok")) {
+				rend_status = "hidden";
 			} else if (original_md5 != null && md5 != null && !original_md5.equals(md5)) {
-				rend_status = "notok";
+				rend_status = "label label-important";
+			} else {
+				rend_status = "label label-success fa fa-check bold";
 			}
 			
-			row.addCell("data", Row.ROLE_DATA, rend_status).addContent(md5);
+			Cell c = row.addCell();
 			
-			CheckBox r = row.addCell("todelete", Row.ROLE_DATA, null).addCheckBox(String.format("%s-%d", delete_prefix, pos+1));
+			c.addHighlight(rend_status).addContent(" " + md5);
+			c.addHighlight("label label-default fa fa-clock-o bold").addContent(" " + metadata.get("INFO_TimeOfTransfer"));
+			
+			CheckBox r = row.addCell("todelete", Row.ROLE_DATA, "todelete").addCheckBox(delete_prefix + "_" + pos);
 			r.addOption(name);
-			pos++;
-
 
 		}
-
-		div.setHead(String.format("Replicated files [#%s]", list.size(),
-				all_file_size < 0 ? "N/A" : FileUtils.byteCountToDisplaySize(all_file_size)));
 		
-		return message;
+		msg.addPara().addContent("Total replicated items: " + pos);
+		msg.addPara().addContent("Total replicated size: " + FileUtils.byteCountToDisplaySize(all_file_size));
+		
 		
 	} // list_replicas	
 	
 }
+
 

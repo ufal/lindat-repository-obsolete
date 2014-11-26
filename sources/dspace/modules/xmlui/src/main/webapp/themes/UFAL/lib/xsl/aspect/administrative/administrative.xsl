@@ -151,5 +151,37 @@
         </xsl:if>
     </xsl:template>
     
-
+    
+    <xsl:template match="dri:list[@n='replication_tabs']" priority="10">
+    	<div role="tabpanel">
+    		<ul class="nav nav-tabs" role="tablist">
+				<xsl:for-each select="dri:item/dri:xref">
+					<li role="presentation">
+						<xsl:attribute name="class">
+							<xsl:value-of select="../@n" />
+						</xsl:attribute>
+						<a>							
+							<xsl:attribute name="href">
+								<xsl:value-of select="@target" />
+							</xsl:attribute>
+		 					<xsl:value-of select="node()" />
+						</a>
+					</li>
+		 		</xsl:for-each>
+    		</ul>    		
+    	</div>
+    </xsl:template>
+    
+    <xsl:template match="dri:field[@id='aspect.administrative.ControlPanel.field.action']" priority="10">
+        <input type="submit">
+                <xsl:call-template name="standardAttributes" />
+                <xsl:attribute name="name">
+                        <xsl:value-of select="@n" />
+                </xsl:attribute>
+                <xsl:attribute name="value">
+                        <xsl:value-of select="dri:value/node()" />
+                </xsl:attribute>
+        </input>
+    </xsl:template>
+    
 </xsl:stylesheet>
