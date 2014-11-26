@@ -112,12 +112,14 @@
                 <xsl:choose>
                     <xsl:when test=".='corpus'">
                         <dc:type xsi:type="dcterms:DCMIType">Text</dc:type>
+                        <dc:type xsi:type="olac:linguistic-type" olac:code="primary_text"/>
                     </xsl:when>
                     <xsl:when test=".='toolService'">
                         <dc:type xsi:type="dcterms:DCMIType">Software</dc:type>
                     </xsl:when>
-                    <xsl:when test=".='lexicalConceptualResource '">
+                    <xsl:when test=".='lexicalConceptualResource'">
                         <dc:type xsi:type="dcterms:DCMIType">Text</dc:type>
+                        <dc:type xsi:type="olac:linguistic-type" olac:code="lexicon"/>
                     </xsl:when>
                     <xsl:when test=".='languageDescription'">
                         <dc:type xsi:type="dcterms:DCMIType">Text</dc:type>
