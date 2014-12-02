@@ -7,6 +7,7 @@
 """
 from collections import defaultdict
 
+
 def item2metadata( cursor, item_id ):
     cursor.execute( """
         select metadataschemaregistry.short_id,  metadatafieldregistry.element, metadatafieldregistry.qualifier, metadatavalue.text_value
@@ -25,6 +26,7 @@ def item2metadata( cursor, item_id ):
         vals[k].append(v)
     return vals 
 
+
 def db2items( cursor ):
     cursor.execute( """
         select item.item_id, eperson.email, collection.name
@@ -42,8 +44,7 @@ def db2items( cursor ):
     return items
 
 
-
-def do( cursor ):
+def do( cursor, _1, _2 ):
     """
         Do something with the database.
     """
@@ -53,10 +54,31 @@ def do( cursor ):
         v["metadata"] = item2metadata(cursor, k)
 
     for i, k in enumerate( sorted(items, key=lambda x: len(items[x]["metadata"])) ):
-        if i > 100:
-            break
+        #if i > 100:
+        #    break
         v = items[k]
-        print 20 * "="
-        print k, v["submitter"], v["collection"]
-        for k, v in v["metadata"].iteritems():
-            print "\t", k, v
+
+        for km, vm in v["metadata"].iteritems():
+            if len(vm) > 1 and km not in (
+                "dc.description.provenance",
+                "dc.subject",
+                "dc.language.iso",
+                "dc.contributor.author",
+                "dc.relation.requires",
+                "metashare.ResourceInfo#DistributionInfo#LicenseInfo.restrictionsOfUse",
+                "metashare.ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo.projectName",
+                "metashare.ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo.fundingType",
+                "metashare.ResourceInfo#DistributionInfo#LicenseInfo.distributionAccessMedium",
+                "metashare.ResourceInfo#ResourceDocumentationInfo.samplesLocation",
+                "dc.publisher",
+                "dc.contributor.other",
+
+
+                #"dc.date.available",
+                #"dc.rights.label",
+                #"dc.date.accessioned",
+                #"dc.source.uri",
+            ):
+                print 20 * "="
+                print k, v["submitter"], v["collection"]
+                print "\t", km, vm
