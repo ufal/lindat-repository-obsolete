@@ -7,7 +7,7 @@ ufal.citation = {
 			var div = jQuery("<div></div>").appendTo(container);
 			var URI = container.attr("uri");
 			var oaiURI = container.attr("oai");
-			var oaiHandle = container.attr("oai-handle");
+			var handle = container.attr("handle");
 			var dataTarget = container.attr("data-target");
 			var title = container.attr("title");
 			div.addClass("alert alert-warning bold");
@@ -27,7 +27,7 @@ ufal.citation = {
 				link.attr("data-target", dataTarget);
 				link.attr("title", title);
 				link.addClass("label label-default exportto");
-				link.attr("href", oaiURI + "/cite?verb=GetRecord&metadataPrefix=" + format + "&identifier=" + oaiHandle);
+				link.attr("href", oaiURI + "/cite?metadataPrefix=" + format + "&handle=" + handle);
 				link.click(ufal.citation.exporter_click);
 			}
 
@@ -52,7 +52,7 @@ ufal.citation = {
 			
 			jQuery.ajax(
 				{
-					url : oaiURI + "/cite?verb=GetRecord&metadataPrefix=html&identifier=" + oaiHandle,
+					url : oaiURI + "/cite?metadataPrefix=html&handle=" + handle,
 					context : document.body,
 					dataType : 'text'
 				}
@@ -87,7 +87,7 @@ ufal.citation = {
 				var metadata = jQuery(xml.getElementsByTagNameNS(
 						"http://lindat.mff.cuni.cz/ns/experimental/bibtex",
 						"bibtex")[0]);
-				if (!metadata.exists()) {
+				if (!metadata) {
 					throw "Not found."
 				}
 				return metadata.text();
@@ -106,7 +106,7 @@ ufal.citation = {
 				var metadata = jQuery(xml.getElementsByTagNameNS(
 						"http://lindat.mff.cuni.cz/ns/experimental/html",
 						"html")[0]).html();
-				if (!metadata.exists()) {
+				if (!metadata) {
 					throw "Not found."
 				}
 				return metadata;

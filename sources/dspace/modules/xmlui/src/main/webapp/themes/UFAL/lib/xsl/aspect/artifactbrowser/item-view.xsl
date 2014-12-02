@@ -102,14 +102,14 @@
                  		<xsl:value-of select="dim:field[@element='identifier' and @qualifier='uri']/node()" />
                		</xsl:attribute>
 					<xsl:attribute name="oai">
-                 		<xsl:value-of select="$oai-url" />
-               		</xsl:attribute>
-					<xsl:attribute name="oai-handle">
-                 		<xsl:value-of select="$oai-handle" />
-               		</xsl:attribute>
+						<xsl:value-of select="$oai-url" />
+					</xsl:attribute>               		
+					<xsl:attribute name="handle">
+                        <xsl:value-of select="substring-after(/mets:METS/@ID,'hdl:')" />
+                    </xsl:attribute>               		
 					<xsl:attribute name="title">
                         <xsl:value-of select="dim:field[@element='title'][not(@qualifier)]/node()" />
-                    </xsl:attribute>               		
+                    </xsl:attribute>
                		&#160;               		
 				</div>
 				<xsl:call-template name="itemSummaryView-DIM-fields">
@@ -599,11 +599,11 @@
                  		<xsl:value-of select="dim:field[@element='identifier' and @qualifier='uri']/node()" />
                		</xsl:attribute>
 					<xsl:attribute name="oai">
-                 		<xsl:value-of select="$oai-url" />
-               		</xsl:attribute>
-					<xsl:attribute name="oai-handle">
-                 		<xsl:value-of select="$oai-handle" />
-               		</xsl:attribute>
+						<xsl:value-of select="$oai-url" />
+					</xsl:attribute>               		               		
+					<xsl:attribute name="handle">
+                        <xsl:value-of select="substring-after(/mets:METS/@ID,'hdl:')" />
+                    </xsl:attribute>               		
 					<xsl:attribute name="title">
                         <xsl:value-of select="dim:field[@element='title'][not(@qualifier)]/node()" />
                     </xsl:attribute>
