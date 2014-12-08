@@ -302,3 +302,20 @@ lr.tracker.bitstream.site_id = 5
 # Leave it empty if you want to check everything.
 lr.curation.metadata.checkrequired.ignore = metashare.*
 
+############################################
+#
+# Link checker
+#
+# User Agent string for link checker
+#lr.link.checker.user.agent = "DSpace Link Validator"
+#
+# Connection timeout for link checker (in milliseconds)
+#lr.link.checker.connect.timeout = 2000
+#
+# Read timeout for link checker (in milliseconds)
+#lr.link.checker.read.timeout = 3000
+#
+############################################
+lr.link.checker.user.agent = "DSpace Link Validator"
+lr.link.checker.connect.timeout = 2000
+lr.link.checker.read.timeout = 3000
