@@ -22,6 +22,7 @@ import org.dspace.content.Bitstream;
 import org.dspace.content.Bundle;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.Item;
+import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.eperson.EPerson;
 
@@ -31,27 +32,27 @@ import cz.cuni.mff.ufal.lindat.utilities.interfaces.IFunctionalities;
 /**
  * This simple selector operates on the authenticated DSpace user and selects
  * between two levels of access.
- * 
+ *
  * <map:selector name="AuthenticatedSelector" src="org.dspace.app.xmlui.AuthenticatedSelector"/>
- * 
- * 
- * 
- * <map:select type="AuthenticatedSelector"> 
+ *
+ *
+ *
+ * <map:select type="AuthenticatedSelector">
  *   <map:when test="administrator">
  *     ...
- *   </map:when> 
- *   <map:when test="eperson"> 
- *     ... 
- *   </map:when> 
- *   <map:otherwise> 
+ *   </map:when>
+ *   <map:when test="eperson">
  *     ...
- *   </map:otherwise> 
+ *   </map:when>
+ *   <map:otherwise>
+ *     ...
+ *   </map:otherwise>
  * </map:select>
- * 
+ *
  * There are only two defined test expressions: "administrator" and "eperson".
  * Remember an administrator is also an eperson so if you need to check for
  * administrators distinct from epersons that select must come first.
- * 
+ *
  * based on class by Scott Phillips
  * modified for LINDAT/CLARIN
  */
@@ -62,11 +63,13 @@ public class AuthenticatedSelector extends AbstractLogEnabled implements
 
     private static Logger log = Logger.getLogger(AuthenticatedSelector.class);
 
-    /** Test expressiots */
+    /** Test expressions */
+    public static final String AUTHORIZED = "authorized";
+
     public static final String EPERSON = "eperson";
 
     public static final String ADMINISTRATOR = "administrator";
-    
+
     /**
      * Determine if the authenticated eperson matches the given expression.
      */
@@ -75,15 +78,15 @@ public class AuthenticatedSelector extends AbstractLogEnabled implements
         try {
             Context context = ContextUtil.obtainContext(objectModel);
             EPerson eperson = context.getCurrentUser();
-            
+            DSpaceObject dso = HandleUtil.obtainHandle(objectModel);
+
             /** UFAL: first check the dtoken */
             Request request = ObjectModelHelper.getRequest(objectModel);
             String dtoken = request.getParameter("dtoken");
-            if(dtoken!=null && !dtoken.isEmpty()) {            
+            if(dtoken!=null && !dtoken.isEmpty()) {
 	            IFunctionalities manager = DSpaceApi.getFunctionalityManager();
 	            manager.openSession();
 	            boolean tokenVerified = true;
-                DSpaceObject dso = HandleUtil.obtainHandle(objectModel);
                 if (dso instanceof Item) { // should be an item
                 	Item item = (Item) dso;
         			Bundle[] originals = item.getBundles("ORIGINAL");
@@ -92,15 +95,42 @@ public class AuthenticatedSelector extends AbstractLogEnabled implements
         					tokenVerified = manager.verifyToken(bitstream.getID(), dtoken);
         					if(!tokenVerified) break;
         				}
-        			}                	
+        			}
                 }
 	            manager.closeSession();
-	            
+
 	            if(tokenVerified) {
 	            	return true;
 	            }
-            }            
+            }
             /** UFAL: dtoken checking done */
+
+            /** UFAL: second check authorized access */
+            if (AUTHORIZED.equals(expression)) {
+                if (dso instanceof Item) { // should be an item
+                    Item item = (Item) dso;
+                    Bundle[] originals = item.getBundles("ORIGINAL");
+                    for (Bundle original : originals) {
+                        for (Bitstream bitstream : original.getBitstreams()) {
+                            try {
+                                AuthorizeManager.authorizeAction(context, bitstream, Constants.READ);
+                            }
+                            catch (Exception e)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
+                    if (item != null && item.isWithdrawn() && !AuthorizeManager.isAdmin(context)) {
+                        return false;
+                    }
+
+                    return true;
+                }
+            }
+            /** UFAL: authorized access checking done */
+
 
             if (eperson == null)
             {

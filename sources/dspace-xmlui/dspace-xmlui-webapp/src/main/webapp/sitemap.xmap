@@ -294,16 +294,21 @@
                         
                         
                         <map:match pattern="handle/*/*/allzip">
-							<map:select type="AuthenticatedSelector">
-                                <map:when test="eperson">                                                                                       
-	                        		<map:read type="AllBitstreamZipArchiveReader">
-	                        			<map:parameter name="handle" value="{1}/{2}"/>
-	                        		</map:read>
-                                </map:when>
-                                <map:otherwise>
-                                        <map:act type="StartAuthentication"/>
-                                </map:otherwise>
-                            </map:select>                        
+				<map:select type="AuthenticatedSelector">
+		                        <map:when test="authorized">
+		                            <map:read type="AllBitstreamZipArchiveReader">
+		                                <map:parameter name="handle" value="{1}/{2}"/>
+		                            </map:read>
+		                        </map:when>
+		                        <map:when test="eperson">
+						<map:read type="AllBitstreamZipArchiveReader">
+							<map:parameter name="handle" value="{1}/{2}"/>
+						</map:read>
+		                        </map:when>
+		                        <map:otherwise>
+		                                <map:act type="StartAuthentication"/>
+		                        </map:otherwise>
+                            	</map:select>
                         </map:match>
 
                         <!--
