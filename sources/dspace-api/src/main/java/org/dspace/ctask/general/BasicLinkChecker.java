@@ -8,7 +8,12 @@
 package org.dspace.ctask.general;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,21 +37,29 @@ import cz.cuni.mff.ufal.AllCertsTrustManager;
  * A basic link checker that is designed to be extended. By default this link
  * checker will check that all links stored in anyschema.anyelement.uri metadata
  * fields return a 20x status code.
- * 
+ *
  * This link checker can be enhanced by extending this class, and overriding the
  * getURLs and checkURL methods.
- * 
+ *
  * based on class by Stuart Lewis modified for LINDAT/CLARIN
  */
 
 public class BasicLinkChecker extends AbstractCurationTask
 {
 
+    protected static final String LR_CONFIG_MODULE = "lr";
+
+    protected static final String LINK_CHECKER_USER_AGENT_KEY = "lr.link.checker.user.agent";
     protected static final String LINK_CHECKER_USER_AGENT = "DSpace Link Validator";
+    protected String cachedUserAgent;
 
-    protected static final int LINK_CHECKER_CONNECT_TIMEOUT = 1000;
+    protected static final String LINK_CHECKER_CONNECT_TIMEOUT_KEY = "lr.link.checker.connect.timeout";
+    protected static final int LINK_CHECKER_CONNECT_TIMEOUT = 2000;
+    protected Integer cachedConnectTimeout;
 
+    protected static final String LINK_CHECKER_READ_TIMEOUT_KEY = "lr.link.checker.read.timeout";
     protected static final int LINK_CHECKER_READ_TIMEOUT = 3000;
+    protected Integer cachedReadTimeout;
 
     // The status of the link checking of this item
     protected int status = Curator.CURATE_UNSET;
@@ -81,9 +94,9 @@ public class BasicLinkChecker extends AbstractCurationTask
 
     /**
      * Helper class for HTTP Response information
-     * 
+     *
      * @author Michal Jos√≠fko
-     * 
+     *
      */
     protected class ResponseStatus
     {
@@ -145,7 +158,7 @@ public class BasicLinkChecker extends AbstractCurationTask
 
     /**
      * Perform the link checking.
-     * 
+     *
      * @param dso
      *            The DSpaaceObject to be checked
      * @return The curation task status of the checking
@@ -229,7 +242,7 @@ public class BasicLinkChecker extends AbstractCurationTask
 
     /**
      * Get the URLs to check
-     * 
+     *
      * @param item
      *            The item to extract URLs from
      * @return An array of URL Strings
@@ -248,7 +261,7 @@ public class BasicLinkChecker extends AbstractCurationTask
 
     /**
      * Check the URL and perform appropriate reporting
-     * 
+     *
      * @param url
      *            The URL to check
      * @return If the URL was OK or not
@@ -281,7 +294,7 @@ public class BasicLinkChecker extends AbstractCurationTask
 
     /**
      * Checks if given URL should be ignored
-     * 
+     *
      * @param url
      *            URL to be checked
      * @return True if url should be ignored
@@ -307,7 +320,7 @@ public class BasicLinkChecker extends AbstractCurationTask
 
     /**
      * Analyses the result of checking URL
-     * 
+     *
      * @param url
      *            URL that was checked
      * @param responseStatus
@@ -355,7 +368,7 @@ public class BasicLinkChecker extends AbstractCurationTask
 
     /**
      * Formats results of checking URL
-     * 
+     *
      * @param level
      *            Error level
      * @param url
@@ -387,12 +400,12 @@ public class BasicLinkChecker extends AbstractCurationTask
      * Get the response status for a URL with redirection following and special
      * handling of handle URLs. Possible response codes are: 0 = error, -2 =
      * timeout, -3 = redirection loop, HTTP code otherwise.
-     * 
+     *
      * @param url
      *            The url to open
      * @return Response status wrapping first response code, last redirection
      *         url, and last response code
-     * 
+     *
      */
 
     protected ResponseStatus getResponseStatus(String url)
@@ -452,12 +465,12 @@ public class BasicLinkChecker extends AbstractCurationTask
      * Get the response status for a URL. Redirection is not handled. Possible
      * response codes are: 0 = error, -2 = timeout, -3 = redirection loop, HTTP
      * code otherwise.
-     * 
+     *
      * @param url
      *            The url to open
      * @return Response status wrapping first response code, and redirection URL
      *         if the response code is 3xx
-     * 
+     *
      */
 
     protected ResponseStatus getRealResponseStatus(String url)
@@ -472,9 +485,9 @@ public class BasicLinkChecker extends AbstractCurationTask
             HttpURLConnection connection = (HttpURLConnection) theURL
                     .openConnection();
             connection
-                    .setRequestProperty("User-Agent", LINK_CHECKER_USER_AGENT);
-            connection.setConnectTimeout(LINK_CHECKER_CONNECT_TIMEOUT);
-            connection.setReadTimeout(LINK_CHECKER_READ_TIMEOUT);
+                    .setRequestProperty("User-Agent", getUserAgent());
+            connection.setConnectTimeout(getConnectTimeout());
+            connection.setReadTimeout(getReadTimeout());
             connection.setInstanceFollowRedirects(false);
 
             // handle HTTPS
@@ -523,7 +536,7 @@ public class BasicLinkChecker extends AbstractCurationTask
     /**
      * Internal utitity method to get a formatted URL of the item in local
      * repository
-     * 
+     *
      * @param item
      *            The item to get a URL of
      * @return The URL of the item
@@ -536,7 +549,7 @@ public class BasicLinkChecker extends AbstractCurationTask
 
     /**
      * Internal utitity method to get a description of the handle
-     * 
+     *
      * @param item
      *            The item to get a description of
      * @return The handle, or in workflow
@@ -549,7 +562,7 @@ public class BasicLinkChecker extends AbstractCurationTask
 
     /**
      * Checks whether the given URL is Handle System URL
-     * 
+     *
      * @param url
      *            URL to check
      * @return True if the given URL is a Handle System URL
@@ -561,12 +574,44 @@ public class BasicLinkChecker extends AbstractCurationTask
 
     /**
      * Checks whether we can continue performing tasks
-     * 
+     *
      * @return False if no more checking should be done
      */
     protected boolean canContinue()
     {
         return true;
+    }
+
+    protected String getUserAgent()
+    {
+        if(cachedUserAgent == null)
+        {
+            cachedUserAgent = ConfigurationManager.getProperty(LR_CONFIG_MODULE, LINK_CHECKER_USER_AGENT_KEY);
+            if(cachedUserAgent == null)
+            {
+                cachedUserAgent = LINK_CHECKER_USER_AGENT;
+            }
+
+        }
+        return cachedUserAgent;
+    }
+
+    protected int getConnectTimeout()
+    {
+        if(cachedReadTimeout == null)
+        {
+            cachedReadTimeout = ConfigurationManager.getIntProperty(LR_CONFIG_MODULE, LINK_CHECKER_CONNECT_TIMEOUT_KEY, LINK_CHECKER_CONNECT_TIMEOUT);
+        }
+        return cachedReadTimeout;
+    }
+
+    protected int getReadTimeout()
+    {
+        if(cachedReadTimeout == null)
+        {
+            cachedReadTimeout = ConfigurationManager.getIntProperty(LR_CONFIG_MODULE, LINK_CHECKER_CONNECT_TIMEOUT_KEY, LINK_CHECKER_CONNECT_TIMEOUT);
+        }
+        return cachedReadTimeout;
     }
 
 }

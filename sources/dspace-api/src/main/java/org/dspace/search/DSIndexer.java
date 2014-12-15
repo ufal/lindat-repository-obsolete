@@ -652,6 +652,12 @@ public class DSIndexer
     static IndexingTask prepareIndexingTask(DSpaceObject dso, boolean force) throws SQLException, IOException
     {
         String handle = dso.getHandle();
+        // no handle - skip indexing
+        if ( null == handle ) {
+            log.warn( String.format("Cannot index object with NULL handle - [Item id:%s - %s]!",
+                dso.getID(), dso.toString()) );
+            return null;
+        }
         Term term = new Term("handle", handle);
         IndexingTask action = null;
         switch (dso.getType())

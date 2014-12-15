@@ -102,14 +102,14 @@
                  		<xsl:value-of select="dim:field[@element='identifier' and @qualifier='uri']/node()" />
                		</xsl:attribute>
 					<xsl:attribute name="oai">
-                 		<xsl:value-of select="$oai-url" />
-               		</xsl:attribute>
-					<xsl:attribute name="oai-handle">
-                 		<xsl:value-of select="$oai-handle" />
-               		</xsl:attribute>
+						<xsl:value-of select="$oai-url" />
+					</xsl:attribute>               		
+					<xsl:attribute name="handle">
+                        <xsl:value-of select="substring-after(/mets:METS/@ID,'hdl:')" />
+                    </xsl:attribute>               		
 					<xsl:attribute name="title">
                         <xsl:value-of select="dim:field[@element='title'][not(@qualifier)]/node()" />
-                    </xsl:attribute>               		
+                    </xsl:attribute>
                		&#160;               		
 				</div>
 				<xsl:call-template name="itemSummaryView-DIM-fields">
@@ -278,9 +278,42 @@
 				</xsl:call-template>
 			</xsl:when>
 
+			<!-- Demo URL(s) row -->
+			<xsl:when
+				test="$clause = 5 and dim:field[@mdschema='local' and @element='demo' and @qualifier='uri']">
+						<dl id="demo-url" class="dl-horizontal">
+							<dt style="text-align: left">
+								<i class="fa fa-external-link">&#160;</i>
+								<i18n:text>xmlui.dri2xhtml.METS-1.0.item-demo-uri</i18n:text>
+							</dt>
+							<dd>
+								<xsl:for-each
+									select="dim:field[@mdschema='local' and @element='demo' and @qualifier='uri']">
+								<xsl:if test="self::node()[text()!='']">
+									<a target="_blank">
+										<xsl:attribute name="href">
+		                            <xsl:copy-of select="./node()" />
+		                        </xsl:attribute>
+										<xsl:copy-of select="./node()" />
+									</a>
+									<xsl:if
+										test="count(following-sibling::dim:field[@mdschema='local' and @element='demo' and @qualifier='uri']) != 0">
+										<br />
+									</xsl:if>
+								</xsl:if>
+								</xsl:for-each>
+							</dd>
+						</dl>
+
+				<xsl:call-template name="itemSummaryView-DIM-fields">
+					<xsl:with-param name="clause" select="($clause + 1)" />
+					<xsl:with-param name="phase" select="$otherPhase" />
+				</xsl:call-template>
+			</xsl:when>
+
 			<!-- date.issued row -->
 			<xsl:when
-				test="$clause = 5 and (dim:field[@element='date' and @qualifier='issued'])">
+				test="$clause = 6 and (dim:field[@element='date' and @qualifier='issued'])">
 				<dl id="date-issued" class="dl-horizontal">
 					<dt style="text-align: left">
 						<i class="fa fa-calendar">&#160;</i>					
@@ -304,7 +337,7 @@
 
 			<!-- type row -->
 			<xsl:when
-				test="$clause = 6 and (dim:field[@element='type' and not(@qualifier)])">
+				test="$clause = 7 and (dim:field[@element='type' and not(@qualifier)])">
 					<dl id="item-type" class="dl-horizontal">
 					<dt style="text-align: left">
 						<i class="fa fa-tag">&#160;</i>
@@ -328,9 +361,33 @@
 				</xsl:call-template>
 			</xsl:when>				
 
+			<!-- size row -->
+			<xsl:when
+				test="$clause = 8 and (dim:field[@mdschema='local' and @element='size' and @qualifier='info'])">
+					<dl id="item-type" class="dl-horizontal">
+					<dt style="text-align: left">
+						<i class="fa fa-arrows-alt">&#160;</i>
+												<i18n:text>xmlui.dri2xhtml.METS-1.0.item-size-info</i18n:text>
+					</dt>
+					<dd>
+						<xsl:variable name="sizeInfo" select="dim:field[@mdschema='local' and @element='size' and @qualifier='info'][1]/node()"/>
+						<xsl:value-of select="substring-before($sizeInfo,'@@')" />
+						<xsl:text> </xsl:text>
+						<xsl:call-template name="plural-to-singular-en">
+								<xsl:with-param name="value" select="substring-after($sizeInfo,'@@')" />
+                                <xsl:with-param name="number" select="substring-before($sizeInfo,'@@')" />
+                        </xsl:call-template>
+					</dd>
+				</dl>
+				<xsl:call-template name="itemSummaryView-DIM-fields">
+					<xsl:with-param name="clause" select="($clause + 1)" />
+					<xsl:with-param name="phase" select="$otherPhase" />
+				</xsl:call-template>
+			</xsl:when>
+
 			<!-- type languages -->
 			<xsl:when
-				test="$clause = 7 and (dim:field[@element='language' and @qualifier='iso'])">
+				test="$clause = 9 and (dim:field[@element='language' and @qualifier='iso'])">
 					<dl id="item-languages" class="dl-horizontal">
 					<dt style="text-align: left">
 						<i class="fa fa-flag ">&#160;</i>
@@ -373,7 +430,7 @@
 
 			<!-- Abstract row -->
 			<!-- xsl:when
-				test="$clause = 8 and (dim:field[@element='description' and @qualifier='abstract' and descendant::text()])">
+				test="$clause = 10 and (dim:field[@element='description' and @qualifier='abstract' and descendant::text()])">
 				<div class="simple-item-view-description">
 					<h3>
 						<i18n:text>xmlui.dri2xhtml.METS-1.0.item-abstract</i18n:text>
@@ -413,7 +470,7 @@
 
 			<!-- Description row -->
 			<xsl:when
-				test="$clause = 8 and (dim:field[@element='description' and not(@qualifier)])">
+				test="$clause = 10 and (dim:field[@element='description' and not(@qualifier)])">
 				<dl id="item-description" class="dl-horizontal linkify">
 					<dt style="text-align: left">
 						<i class="fa fa-file-text-o">&#160;</i>
@@ -446,7 +503,7 @@
 			
 			<!-- Publisher row -->
 			<xsl:when
-				test="$clause = 9 and (dim:field[@element='publisher' and not(@qualifier)])">
+				test="$clause = 11 and (dim:field[@element='publisher' and not(@qualifier)])">
 				<dl id="item-publisher" class="dl-horizontal">
 					<dt style="text-align: left">
 						<i class="fa fa-copy">&#160;</i>
@@ -483,7 +540,7 @@
 			
 			<!-- Subject keywords -->
 			<xsl:when
-				test="$clause = 10 and (dim:field[@element='subject' and not(@qualifier)])">
+				test="$clause = 12 and (dim:field[@element='subject' and not(@qualifier)])">
 				<dl id="item-subject" class="dl-horizontal">
 					<dt style="text-align: left">
 						<i class="fa fa-tags">&#160;</i>
@@ -514,7 +571,7 @@
 			
 			<!-- Collections -->
   			<xsl:when
-				test="$clause = 11 and $ufal-collection-references">
+				test="$clause = 13 and $ufal-collection-references">
 				<dl id="item-subject" class="dl-horizontal">
 					<dt style="text-align: left">
 						<i class="fa fa-sitemap">&#160;</i>
@@ -541,7 +598,7 @@
 				</xsl:call-template>
 			</xsl:when>
 
-			<xsl:when test="$clause = 12 and $ds_item_view_toggle_url != ''">
+			<xsl:when test="$clause = 14 and $ds_item_view_toggle_url != ''">
 
 				<!-- replacedby info -->
 				<xsl:if test="count(dim:field[@element='relation' and @qualifier='isreplacedby' and @mdschema='dc']) = 1">
@@ -576,7 +633,7 @@
 			<!-- recurse without changing phase if we didn't output anything -->
 			<xsl:otherwise>
 				<!-- IMPORTANT: This test should be updated if clauses are added! -->
-				<xsl:if test="$clause &lt; 12">
+				<xsl:if test="$clause &lt; 14">
 					<xsl:call-template name="itemSummaryView-DIM-fields">
 						<xsl:with-param name="clause" select="($clause + 1)" />
 						<xsl:with-param name="phase" select="$phase" />
@@ -599,11 +656,11 @@
                  		<xsl:value-of select="dim:field[@element='identifier' and @qualifier='uri']/node()" />
                		</xsl:attribute>
 					<xsl:attribute name="oai">
-                 		<xsl:value-of select="$oai-url" />
-               		</xsl:attribute>
-					<xsl:attribute name="oai-handle">
-                 		<xsl:value-of select="$oai-handle" />
-               		</xsl:attribute>
+						<xsl:value-of select="$oai-url" />
+					</xsl:attribute>               		               		
+					<xsl:attribute name="handle">
+                        <xsl:value-of select="substring-after(/mets:METS/@ID,'hdl:')" />
+                    </xsl:attribute>               		
 					<xsl:attribute name="title">
                         <xsl:value-of select="dim:field[@element='title'][not(@qualifier)]/node()" />
                     </xsl:attribute>

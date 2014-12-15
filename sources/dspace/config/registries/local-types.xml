@@ -45,6 +45,12 @@
     </dc-type>    
     <dc-type>
         <schema>local</schema>
+        <element>demo</element>
+        <qualifier>uri</qualifier>
+        <scope_note>URL of the demo</scope_note>
+    </dc-type>
+    <dc-type>
+        <schema>local</schema>
         <element>contact</element>
         <qualifier>person</qualifier>
         <scope_note>Contact person</scope_note>

@@ -2184,11 +2184,13 @@
     <message key="xmlui.dri2xhtml.METS-1.0.item-description">Description</message>
     <message key="xmlui.dri2xhtml.METS-1.0.item-uri">URI</message>
     <message key="xmlui.dri2xhtml.METS-1.0.item-project-uri">Project URL</message>
+    <message key="xmlui.dri2xhtml.METS-1.0.item-demo-uri">Demo URL</message>
     <message key="xmlui.dri2xhtml.METS-1.0.item-handle">Handle</message>
     <message key="xmlui.dri2xhtml.METS-1.0.item-date">Date issued</message>
     <message key="xmlui.dri2xhtml.METS-1.0.item-publisher">Publisher</message>
     <message key="xmlui.dri2xhtml.METS-1.0.item-subject">Subject(s)</message>
     <message key="xmlui.dri2xhtml.METS-1.0.item-type">Type</message>
+    <message key="xmlui.dri2xhtml.METS-1.0.item-size-info">Size</message>
 
     <message key="xmlui.dri2xhtml.METS-1.0.item-langs">Language(s)</message>
     <message key="xmlui.dri2xhtml.METS-1.0.item-no-langs">There are no language(s) associated with this item.</message>
@@ -2237,7 +2239,6 @@
 
     <message key="xmlui.dri2xhtml.METS-1.0.header-qdc-elements">Dublin Core elements</message>
     <message key="xmlui.dri2xhtml.METS-1.0.header-qdc-terms">Dublin Core terms</message>
-
 
     <!-- Special pioneer model related text, wherever it might end up -->
     <message key="xmlui.dri2xhtml.pioneer.preview">Preview</message>

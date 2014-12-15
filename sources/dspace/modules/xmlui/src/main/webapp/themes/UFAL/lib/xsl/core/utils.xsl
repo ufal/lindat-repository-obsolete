@@ -91,5 +91,36 @@
         </xsl:choose>
     </xsl:template>
 
+    <!-- strip given suffix $suffix from $value -->
+    <xsl:template name="strip-suffix">
+        <xsl:param name="value" />
+        <xsl:param name="suffix" />
+        <xsl:choose>
+            <xsl:when test="$suffix = substring($value,(string-length($value) - string-length($suffix)) + 1, string-length($suffix))">
+                <xsl:value-of select="substring($value,1,string-length($value) - string-length($suffix))" />
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="$value" />
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- converts plural to singular form -->
+    <xsl:template name="plural-to-singular-en">
+        <xsl:param name="value" />
+        <xsl:param name="number" />
+        <xsl:choose>
+            <xsl:when test="$number = '1'">
+                <xsl:call-template name="strip-suffix">
+                    <xsl:with-param name="value" select="$value" />
+                    <xsl:with-param name="suffix" select="'s'" />
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="$value" />
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
 </xsl:stylesheet>
 

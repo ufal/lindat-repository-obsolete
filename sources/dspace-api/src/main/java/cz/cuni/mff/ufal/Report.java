@@ -1109,7 +1109,7 @@ class report_curator implements simple_report
                                     (endTime - startTime)/1000, curator.getOverallStatus(task_name) );
                     // do for failed or for profile...
                     // checklinks have strange output - show only the bad ones
-                    if ( task_name.equals("checklinks") || task_name.equals("checkhandles") ) {
+                    if ( task_name.equals("fastchecklinks") || task_name.equals("checkhandles") ) {
                         ret += output_checklinks(results);
                     }else if (task_name.equals("requiredmetadata")) {
                         ret += output_requiredmetadata(results);
@@ -1692,17 +1692,17 @@ class db {
         List<TableRow> rows = sql("SELECT count(1) as cnt FROM handle");     
         return rows.get(0).getLongColumn("cnt");
     }
-    
+
     static List<TableRow> get_handles_invalid_handles() throws SQLException
-    {        
+    {
         List<TableRow> rows = sql("SELECT * FROM handle "
                 + " WHERE NOT ("
                 + "     (handle IS NOT NULL AND resource_type_id IS NOT NULL AND resource_id IS NOT NULL)"
                 + " OR "
                 + "     (handle IS NOT NULL AND url IS NOT NULL)"
-                + " ) ");     
+                + " ) ");
         return rows;
-    }        
+    }
 
 
 } // db

@@ -352,16 +352,19 @@ public class DSpaceApi {
 	 */
 	public static EPerson getEPersonByToken(Context context, String token){
 		EPerson e = null;
+		int eid = 0;
+		String email = null;
+		String organization = null;
 		try{
 			IFunctionalities manager = DSpaceApi.getFunctionalityManager();
 			manager.openSession();
 			final VerificationTokenEperson vte = manager.getVerificationToken(token);
-			int eid = vte.getEid();
-			String email = vte.getEmail();
+			eid = vte.getEid();
+			email = vte.getEmail();
 			e = EPerson.find(context, eid);
 			context.turnOffAuthorisationSystem();
 			e.setEmail(email);
-			String organization = e.getNetid().replaceAll(".*(\\[.*\\])", "$1");
+			organization = e.getNetid().replaceAll(".*(\\[.*\\])", "$1");
 			manager.registerUser(eid, email, organization, true);
 			e.setCanLogIn(false); //Don't know why, but taking from ShibAuthentication
 			e.update();
@@ -370,15 +373,18 @@ public class DSpaceApi {
 			manager.close();
 		}
 		catch(AuthorizeException ae){
-			log.error("Error while filling the email");
+			log.error("Error while filling the email", ae);
+			log.info(String.format("token = %s, eid = %d, email = %s, organization = %s", token, eid, email, organization));
 			e = null;
 		}
 		catch(SQLException sqle){
-			log.error("Error while filling the email");
+			log.error("Error while filling the email", sqle);
+			log.info(String.format("token = %s, eid = %d, email = %s, organization = %s", token, eid, email, organization));
 			e = null;
 		}
 		catch(RuntimeException ex){
-			log.error("Error while filling the email");
+			log.error("Error while filling the email", ex);
+			log.info(String.format("token = %s, eid = %d, email = %s, organization = %s", token, eid, email, organization));
 			e = null;
 		}
 		return e;
@@ -453,8 +459,13 @@ public class DSpaceApi {
         manager.close();
 		return true;
 	}
-	
-    public static void load_dspace()
+
+	public static void load_dspace() {
+		load_dspace("./config/dspace.cfg");
+	}
+
+
+    public static void load_dspace(String explicit_file)
     {
         try {
         	ConfigurationManager.getProperty("dspace.url");
@@ -471,7 +482,7 @@ public class DSpaceApi {
 	    }
 
         // last option
-        ConfigurationManager.loadConfig("./config/dspace.cfg");
+        ConfigurationManager.loadConfig(explicit_file);
     }
     
     public static String convertBytesToHumanReadableForm(long bytes) {

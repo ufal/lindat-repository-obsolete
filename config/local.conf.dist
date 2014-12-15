@@ -15,7 +15,7 @@ lr.pid.service.testPid =
 # multiple configurations can be given separated by semicolon
 # default configuration should have asterisk as the community ID
 # subprefix is only used for local handles
-lr.pid.community.configurations = community=*,prefix=11858,type=local,canonical_prefix=http://hdl.handle.net/
+lr.pid.community.configurations = community=*,prefix=99999,type=local,canonical_prefix=http://hdl.handle.net/
 
 
 # UFAL mounted assetstore for restricted item harvesting. Please mind the traling slash
@@ -46,7 +46,7 @@ lr.db.name = postgres
 # The name of the database that you will use for your dspace instance.
 # If the database is not created yet, this name will be used to create the new database.
 # Be careful with the trailing spaces in the name!
-lr.database = 
+lr.database = XXX-LR-DATABASE
 
 # Connection URL of the database. Make sure you are using the correct port and if you are connecting to remote server,
 # verify that the port is accessible. Do not change the ${lr.database}, the database name will be substituted from above property.
@@ -60,7 +60,7 @@ lr.db.username = dspace
 lr.db.password =
 
 # UFAL Utilities database name.
-lr.utilities.database = 
+lr.utilities.database = XXX-UTILS-DATABASE
 
 # Conneciton URL for the Utilities database.
 lr.utilities.db.url = jdbc:postgresql://localhost:5432/${lr.utilities.database}
@@ -301,3 +301,21 @@ lr.tracker.bitstream.site_id = 5
 # that should be ignored while checking for required metadata.
 # Leave it empty if you want to check everything.
 lr.curation.metadata.checkrequired.ignore = metashare.*
+
+############################################
+#
+# Link checker
+#
+# User Agent string for link checker
+#lr.link.checker.user.agent = "DSpace Link Validator"
+#
+# Connection timeout for link checker (in milliseconds)
+#lr.link.checker.connect.timeout = 2000
+#
+# Read timeout for link checker (in milliseconds)
+#lr.link.checker.read.timeout = 3000
+#
+############################################
+lr.link.checker.user.agent = "DSpace Link Validator"
+lr.link.checker.connect.timeout = 2000
+lr.link.checker.read.timeout = 3000

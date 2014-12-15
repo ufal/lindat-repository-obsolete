@@ -60,7 +60,7 @@
 
             <!-- date -->
             <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='date']/doc:element[@name='accessioned' or @name='updated']/doc:element/doc:field[@name='value']|doc:metadata/doc:element[@name='dc']/doc:element[@name='date']/doc:element/doc:field[@name='value'])[1]">
-                <dc:date><xsl:value-of select="."/></dc:date>
+                <dc:date xsi:type="dcterms:W3CDTF"><xsl:value-of select="."/></dc:date>
             </xsl:for-each>
  
             <!-- submitted -->
@@ -75,12 +75,12 @@
 
             <!-- identifier -->
             <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='identifier']/doc:element[@name!='citation']/doc:element/doc:field[@name='value']|doc:metadata/doc:element[@name='dc']/doc:element[@name='identifier']/doc:element/doc:field[@name='value'])">
-                <dc:identifier><xsl:value-of select="."/></dc:identifier>
+                <dc:identifier xsi:type="dcterms:URI"><xsl:value-of select="."/></dc:identifier>
             </xsl:for-each>
 
             <!-- isreplacedby -->
             <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='relation']/doc:element[@name='isreplacedby']/doc:element/doc:field[@name='value'])">
-                <dcterms:isReplacedBy><xsl:value-of select="."/></dcterms:isReplacedBy>
+                <dcterms:isReplacedBy xsi:type="dcterms:URI"><xsl:value-of select="."/></dcterms:isReplacedBy>
             </xsl:for-each>
 
             <!-- publisher -->
@@ -90,7 +90,7 @@
 
             <!-- replaces -->
             <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='relation']/doc:element[@name='replaces']/doc:element/doc:field[@name='value'])">
-                <dcterms:replaces><xsl:value-of select="."/></dcterms:replaces>
+                <dcterms:replaces xsi:type="dcterms:URI"><xsl:value-of select="."/></dcterms:replaces>
             </xsl:for-each>
 
             <!-- rights -->
@@ -99,14 +99,41 @@
             </xsl:for-each>
 
             <!-- subject -->
-            <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='subject']//doc:field[@name='value'])">
+            <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='subject']/doc:element/doc:field[@name='value'])">
                 <dc:subject><xsl:value-of select="."/></dc:subject>
             </xsl:for-each>
 
             <!-- type -->
             <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='type']/doc:element/doc:field[@name='value'])">
                 <dc:type><xsl:value-of select="."/></dc:type>
+
+                <!-- dcmitype type http://dublincore.org/documents/2000/07/11/dcmi-type-vocabulary/ -->
+                <!-- Linguistic Type type http://www.language-archives.org/REC/type.html -->
+                <xsl:choose>
+                    <xsl:when test=".='corpus'">
+                        <dc:type xsi:type="dcterms:DCMIType">Text</dc:type>
+                        <dc:type xsi:type="olac:linguistic-type" olac:code="primary_text"/>
+                    </xsl:when>
+                    <xsl:when test=".='toolService'">
+                        <dc:type xsi:type="dcterms:DCMIType">Software</dc:type>
+                    </xsl:when>
+                    <xsl:when test=".='lexicalConceptualResource'">
+                        <dc:type xsi:type="dcterms:DCMIType">Text</dc:type>
+                        <dc:type xsi:type="olac:linguistic-type" olac:code="lexicon"/>
+                    </xsl:when>
+                    <xsl:when test=".='languageDescription'">
+                        <dc:type xsi:type="dcterms:DCMIType">Text</dc:type>
+                        <dc:type xsi:type="olac:linguistic-type" olac:code="language_description"/>
+                    </xsl:when>
+                </xsl:choose>
+
             </xsl:for-each>
+
+            <!-- language -->
+            <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='language']/doc:element[@name='iso']/doc:element/doc:field[@name='value'])">
+                <dc:language><xsl:value-of select="."/></dc:language>
+            </xsl:for-each>
+
 
 		</olac:olac>
 	</xsl:template>

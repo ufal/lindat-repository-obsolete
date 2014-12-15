@@ -180,23 +180,28 @@ public class BitstreamReader extends AbstractReader implements Recyclable
             this.request = ObjectModelHelper.getRequest(objectModel);
             this.response = ObjectModelHelper.getResponse(objectModel);
 
-            if(ConfigurationManager.getBooleanProperty("lr", "lr.tracker.enabled")) {
-                // Track the download for analytics platform
-                TrackerFactory.createInstance(TrackingSite.BITSTREAM).trackPage(request,"Bitstream Download / Single File");
-            }
-
-            // Check to see if a context is allready existing or not. We may
-            // have been aggregated into an http request by the XSL document
-            // pulling in an XML based bitstream. In this case the context has
-            // allready been created and we should leave it open because the
-            // normal processes will close it.
-            boolean BistreamReaderOpenedContext = !ContextUtil.isContextAvailable(objectModel);
-            Context context = ContextUtil.obtainContext(objectModel);
-
             // Get our parameters that identify the bitstream
             int itemID = par.getParameterAsInteger("itemID", -1);
             int bitstreamID = par.getParameterAsInteger("bitstreamID", -1);
             String handle = par.getParameter("handle", null);
+
+            // community logo - bitstreamID
+            // file download - in par, bitstream, name, handle
+            //  see dspace-xmlui/dspace-xmlui-webapp/src/main/webapp/sitemap.xmap
+            boolean is_item_bitstream = (-1 == bitstreamID && handle != null);
+
+            if(is_item_bitstream && ConfigurationManager.getBooleanProperty("lr", "lr.tracker.enabled")) {
+                // Track the download for analytics platform
+                TrackerFactory.createInstance(TrackingSite.BITSTREAM).trackPage(request,"Bitstream Download / Single File");
+            }
+
+            // Check to see if a context is already existing or not. We may
+            // have been aggregated into an http request by the XSL document
+            // pulling in an XML based bitstream. In this case the context has
+            // already been created and we should leave it open because the
+            // normal processes will close it.
+            boolean BistreamReaderOpenedContext = !ContextUtil.isContextAvailable(objectModel);
+            Context context = ContextUtil.obtainContext(objectModel);
 
             int sequence = par.getParameterAsInteger("sequence", -1);
             String name = par.getParameter("name", null);

@@ -14,71 +14,74 @@ import os
 from settings import settings as settings_inst
 import utils
 # initialise logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)-15s %(message)s')
-_logger = logging.getLogger()
+logging.basicConfig( level=logging.DEBUG, format='%(asctime)-15s %(message)s' )
+_logger = logging.getLogger( )
 
 
-def get_credentials( env ):
+# =======================================
+# dspace specific config
+# =======================================
+
+class dspace_configuration(object):
     """
-        Parse dspace.cfg if found
+        Parse dspace.cfg/local.conf if found
     """
-    for dspace_cfg in env["config_dist_relative"]:
-        dspace_cfg = os.path.join( os.getcwd( ), dspace_cfg )
-        if os.path.exists( dspace_cfg ):
-            env["config_dist_relative"][0] = dspace_cfg
-            break
-    dspace_cfg = os.path.join( os.getcwd( ), env["config_dist_relative"][0] )
-    if not os.path.exists( dspace_cfg ):
-        _logger.info( "Could not find [%s]", dspace_cfg )
-        dspace_cfg, prefix = os.path.join( os.getcwd( ), env["dspace_cfg_relative"] ), ""
-        # try dspace.cfg
+    def __init__(self, env):
+        self.conf = None
+        for dspace_cfg in env["config_dist_relative"]:
+            dspace_cfg = os.path.join( os.getcwd( ), dspace_cfg )
+            if os.path.exists( dspace_cfg ):
+                env["config_dist_relative"][0] = dspace_cfg
+                break
+        dspace_cfg = os.path.join( os.getcwd( ), env["config_dist_relative"][0] )
         if not os.path.exists( dspace_cfg ):
             _logger.info( "Could not find [%s]", dspace_cfg )
-            dspace_cfg = None
+            dspace_cfg, prefix = os.path.join( os.getcwd( ), env["dspace_cfg_relative"] ), ""
+            # try dspace.cfg
+            if not os.path.exists( dspace_cfg ):
+                _logger.info( "Could not find [%s]", dspace_cfg )
+                dspace_cfg = None
 
-    # not found
-    if dspace_cfg is None:
-        return None, None, None
+        # not found
+        if dspace_cfg is None:
+            return
 
-    # get the variables
-    #
-    _logger.info( "Parsing [%s]", dspace_cfg )
+        # get the variables
+        #
+        _logger.info( "Parsing [%s]", dspace_cfg )
 
-    conf_db = "lr.db.url"
-    conf_db_name = "lr.database"
-    conf_u = "lr.db.username"
-    conf_p = "lr.db.password"
+        self.conf = {}
+        if os.path.exists( dspace_cfg ):
+            lls = [x.strip( ) for x in open( dspace_cfg, "r" ).readlines( )]
+            for l in lls:
+                if l.startswith( "#" ) or len( l.split("=") ) != 2:\
+                    continue
+                self.conf[l.split("=")[0].strip()] = l.split("=")[1].strip()
 
-    db_username = None
-    db_pass = None
-    db = None
-    if os.path.exists( dspace_cfg ):
-        lls = [ x.strip() for x in open( dspace_cfg, "r" ).readlines() ]
-        for l in lls:
-            if l.startswith( conf_u ):
-                db_username = l.split( "=" )[1].strip( )
-            elif l.startswith( conf_p ):
-                db_pass = l.split( "=" )[1].strip( )
-            elif l.startswith( conf_db ):
-                db = l.split( "=" )[1].strip( )
-                db = "/".join(db.split( "/" )[:-1]).strip()
-            elif l.startswith( conf_db_name ):
-                db_name = l.split( "=" )[1].strip( )
-    return db_name, db_username, db_pass
+    def __getitem__(self, key):
+        return self.conf.get( key, None )
 
 
+# =======================================
+# dspace db
+# =======================================
 
-class dspace_db(object):
-
-    def __init__(self, env):
-        self.env = env
+class dspace_database( object ):
+    """
+        Dspace db wrapper.
+    """
+    def __init__(self, dspace_conf):
         self.con = None
-        db, u, p = get_credentials( self.env )
+        db = dspace_conf["lr.database"]
+        u = dspace_conf["lr.db.username"]
+        p = dspace_conf["lr.db.password"]
+
         if db is None:
             _logger.info( "DSpace config could not be parsed correctly" )
             return
         _logger.info( "Trying to connect to [%s] under [%s]", db, u )
         import bpgsql
+
         self.con = bpgsql.connect(
             username=u, password=p, host="127.0.0.1", dbname=db )
         self.cursor = None
@@ -96,28 +99,32 @@ class dspace_db(object):
         self.con.close( )
 
 
-#=======================================
-# important stuff
-#=======================================
+# =======================================
+# the stuff
+# =======================================
 
-def metadata(env):
+def call_ftor(env, callable, opts):
     """
         Metadata info.
     """
-    dspace = dspace_db(env)
-    if dspace.ok():
-        from ftor import do
-        with dspace as c:
-            do(c)
+    conf = dspace_configuration( env )
+    db = dspace_database( conf )
+    if db.ok( ):
+        with db as cursor:
+            callable( cursor, conf, opts )
 
 
-#=======================================
+# =======================================
 # help
-#=======================================
+# =======================================
 
 def help_msg(env):
     """ Returns help message. """
-    _logger.warning( u"""\n%s help. Supported commands:\n""", env["name"] )
+    _logger.warning( u"""
+%s help. Supported commands:
+--metadata
+--assetstore-path --handle= --name=
+    """, env["name"] )
 
 
 def version_msg(env):
@@ -125,34 +132,41 @@ def version_msg(env):
     return _logger.warning( u"Version: %s", env["name"] )
 
 
-#=======================================
+# =======================================
 # command line
-#=======================================
+# =======================================
 
 def parse_command_line(env):
     """ Parses the command line arguments. """
     try:
-        options = []
+        options = [
+            "metadata",
+            "assetstore-path",
+            "handle=",
+            "name=",
+            ]
         input_options = sys.argv[1:]
         opts, _ = getopt.getopt( input_options, "", options )
     except getopt.GetoptError:
         help_msg( env )
         sys.exit( 1 )
 
-    # for option, param in opts:
-    #     if option == "--help":
-    #         env["print_info"] = False
-    #         return help_msg
-    #     if option == "--version":
-    #         return version_msg
-    #     if option == "--metadata":
-    #         what_to_do = metadata
-    #
-    # if what_to_do:
-    #     return what_to_do
-    #
-    # what to do but really?
-    return metadata
+    what_to_do = None
+    opts = dict( (x[2:], y) for x, y in opts)
+    for option, param in opts.iteritems():
+        if option == "help":
+            return help_msg
+        if option == "version":
+            return version_msg
+        if option == "metadata":
+            from ftor import do
+            what_to_do = lambda x: call_ftor(x, do, opts)
+        if option == "assetstore-path":
+            from ftor_assetstore_names import do
+            what_to_do = lambda x: call_ftor(x, do, opts)
+
+    # really, what to do?
+    return what_to_do
 
 
 #=======================================
@@ -168,7 +182,8 @@ if __name__ == "__main__":
     ret_code = 0
     try:
         what_to_do_callable = parse_command_line( settings_inst )
-        ret_code = what_to_do_callable( settings_inst )
+        if what_to_do_callable is not None:
+            ret_code = what_to_do_callable( settings_inst )
     except Exception, e_inst:
         _logger.critical( "An exception occurred, ouch:\n%s", e_inst )
         raise

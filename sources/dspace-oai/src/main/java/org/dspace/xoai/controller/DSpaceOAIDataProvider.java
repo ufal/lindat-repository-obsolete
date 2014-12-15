@@ -13,6 +13,7 @@ import static org.apache.log4j.Logger.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -105,7 +106,30 @@ public class DSpaceOAIDataProvider
                     resumptionTokenFormat);
 
             OutputStream out = response.getOutputStream();
-            OAIRequestParameters parameters = new OAIRequestParameters(buildParametersMap(request));
+            
+            // adding some defaults for /cite requests this will make the URL simple
+            // only handle and metadataPrefix will be required
+            Map<String, List<String>> parameterMap = buildParametersMap(request);
+            if(!parameterMap.containsKey("verb")) {
+            	parameterMap.put("verb", asList("GetRecord"));
+            }
+            if(!parameterMap.containsKey("metadataPrefix")) {
+            	parameterMap.put("metadataPrefix", asList("cmdi"));
+            } else {
+            	List<String> mp = parameterMap.get("metadataPrefix");
+            	List<String> lcMP = new ArrayList<String>();
+            	for(String m : mp) {
+            		lcMP.add(m.toLowerCase());
+            	}
+            	parameterMap.put("metadataPrefix", lcMP);
+            }
+            if(!parameterMap.containsKey("identifier")) {
+            	parameterMap.put("identifier", asList("oai:" + request.getServerName() + ":" + request.getParameter("handle")));
+            	parameterMap.remove("handle");
+            }
+            /////////////////////////////////////////////////////////////////////////
+            
+            OAIRequestParameters parameters = new OAIRequestParameters(parameterMap);
 
             response.setContentType("application/xml");
 
