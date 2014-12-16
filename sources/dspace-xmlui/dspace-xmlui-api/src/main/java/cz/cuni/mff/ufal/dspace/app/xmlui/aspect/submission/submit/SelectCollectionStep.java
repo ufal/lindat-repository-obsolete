@@ -15,8 +15,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.dspace.app.xmlui.utils.UIException;
 import org.dspace.app.xmlui.aspect.submission.AbstractSubmissionStep;
+import org.dspace.app.xmlui.utils.UIException;
 import org.dspace.app.xmlui.wing.Message;
 import org.dspace.app.xmlui.wing.WingException;
 import org.dspace.app.xmlui.wing.element.Body;
@@ -27,7 +27,6 @@ import org.dspace.app.xmlui.wing.element.List;
 import org.dspace.app.xmlui.wing.element.PageMeta;
 import org.dspace.app.xmlui.wing.element.Select;
 import org.dspace.authorize.AuthorizeException;
-import org.dspace.authorize.AuthorizeManager;
 import org.dspace.content.Collection;
 import org.dspace.content.Community;
 import org.dspace.content.DSpaceObject;
@@ -43,7 +42,7 @@ import org.xml.sax.SAXException;
  * Normaly a user will have selected a collection to submit too by going to the
  * collection's page, but if that was invalid or the user came directly from the
  * mydspace page then this step is given.
- * 
+ *
  * @author Scott Phillips
  * @author Tim Donohue (updated for Configurable Submission)
  * modified for LINDAT/CLARIN
@@ -55,8 +54,8 @@ public class SelectCollectionStep extends AbstractSubmissionStep
     /** Language Strings */
     protected static final Message T_head = message("xmlui.Submission.submit.SelectCollection.head");
 
-    protected static final Message T_select_collection_head = message("xmlui.Submission.submit.SelectCollection.select_collection_head");    
-    
+    protected static final Message T_select_collection_head = message("xmlui.Submission.submit.SelectCollection.select_collection_head");
+
     protected static final Message T_select_collection_help = message("xmlui.Submission.submit.SelectCollection.select_collection_help");
 
     protected static final Message T_collection = message("xmlui.Submission.submit.SelectCollection.collection");
@@ -70,7 +69,7 @@ public class SelectCollectionStep extends AbstractSubmissionStep
     protected static final Message T_select_community_help = message("xmlui.Submission.submit.SelectCollection.select_community_help");
 
     protected static final Message T_community = message("xmlui.Submission.submit.SelectCollection.community");
-    
+
     protected static final Message T_single_collection_help = message("xmlui.Submission.submit.SelectCollection.single_collection_help");
 
     protected static final Message T_submit_next = message("xmlui.Submission.general.submission.next");
@@ -99,9 +98,9 @@ public class SelectCollectionStep extends AbstractSubmissionStep
     }
 
     public void addPageMeta(PageMeta pageMeta) throws SAXException,
-            WingException
+            WingException, SQLException, IOException, AuthorizeException
     {
-
+        super.addPageMeta(pageMeta);
         pageMeta.addMetadata("title").addContent(T_submission_title);
         pageMeta.addTrailLink(contextPath + "/", T_dspace_home);
         pageMeta.addTrail().addContent(T_submission_trail);
@@ -151,7 +150,7 @@ public class SelectCollectionStep extends AbstractSubmissionStep
         // First store the hierarchical structure of authorized communities and
         // collections in a hidden input, so that it is available on the client side
         Hidden modelHidden = div.addHidden("communities-model");
-        modelHidden.setValue(jsonModel.toJSONString());                               
+        modelHidden.setValue(jsonModel.toJSONString());
 
         if (collections != null && collections.length > 0)
         {
@@ -160,33 +159,33 @@ public class SelectCollectionStep extends AbstractSubmissionStep
             if (collections.length == 1)
             {
                 Division collectionsDiv = communitiesAndCollectionsDiv.addDivision("single-collection");
-                
+
                 Hidden collection = collectionsDiv.addHidden("handle");
                 collection.setValue(collections[0].getHandle());
-                                
+
                 collectionsDiv.addPara(null, "alert alert-info").addContent(
                         T_single_collection_help);
-                                
+
                 Button submit = communitiesAndCollectionsDiv.addDivision("control-group","control-group").addPara().addButton("submit");
                 submit.setValue(T_submit_next);
             }
             else
             {
-                // Communities                                
+                // Communities
 
                 Division communitiesDiv = communitiesAndCollectionsDiv.addDivision("select-community-div","hidden");
-                
+
                 communitiesDiv.setHead(T_select_community_head);
-                
+
                 communitiesDiv.addPara(null, "alert alert-info").addContent(
                         T_select_community_help);
-                
+
                 communitiesDiv.addDivision("communities-list");
 
                 Division collectionsDiv = communitiesAndCollectionsDiv.addDivision("select-collection-div");
-                
+
                 collectionsDiv.setHead(T_select_collection_head);
-                
+
                 collectionsDiv.addPara(null, "alert alert-info").addContent(
                         T_select_collection_help);
 
@@ -216,11 +215,11 @@ public class SelectCollectionStep extends AbstractSubmissionStep
                                 (String) collectionJo.get("name"));
                     }
                 }
-                
+
                 Button submit = communitiesAndCollectionsDiv.addDivision("control-group","control-group").addPara().addButton("submit");
                 submit.setValue(T_submit_next);
             }
-            
+
         }
         else
         {
@@ -234,7 +233,7 @@ public class SelectCollectionStep extends AbstractSubmissionStep
     /**
      * Transforms hierarchical structure of communities and collections into
      * JSON array of JASON objects
-     * 
+     *
      * @param model
      *            The hierarchical structure of communities and collections as
      *            created by createModel
@@ -305,7 +304,7 @@ public class SelectCollectionStep extends AbstractSubmissionStep
 
     /**
      * Creates the hierarchical structure of communities and collections
-     * 
+     *
      * @param collections
      *            The list of collections
      * @return The hierarchical structure of communities and collections
@@ -351,7 +350,7 @@ public class SelectCollectionStep extends AbstractSubmissionStep
      * sub-List object (with this step's name as the heading), by using a call
      * to reviewList.addList(). This sublist is the list you return from this
      * method!
-     * 
+     *
      * @param reviewList
      *            The List to which all reviewable information should be added
      * @return The new sub-List object created by this step, which contains all
