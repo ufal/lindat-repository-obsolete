@@ -15,7 +15,7 @@
  <!ATTLIST form name NMTOKEN #REQUIRED>
  <!ELEMENT page (field)+ >
  <!ATTLIST page number NMTOKEN #REQUIRED>
- <!ELEMENT field (dc-schema, dc-element, dc-qualifier?, repeatable?, repeatable-component?, repeatable-parse?, autocomplete?, mapped-to?, label, type-bind?, input-type, hint, required?, vocabulary?, regexp?, regexp-warning?, additional?, component-label?, collapsible?, acl?) >
+ <!ELEMENT field (dc-schema, dc-element, dc-qualifier?, repeatable?, repeatable-component?, repeatable-parse?, autocomplete?, mapped-to?, label, type-bind?, input-type, hint, required?, vocabulary?, regexp?, regexp-warning?, additional?, component-label?, collapsible?, acl?, class?) >
  <!ELEMENT dc-schema (#PCDATA) >
  <!ELEMENT dc-element (#PCDATA) >
  <!ELEMENT dc-qualifier (#PCDATA) >
@@ -48,7 +48,7 @@
       policy=(allow|deny),action=(read|write),grantee-type=(user|group),grantee-id=(\d+,\*) 
  -->
  <!ELEMENT acl (#PCDATA)>
- 			   
+ <!ELEMENT class (#PCDATA) >
  
  <!-- ***
         To assign a particular 'value-pairs' list to a particular dropdown 'input-type'
