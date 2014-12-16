@@ -69,6 +69,17 @@
         </field>
 
         <field>
+          <dc-schema>local</dc-schema>
+          <dc-element>demo</dc-element>
+          <dc-qualifier>uri</dc-qualifier>
+          <repeatable>false</repeatable>
+          <label>Demo URL</label>
+          <input-type>onebox</input-type>
+          <hint>Enter the demo url.</hint>
+          <required></required>
+        </field>
+
+        <field>
           <dc-schema>dc</dc-schema>
           <dc-element>date</dc-element>
           <dc-qualifier>issued</dc-qualifier>
