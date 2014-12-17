@@ -4,11 +4,11 @@
     <title>License Selector</title>
 
     <!-- dependencies -->
-    <script type="text/javascript" src="vendor/jquery.js"></script>
-    <script type="text/javascript" src="vendor/lodash.js"></script>
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="lodash.min.js"></script>
 
     <!-- implementation -->
-    <script type="text/javascript" src="lib/license-selector.js"></script>
+    <script type="text/javascript" src="license-selector.min.js"></script>
     <script type="text/javascript">
       $(function() {
         $('<p><a href="#!">Click to open selector</a></p>')
@@ -18,7 +18,7 @@
             console.log(license)
           }
         }).click();
-        
+
         $('<p><a href="#!">Click to open selector with modified options</a></p>')
           .appendTo('body')
           .licenseSelector({
@@ -29,10 +29,22 @@
                 available: true,
                 url: 'http://www.example.com/abc-license',
                 description: 'This is ABC license inserted as a test',
+                template: function($el, license, selectFunction) {
+                  var h = $('<h4 />').text(license.name);
+                  h.append($('<a/>').attr({
+                    href: license.url,
+                    target: '_blank'
+                  }));
+                  //$el.click(selectFunction);
+                  $el.append(h);
+                  $el.append('<p>Custom template function</p>');
+                  $el.append($('<button/>').append('<span>Click here to select license</span>').click(selectFunction));
+                },
                 categories: ['data', 'abc']
               },
               'cc-by': {
-                description: 'Modified description ...'
+                description: 'Modified description ...',
+                cssClass: 'cc-by'
               }
             },
             start: 'DataCopyrightable',
@@ -44,8 +56,7 @@
       });
     </script>
 
-    <link rel="stylesheet" href="lib/license-selector.css">
-    <!-- <link rel="stylesheet" href="vendor/css/bootstrap.min.css"> -->
+    <link rel="stylesheet" href="license-selector.min.css">
     <style>
       pre {
         display: block;
@@ -60,8 +71,13 @@
         border: 1px solid #ccc;
         border-radius: 4px;
       }
+      .cc-by {
+        border-color: #c80000 !important;
+      }
     </style>
   </head>
   <body>
+  <h1>License Selector</h1>
+  <p>If you see this without closing the License Selector please reload the page.</p>
   </body>
 </html>
