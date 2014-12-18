@@ -12,3 +12,4 @@ INSERT INTO license_definition (name, definition, eperson_id, label_id, created_
 INSERT INTO license_definition (name, definition, eperson_id, label_id, created_on, confirmation) VALUES ('Open Data Commons Open Database License (ODbL)','http://opendatacommons.org/licenses/odbl/summary/','1','1','2014-12-17 14:05:00','0');
 INSERT INTO license_definition (name, definition, eperson_id, label_id, created_on, confirmation) VALUES ('Open Data Commons Public Domain Dedication and License (PDDL)','http://opendatacommons.org/licenses/pddl/summary/','1','1','2014-12-17 14:05:00','0');
 INSERT INTO license_definition (name, definition, eperson_id, label_id, created_on, confirmation) VALUES ('Public Domain Mark (PD)','http://creativecommons.org/publicdomain/mark/1.0/','1','1','2014-12-17 14:05:00','0');
+UPDATE license_definition SET name='Public Domain Dedication (CC Zero)',definition='http://creativecommons.org/publicdomain/zero/1.0/' where name ='CC0-No Rights Reserved';
