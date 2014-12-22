@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?XML VERsion="1.0"?>
 <!DOCTYPE input-forms SYSTEM "input-forms.dtd">
 
 
@@ -178,7 +178,7 @@
         	<repeatable>true</repeatable>
         	<label>Contact person</label>
         	<input-type complex-definition-ref="contact_person">complex</input-type>
-        	<hint>Provider</hint>
+        	<hint>Person to contact in case of any issues with this item.</hint>
         	<required>Please fill all the fields for the contact person.</required>
         </field>
 
