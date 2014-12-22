@@ -41,11 +41,27 @@
       <page number="1">
       
       <!-- Basic info
-      		projectUrl
-      		title
-      		date
       		+type for type binds
+      		title
+            projectUrl
+            demoUrl
+      		date
       		+admin only fields-->
+
+        <field>
+          <dc-schema>dc</dc-schema>
+          <dc-element>type</dc-element>
+          <dc-qualifier></dc-qualifier>
+          <repeatable>false</repeatable>
+          <label>Select type of your resource</label>
+          <input-type value-pairs-name="common_types">dropdown</input-type>
+          <hint>Type of the resource: "Corpus" refers to text, speech and multimodal corpora.
+          "Lexical Conceptual Resource" includes lexica, ontologies, dictionaries, word lists etc.
+          "language Description" covers language models and grammars.
+          "Technology / Tool / Service" is used for tools, systems, system components etc.</hint>
+          <required>Please select a resource type for your submission.</required>
+        </field>
+
         <field>
           <dc-schema>dc</dc-schema>
           <dc-element>title</dc-element>
@@ -91,21 +107,7 @@
           <regexp>\d\d\d\d(-\d\d)?(-\d\d)?</regexp>
           <regexp-warning>The supplied date does not follow our date pattern \d\d\d\d(-\d\d)?(-\d\d)? e.g., 2014-01-21 or 2014</regexp-warning>         
         </field>
-        
-        <field>
-          <dc-schema>dc</dc-schema>
-          <dc-element>type</dc-element>
-          <dc-qualifier></dc-qualifier>
-          <repeatable>false</repeatable>
-          <label>Select type of your resource</label>
-          <input-type value-pairs-name="common_types">dropdown</input-type>
-          <hint>Type of the resource: "Corpus" refers to text, speech and multimodal corpora.
-          "Lexical Conceptual Resource" includes lexica, ontologies, dictionaries, word lists etc.
-          "language Description" covers language models and grammars.
-          "Technology / Tool / Service" is used for tools, systems, system components etc.</hint>
-          <required>Please select a resource type for your submission.</required>
-        </field>
-        
+
         <field>
             <dc-schema>local</dc-schema>
             <dc-element>hidden</dc-element>
