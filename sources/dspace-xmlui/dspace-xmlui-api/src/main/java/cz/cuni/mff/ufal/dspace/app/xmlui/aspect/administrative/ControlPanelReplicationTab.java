@@ -28,4 +28,3 @@ public class ControlPanelReplicationTab extends AbstractControlPanelTab {
 	
 }
 
-

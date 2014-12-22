@@ -309,6 +309,7 @@ public class UFALLicenseStep extends LicenseStep {
 	div.setHead(T_submission_head);
 	addSubmissionProgressList(div);
 
+	
     // get one bundle (all should have the same licenses)
     // - select those ones which are already present
     org.dspace.content.Item item = submissionInfo.getSubmissionItem().getItem();
@@ -316,15 +317,20 @@ public class UFALLicenseStep extends LicenseStep {
 	boolean file_uploaded = (0 < item.getBundles("ORIGINAL").length) && (0 < item.getBundles("ORIGINAL")[0].getBitstreams().length);
 
 	List controls = div.addList("controls", List.TYPE_FORM, "well well-light");
-	controls.setHead(T_head);
+	//controls.setHead(T_head);
 
 
 	List license_text = controls.addList("license-select", List.TYPE_FORM, "well well-white");
+	
+	license_text.setHead(T_decision_label);
 
+	license_text.addItem().addContent(T_info1);
+	license_text.addItem().addContent(T_info2);	
+	
 	Item dist_license = license_text.addItem("dist_license", "dist-license");
-
-	CheckBox decision = dist_license.addCheckBox("decision");
-	decision.setLabel(T_decision_label);
+	
+	CheckBox decision = dist_license.addCheckBox("decision", "bold");
+	//decision.setLabel(T_decision_label);
 	
 	// get the maximum page reached 
 	int maxStepReached = getMaxStepAndPageReached().getStep();
@@ -338,19 +344,11 @@ public class UFALLicenseStep extends LicenseStep {
 		decision.addOption("accept",T_decision_checkbox);	
 	}
 	
-			
-	license_text.addItem().addContent(T_info1);
-	license_text.addItem().addContent(T_info2);	
-
 	// Default license settings from LicenseStep.java    
     String licenseText = LicenseUtils.getLicenseText(context.getCurrentLocale(), collection, submission.getItem(), submission.getSubmitter());
 
-    List showhide = license_text.addList("accordion.dist").addList("accordion-group.dist", List.TYPE_FORM, "well well-white");
+    license_text.addItem("distributionlicense", "hidden").addContent(licenseText);
     
-    showhide.addItem("accordion-heading.dist", null).addHighlight("bold").addContent("Show/Hide the whole agreement");
-
-    
-    showhide.addList("accordion-body.dist").addItem().addHighlight("text-info linebreak").addContent(licenseText);
     Item info3 = license_text.addItem(null, "alert bold");
     info3.addHighlight("fa fa-warning fa-lg").addContent(" ");
     info3.addHighlight("").addContent(T_info3);
@@ -362,9 +360,16 @@ public class UFALLicenseStep extends LicenseStep {
     //} else {
     if (file_uploaded) {
                               
-	  	form = controls.addList("submit-ufal-license", List.TYPE_FORM);
+	  	form = controls.addList("submit-ufal-license", List.TYPE_FORM, "");
+	  	form.setHead("Resource License");
+	  	
+	    List ls = form.addList("license-selecotr", List.TYPE_GLOSS);	    
+	    Item helpText = ls.addItem();
+	    //helpText.addHighlight("fa fa-legal fa-2x pull-left").addContent(" ");
+	    helpText.addHighlight("").addContent("If you know under which license you want to distribute your work, please select from the list. If you need help please use the license selector:");
+	    ls.addItem().addXref("#!", "OPEN License Selector", "btn btn-link licenseselector bold");
   		
-	  	Select license_select = form.addItem().addSelect("license", "input-xxlarge");
+	  	Select license_select = ls.addItem().addSelect("license", "input-xxlarge");
   		license_select.setLabel(T_license_select);
 	  	license_select.setHelp(T_license_select_help);
 
@@ -382,7 +387,7 @@ public class UFALLicenseStep extends LicenseStep {
 
 	  	if (license_defs!=null && !license_defs.isEmpty()) {
 
-	  		List help_licenses = help_list.addList("accordion-group.lic.1", List.TYPE_FORM, "well well-white");
+	  		List help_licenses = help_list.addList("accordion-group.lic.1", List.TYPE_FORM, "hidden");
 	  		help_licenses.addItem("accordion-heading.lic.1", null).addHighlight("bold").addContent(T_license_detail);
 	  		List licenses = help_licenses.addList("accordion-body.lic.1").addList("bulleted-list", List.TYPE_BULLETED);
 
@@ -397,7 +402,7 @@ public class UFALLicenseStep extends LicenseStep {
 	  		for (LicenseDefinition license_def : license_defs) {
 	  			boolean selected = license_def.getLicenseId() == selectedId;
 		  		license_select.addOption(selected, license_def.getLicenseId(), license_def.getName());
-		  		licenses.addItem().addXref(license_def.getDefinition(), license_def.getName(), "target_blank");
+		  		licenses.addItem().addXref(license_def.getDefinition(), license_def.getName(), "target_blank", "_" + license_def.getID());
   			}
 			
 	  		java.util.List<LicenseDefinition> present_licenses = licenseManager.getLicenses(bitstream.getID());
@@ -414,11 +419,10 @@ public class UFALLicenseStep extends LicenseStep {
   			license_select.setDisabled();
 	  	}
 
-  		List new_license_list = help_list.addList("accordion-group.lic.2", List.TYPE_FORM, "well well-white");
-  		new_license_list.addItem("accordion-heading.lic.2", null).addHighlight("text-error bold").addContent(message("xmlui.Submission.submit.LicenseStep.morelicense_head"));
-  		List new_license_body = new_license_list.addList("accordion-body.lic.2", List.TYPE_FORM, "text-error");
-  		new_license_body.addItem(message("xmlui.Submission.submit.LicenseStep.morelicense_line1"));
-  		new_license_body = new_license_body.addList("steps", List.TYPE_BULLETED);
+  		List new_license_list = controls.addList("no-license-match", List.TYPE_FORM, "alert alert-danger");
+  		new_license_list.addItem("", "bold").addContent(message("xmlui.Submission.submit.LicenseStep.morelicense_head"));
+  		new_license_list.addItem(message("xmlui.Submission.submit.LicenseStep.morelicense_line1"));
+  		List new_license_body = new_license_list.addList("steps", List.TYPE_BULLETED);
   		new_license_body.addItem(message("xmlui.Submission.submit.LicenseStep.morelicense_line2"));
   		new_license_body.addItem(message("xmlui.Submission.submit.LicenseStep.morelicense_line3"));
   		new_license_body.addItem(message("xmlui.Submission.submit.LicenseStep.morelicense_line4"));
@@ -570,5 +574,7 @@ public class UFALLicenseStep extends LicenseStep {
 	}
 
 }
+
+
 
 

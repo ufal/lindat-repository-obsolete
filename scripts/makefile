@@ -268,7 +268,7 @@ create_databases:
 
 update_databases:
 	@echo "UPDATING UTILITIES DATABASE ..."
-	@echo "RUN e.g., sudo -u postgres psql $(UTILITIES_DATABASE_NAME) < ../sources/utilities/licenses.2014.04.25.sql"
+	@echo "RUN e.g., sudo -u postgres psql $(UTILITIES_DATABASE_NAME) < ../sources/utilities/licenses.2014.12.17.sql"
 	@echo "UPDATING DSpace DATABASE ..."
 	@echo "RUN e.g., sudo -u postgres psql $(DATABASE_NAME) < ./upgrades/dspace.2014.03.18.sql"
 	@echo DONE

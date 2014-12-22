@@ -798,17 +798,17 @@
 	<xsl:template match="dri:field" mode="compositeComponent">
 		<xsl:choose>
 			<xsl:when test="@type = 'checkbox'  or @type='radio'">
-				<xsl:apply-templates select="." mode="normalField" />
 				<xsl:if test="dri:label">
 					<xsl:apply-templates select="dri:label" mode="compositeComponent" />
-				</xsl:if>
+				</xsl:if>			
+				<xsl:apply-templates select="." mode="normalField" />
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:choose>
 					<xsl:when test="dri:label">
 						<div>
+							<xsl:apply-templates select="dri:label" mode="compositeComponent" />						
 							<xsl:apply-templates select="." mode="normalField" />
-							<xsl:apply-templates select="dri:label" mode="compositeComponent" />
 						</div>
 					</xsl:when>
 					<xsl:otherwise>
@@ -1336,6 +1336,24 @@
                         </div>
                 </div>
         </xsl:template>
-		
+        
+        <xsl:template match="dri:item[@n='distributionlicense']" priority="10">
+        	<div class='bold'><button class="btn btn-link bold" data-toggle="modal" data-target="#distributionagreement_modal">Show the distribution agreement</button></div>
+			<div class="modal fade" id="distributionagreement_modal" aria-hidden="true">
+  				<div class="modal-dialog">
+    				<div class="modal-content">
+	      				<div class="modal-header">
+	        				<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>
+	        				<h4 class="modal-title">Distribution Agreement</h4>
+	      				</div>
+	      				<div class="modal-body">
+	        				<p class="wordbreak linebreak"><xsl:value-of select="./node()" /></p>
+	      				</div>
+    				</div><!-- /.modal-content -->
+				</div><!-- /.modal-dialog -->
+			</div><!-- /.modal -->        	
+        </xsl:template>		
 		
 </xsl:stylesheet>
+
+

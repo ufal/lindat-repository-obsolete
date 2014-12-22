@@ -87,15 +87,15 @@ public class OAIRequestTest extends BaseTestCase {
 		selenium.open(prop.getProperty("selenium.test.home.url") + "/handle/" + identifier);
 		selenium.waitForPageToLoad("30000");
 
-		selenium.click("link=CMDI");
+		selenium.click("link=cmdi");
 
 		for (int second = 0;; second++) {
 			if (second >= 60) AssertJUnit.fail("timeout");
-			try { if (selenium.isElementPresent("//div[@class='modal-body']/pre")) break; } catch (Exception e) {}
+			try { if (selenium.isElementPresent("//div[@class='modal-body']/samp")) break; } catch (Exception e) {}
 			Thread.sleep(1000);
 		}
 
-		String xml = selenium.getText("//div[@class='modal-body']/pre").trim();
+		String xml = selenium.getText("//div[@class='modal-body']/samp").trim();
 		
 		AssertJUnit.assertTrue(xml.startsWith("<?xml"));
 		AssertJUnit.assertTrue(xml.endsWith("</cmd:CMD>"));
@@ -113,15 +113,15 @@ public class OAIRequestTest extends BaseTestCase {
 		selenium.open(prop.getProperty("selenium.test.home.url") + "/handle/" + identifier);
 		selenium.waitForPageToLoad("30000");
 
-		selenium.click("link=BibTeX");
+		selenium.click("link=bibtex");
 
 		for (int second = 0;; second++) {
 			if (second >= 60) AssertJUnit.fail("timeout");
-			try { if (selenium.isElementPresent("//div[@class='modal-body']/pre")) break; } catch (Exception e) {}
+			try { if (selenium.isElementPresent("//div[@class='modal-body']/samp")) break; } catch (Exception e) {}
 			Thread.sleep(1000);
 		}
 
-		String xml = selenium.getText("//div[@class='modal-body']/pre").trim();
+		String xml = selenium.getText("//div[@class='modal-body']/samp").trim();
 		
 		AssertJUnit.assertTrue(xml.startsWith("@misc{"));
 		AssertJUnit.assertTrue(xml.endsWith("}"));

@@ -49,4 +49,24 @@
         <qualifier>uri</qualifier>
         <scope_note>URL of the demo</scope_note>
     </dc-type>
+    <dc-type>
+        <schema>local</schema>
+        <element>contact</element>
+        <qualifier>person</qualifier>
+        <scope_note>Contact person</scope_note>
+    </dc-type>   
+    <dc-type>
+    	<schema>local</schema>
+    	<element>sponsor</element>
+    	<scope_note>Sponsor</scope_note>
+    </dc-type>
+    <dc-type>
+    	<schema>local</schema>
+    	<element>size</element>
+    	<qualifier>info</qualifier>
+    </dc-type>
+    <dc-type>
+    	<schema>local</schema>
+    	<element>genre</element>
+    </dc-type>
 </dspace-dc-types>

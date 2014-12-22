@@ -195,6 +195,7 @@
                 <map:parameter name="transformer" value="{flow-attribute:transformer}"/>
                 <map:parameter name="error" value="{flow-attribute:error}"/>
                 <map:parameter name="error_fields" value="{flow-attribute:error_fields}"/>
+                <map:parameter name="regex_error" value="{flow-attribute:regex_error}"/>
                 <map:parameter name="handle" value="{1}/{2}"/>
               </map:transform>
             </map:match>

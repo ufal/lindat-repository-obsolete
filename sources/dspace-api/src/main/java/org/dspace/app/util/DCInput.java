@@ -8,20 +8,25 @@
 package org.dspace.app.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.dspace.content.MetadataSchema;
 import org.dspace.core.Context;
+import org.xml.sax.SAXException;
 
 import cz.cuni.mff.ufal.dspace.app.util.ACL;
 
 /**
  * Class representing a line in an input form.
- * 
+ *
  * based on class by Brian S. Hughes, based on work by Jenny Toves, OCLC
  * modified for LINDAT/CLARIN
  * @version
@@ -60,7 +65,7 @@ public class DCInput
 
     /** UFAL/josifko - */
     private ACL acl = null;
-    
+
     /** UFAL/josifko - */
     private Set<String> rends = null;
 
@@ -109,6 +114,8 @@ public class DCInput
     /** allowed document types */
     private List<String> typeBind = null;
 
+    private ComplexDefinition complexDefinition = null;
+
     /**
      * The scope of the input sets, this restricts hidden metadata fields from
      * view during workflow processing.
@@ -124,13 +131,13 @@ public class DCInput
     /**
      * Class constructor for creating a DCInput object based on the contents of
      * a HashMap
-     * 
+     *
      * @param fieldMap
      *            ???
      * @param listMap
      */
     public DCInput(Map<String, String> fieldMap,
-            Map<String, List<String>> listMap)
+            Map<String, List<String>> listMap, ComplexDefinitions complexDefinitions)
     {
         dcElement = fieldMap.get("dc-element");
         dcQualifier = fieldMap.get("dc-qualifier");
@@ -148,6 +155,10 @@ public class DCInput
         // UFAL / josifko
         acl = ACL.fromString(fieldMap.get("acl"));
         rends = new HashSet<String>();
+        if(fieldMap.containsKey("class"))
+        {
+            rends.addAll(Arrays.asList(fieldMap.get("class").split(" ")));
+        }
 
         // Default the schema to dublin core
         dcSchema = fieldMap.get("dc-schema");
@@ -172,6 +183,10 @@ public class DCInput
         {
             valueListName = fieldMap.get("value-pairs-name");
             valueList = listMap.get(valueListName);
+        }
+
+        if ("complex".equals(inputType)){
+        	complexDefinition = complexDefinitions.getByName((fieldMap.get(DCInputsReader.COMPLEX_DEFINITION_REF)));
         }
         hint = fieldMap.get("hint");
         warning = fieldMap.get("required");
@@ -202,11 +217,11 @@ public class DCInput
      * Is this DCInput for display in the given scope? The scope should be
      * either "workflow" or "submit", as per the input forms definition. If the
      * internal visibility is set to "null" then this will always return true.
-     * 
+     *
      * @param scope
      *            String identifying the scope that this input's visibility
      *            should be tested for
-     * 
+     *
      * @return whether the input should be displayed or not
      */
     public boolean isVisible(String scope)
@@ -220,11 +235,11 @@ public class DCInput
      * of the visibility element. Possible values are: hidden (default) and
      * readonly. If the DCInput is visible in the scope then this methods must
      * return false
-     * 
+     *
      * @param scope
      *            String identifying the scope that this input's readonly
      *            visibility should be tested for
-     * 
+     *
      * @return whether the input should be displayed in a readonly way or fully
      *         hidden
      */
@@ -242,7 +257,7 @@ public class DCInput
 
     /**
      * Get the repeatable flag for this row
-     * 
+     *
      * @return the repeatable flag
      */
     public boolean isRepeatable()
@@ -252,7 +267,7 @@ public class DCInput
 
     /**
      * UFAL/jmisutka
-     * 
+     *
      * @param really_repeatable
      *            - if true than it will simulate the original behaviour if
      *            false it will include our extra component logic.
@@ -271,7 +286,7 @@ public class DCInput
 
     /**
      * Alternate way of calling isRepeatable()
-     * 
+     *
      * @return the repeatable flag
      */
     public boolean getRepeatable()
@@ -286,7 +301,7 @@ public class DCInput
 
     /**
      * Get the input type for this row
-     * 
+     *
      * @return the input type
      */
     public String getInputType()
@@ -296,7 +311,7 @@ public class DCInput
 
     /**
      * Get the DC element for this form row.
-     * 
+     *
      * @return the DC element
      */
     public String getElement()
@@ -306,7 +321,7 @@ public class DCInput
 
     /**
      * Get the DC namespace prefix for this form row.
-     * 
+     *
      * @return the DC namespace prefix
      */
     public String getSchema()
@@ -317,7 +332,7 @@ public class DCInput
     /**
      * Get the warning string for a missing required field, formatted for an
      * HTML table.
-     * 
+     *
      * @return the string prompt if required field was ignored
      */
     public String getWarning()
@@ -327,7 +342,7 @@ public class DCInput
 
     /**
      * Is there a required string for this form row?
-     * 
+     *
      * @return true if a required string is set
      */
     public boolean isRequired()
@@ -337,7 +352,7 @@ public class DCInput
 
     /**
      * Get the DC qualifier for this form row.
-     * 
+     *
      * @return the DC qualifier
      */
     public String getQualifier()
@@ -347,7 +362,7 @@ public class DCInput
 
     /**
      * Get the hint for this form row, formatted for an HTML table
-     * 
+     *
      * @return the hints
      */
     public String getHints()
@@ -357,7 +372,7 @@ public class DCInput
 
     /**
      * Get the label for this form row.
-     * 
+     *
      * @return the label
      */
     public String getLabel()
@@ -367,7 +382,7 @@ public class DCInput
 
     /**
      * Get the name of the pairs type
-     * 
+     *
      * @return the pairs type name
      */
     public String getPairsType()
@@ -377,7 +392,7 @@ public class DCInput
 
     /**
      * Get the name of the pairs type
-     * 
+     *
      * @return the pairs type name
      */
     public List getPairs()
@@ -406,7 +421,7 @@ public class DCInput
     /**
      * Get the name of the controlled vocabulary that is associated with this
      * field
-     * 
+     *
      * @return the name of associated the vocabulary
      */
     public String getVocabulary()
@@ -417,7 +432,7 @@ public class DCInput
     /**
      * Set the name of the controlled vocabulary that is associated with this
      * field
-     * 
+     *
      * @param vocabulary
      *            the name of the vocabulary
      */
@@ -429,12 +444,12 @@ public class DCInput
     /**
      * Gets the display string that corresponds to the passed storage string in
      * a particular display-storage pair set.
-     * 
+     *
      * @param pairTypeName
      *            Name of display-storage pair set to search
      * @param storedString
      *            the string that gets stored
-     * 
+     *
      * @return the displayed string whose selection causes storageString to be
      *         stored, null if no match
      */
@@ -456,12 +471,12 @@ public class DCInput
     /**
      * Gets the stored string that corresponds to the passed display string in a
      * particular display-storage pair set.
-     * 
+     *
      * @param pairTypeName
      *            Name of display-storage pair set to search
      * @param displayedString
      *            the string that gets displayed
-     * 
+     *
      * @return the string that gets stored when displayString gets selected,
      *         null if no match
      */
@@ -483,14 +498,14 @@ public class DCInput
     /**
      * The closed attribute of the vocabulary tag for this field as set in
      * input-forms.xml
-     * 
-     * <code> 
+     *
+     * <code>
      * <field>
      *     .....
      *     <vocabulary closed="true">nsrc</vocabulary>
      * </field>
      * </code>
-     * 
+     *
      * @return the closedVocabulary flags: true if the entry should be
      *         restricted only to vocabulary terms, false otherwise
      */
@@ -501,7 +516,7 @@ public class DCInput
 
     /**
      * Decides if this field is valid for the document type
-     * 
+     *
      * @param typeName
      *            Document type name
      * @return true when there is no type restriction or typeName is allowed
@@ -517,13 +532,17 @@ public class DCInput
     /**
      * Check whether the supplied values is allowed (matching supplied email)
      * eg. email validity check
-     * 
+     *
      * @param value
      * @return
      */
-    public boolean isAllowedValue(String value)
+    public boolean isAllowedValue(String value){
+    	return isAllowedValue(value, regexp);
+    }
+
+    public static boolean isAllowedValue(String value, String regex)
     {
-        if (regexp == null || regexp.isEmpty())
+        if (regex == null || regex.isEmpty())
         {
             return true;
         }
@@ -533,7 +552,7 @@ public class DCInput
         }
         else
         {
-            return value.matches(regexp);
+            return value.matches(regex);
         }
     }
 
@@ -575,7 +594,7 @@ public class DCInput
     /**
      * Is user allowed for particular ACL action on this input field in given
      * Context?
-     * 
+     *
      * @param c
      *            Contex
      * @param action
@@ -583,51 +602,134 @@ public class DCInput
      * @return true if allowed, false otherwise
      */
     public boolean isAllowedAction(Context c, int action)
-    {        
+    {
         return acl.isAllowedAction(c, action);
     }
-    
+
     /**
      * Returns true if there is a ACL with at least one ACE bound to this input field
-     *  
+     *
      * @return
      */
-    public boolean hasACL() 
+    public boolean hasACL()
     {
-        if(acl != null && !acl.isEmpty()) 
+        if(acl != null && !acl.isEmpty())
         {
             return true;
         }
         return false;
     }
-    
+
     /**
      * Adds another rend to set of rends for further rendering in GUI
-     * 
+     *
      * @param rend
      */
-    public void addRend(String rend) 
+    public void addRend(String rend)
     {
         rends.add(rend);
     }
-    
+
     /**
      * Returns set of rends for further rendering in GUI
-     * 
+     *
      * @return
-     */    
+     */
     public Set<String> getRends() {
-        return rends;        
+        return rends;
     }
-    
+
     /**
      * Returns rends as space separated String
-     * 
+     *
      * @return
-     */    
+     */
     public String getRendsAsString() {
-        return StringUtils.join(rends.toArray()," ");        
+        return StringUtils.join(rends.toArray()," ");
     }
-    
+
+	public ComplexDefinition getComplexDefinition() {
+		if(getInputType().equals("complex")){
+			return complexDefinition;
+		} else{
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	public static class ComplexDefinitions{
+		private Map<String, ComplexDefinition> definitions = null;
+		private Map<String, List<String>> valuePairs = null;
+
+		ComplexDefinitions(Map<String, List<String>> valuePairs){
+			definitions = new HashMap<String, ComplexDefinition>();
+			this.valuePairs = valuePairs;
+		}
+
+		public ComplexDefinition getByName(String name){
+			return definitions.get(name);
+		}
+
+		public void addDefinition(ComplexDefinition definition) {
+			definitions.put(definition.getName(), definition);
+			definition.setValuePairs(valuePairs);
+		}
+	}
+
+	public static class ComplexDefinition{
+		//use something that wont get replaced when entering into db
+		public static final String SEPARATOR = "@@";
+		private SortedMap<String, Map<String, String>> inputs;
+		private String name;
+		private Map<String, List<String>> valuePairs = null;
+
+		public ComplexDefinition(String definitionName) {
+			name = definitionName;
+			inputs = new TreeMap<String, Map<String, String>>();
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void addInput(Map<String, String> attributes) throws SAXException {
+			// these two are a must, check if present
+			String iName = attributes.get("name");
+			String iType = attributes.get("type");
+
+			if (iName == null || iType == null) {
+				throw new SAXException(
+						"Missing attributes (name or type) on complex definition input");
+			}
+
+			inputs.put(iName,attributes);
+
+		}
+
+		public Map<String, String> getInput(String name){
+			return inputs.get(name);
+		}
+
+		public Set<String> getInputNames() {
+			return inputs.keySet();
+		}
+
+		public int inputsCount() {
+			return getInputNames().size();
+		}
+
+		void setValuePairs(Map<String, List<String>> valuePairs){
+			this.valuePairs = valuePairs;
+		}
+
+		public java.util.List<String> getValuePairsForInput(String name) {
+			String pairsRef = getInput(name).get("pairs");
+			if(valuePairs != null && pairsRef != null){
+				return valuePairs.get(pairsRef);
+			}
+			return null;
+		}
+
+	}
+
 
 }

@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -24,7 +25,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-
 import org.dspace.app.util.DCInputsReader;
 import org.dspace.app.util.DCInputsReaderException;
 import org.dspace.app.util.DCInput;
@@ -86,6 +86,10 @@ public class DescribeStep extends AbstractProcessingStep
 
     // there were required fields that were not filled out
     public static final int STATUS_MISSING_REQUIRED_FIELDS = 2;
+    
+    public static final int STATUS_REGEX_ERROR = 3;
+
+    private static final String REGEX_ERROR_ATTRIBUTE = "dspace.submit.regex_error";
     
     // the metadata language qualifier
     public static final String LANGUAGE_QUALIFIER = getDefaultLanguageQualifier();
@@ -292,6 +296,8 @@ public class DescribeStep extends AbstractProcessingStep
             {
                 readText(request, item, schema, element, qualifier, inputs[j]
                         .getRepeatable(), LANGUAGE_QUALIFIER, inputs[j].getRepeatableParse());
+            } else if(inputType.equals("complex")){
+                readComplex(request, item, schema, element, qualifier, inputs[j]);
             }
             else
             {
@@ -339,6 +345,14 @@ public class DescribeStep extends AbstractProcessingStep
                     // since this field is missing add to list of error fields
                     addErrorField(request, getFieldName(inputs[i]));
                 }
+                
+                // Check whether the value matches given regexp
+                //TODO: use regexp handling that was created for complex fields see addRegexError
+                for(DCValue dcval:values){
+                    if(!inputs[i].isAllowedValue(dcval.value)){
+                        addErrorField(request, getFieldName(inputs[i]));
+                    }
+                }         
             }
         }
 
@@ -354,6 +368,9 @@ public class DescribeStep extends AbstractProcessingStep
         {
             return STATUS_MORE_INPUT_REQUESTED;
         }
+        else if(getBrokenValues(request) != null && getBrokenValues(request).size() > 0){
+        	return STATUS_REGEX_ERROR;
+        }
         // if one or more fields errored out, return
         else if (getErrorFields(request) != null && getErrorFields(request).size() > 0)
         {
@@ -366,7 +383,85 @@ public class DescribeStep extends AbstractProcessingStep
 
     
 
-    /**
+    private void readComplex(HttpServletRequest request, Item item,
+			String schema, String element, String qualifier, DCInput input) {
+
+        String metadataField = MetadataField
+                .formKey(schema, element, qualifier);
+        boolean repeated = input.getRepeatable();
+        
+        DCInput.ComplexDefinition definition = input.getComplexDefinition();
+        java.util.Map<String, java.util.List<String>> fieldsValues = new HashMap<String, java.util.List<String>>();
+        int valuesPerField = 0;
+
+        if (repeated)
+        {
+        	for(String name : definition.getInputNames()){
+        		List<String> list = getRepeatedParameter(request, metadataField, metadataField + "_" + name);
+                fieldsValues.put(name, list);
+                //assume the list are all the same size
+                valuesPerField = list.size();
+        	}
+
+        }
+        else
+        {
+        	for(String name : definition.getInputNames()){
+        		List<String> list = new ArrayList<String>();
+        		String value = request.getParameter(metadataField + "_" + name);
+        		if(value != null){
+        			list.add(value);
+        			fieldsValues.put(name, list);
+        		}
+        	}
+        	valuesPerField = 1;
+        }
+
+
+        boolean error = false;
+        //for all values
+        for(int i = 0; i < valuesPerField; i++){
+        	StringBuilder complexValue = new StringBuilder();
+        	int emptyFields = 0;
+        	//separator empty for first iter
+        	String separator = "";
+        	//in all fields
+        	for(String name : definition.getInputNames()){
+        		String value = fieldsValues.get(name).get(i);
+        		if(value != null){
+        			value = value.trim();
+        			value = value.replaceAll(DCInput.ComplexDefinition.SEPARATOR, DCInput.ComplexDefinition.SEPARATOR.replaceAll("(.)", "_$1_"));
+        		} else{
+        			value = "";
+        		}
+        		if("".equals(value)){
+        			++emptyFields;
+        		}
+                String regex = definition.getInput(name).get("regexp");
+                if(!value.isEmpty() && !DCInput.isAllowedValue(value, regex)){
+                	error = true;
+                }
+        		complexValue.append(separator).append(value);
+        		//non empty separator for the remaining iterations;
+        		separator = DCInput.ComplexDefinition.SEPARATOR;
+        	}
+        	//required and all empty handled by doProcessing
+        	//this checks whether one of the fields was empty
+        	String finalValue = complexValue.toString();
+        	if( emptyFields > 0 && emptyFields < definition.inputsCount()){
+        		error = true;
+        	}
+        	if(error){
+        		//incomplete as regex errors
+        		addRegexError(request,metadataField,finalValue);
+        	}else if(emptyFields != definition.inputsCount()){
+        		//add the final value only if it is not empty
+        		item.addMetadata(schema, element, qualifier, null, finalValue);
+        	}
+        }
+	}
+
+	/**
      * Retrieves the number of pages that this "step" extends over. This method
      * is used to build the progress bar.
      * <P>
@@ -1104,6 +1199,39 @@ public class DescribeStep extends AbstractProcessingStep
                     string_list.add(i, splits[j].trim() );
                 }
             }
+        }
+    }
+    
+    public static final List<String> getBrokenValues(HttpServletRequest request){
+        return (List<String>) request.getAttribute(REGEX_ERROR_ATTRIBUTE);
+    }
+    
+    protected static final void addRegexError(HttpServletRequest request, String fieldName, String value)
+    {
+        //get current list
+        List<String> errorFields = getBrokenValues(request);
+        
+        if (errorFields == null)
+        {
+            errorFields = new ArrayList<String>();
+        }
+
+        //add this field
+        errorFields.add(fieldName);
+        errorFields.add(value);
+        
+        //save updated list
+        setRegexError(request, errorFields);
+    }
+    private static final void setRegexError(HttpServletRequest request, List<String> errorFields)
+    {
+        if(errorFields==null)
+        {
+            request.removeAttribute(REGEX_ERROR_ATTRIBUTE);
+        }
+        else
+        {
+            request.setAttribute(REGEX_ERROR_ATTRIBUTE, errorFields);
         }
     }
 }

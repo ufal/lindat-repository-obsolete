@@ -251,6 +251,9 @@ public abstract class AbstractStep extends AbstractDSpaceTransformer
 			pageMeta.addTrailLink(contextPath + "/",T_dspace_home);
 	        pageMeta.addTrail().addContent(T_default_trail);
 		}
+        // <UFAL> - include ufal-submission.js
+        pageMeta.addMetadata("include-library", "submission");
+        // </UFAL>
 	}
 
 
