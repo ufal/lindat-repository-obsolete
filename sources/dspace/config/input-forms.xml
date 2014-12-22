@@ -1,4 +1,4 @@
-<?XML VERsion="1.0"?>
+<?xml version="1.0"?>
 <!DOCTYPE input-forms SYSTEM "input-forms.dtd">
 
 
@@ -998,10 +998,10 @@
   <form-complex-definitions>
   <!-- currently only text and dropbox -->
   	<definition name="contact_person">
-  		<input name="1_givenname" type="text" label="Provider's given name"/>
-  		<input name="2_surname" type="text" label="Provider's surname" help="Family name"/>
-  		<input name="3_email" type="text" label="Provider's email" regexp="[^@]+@[^\.@]+\.[^@]+"/>
-  		<input name="4_affiliation" type="text" label="Provider's institution name" autocomplete="solr-publisher_ac"/>
+  		<input name="1_givenname" type="text" label="Contact person's given name"/>
+  		<input name="2_surname" type="text" label="Contact person's surname" help="Family name"/>
+  		<input name="3_email" type="text" label="Contact person's email" regexp="[^@]+@[^\.@]+\.[^@]+"/>
+  		<input name="4_affiliation" type="text" label="Contact person's institution name" autocomplete="solr-publisher_ac"/>
   	</definition>
 
   	<definition name="funding">
