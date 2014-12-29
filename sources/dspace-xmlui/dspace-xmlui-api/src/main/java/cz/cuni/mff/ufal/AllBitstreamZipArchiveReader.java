@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.zip.Deflater;
 
 import javax.mail.internet.MimeUtility;
 
@@ -26,6 +27,7 @@ import org.apache.cocoon.environment.Request;
 import org.apache.cocoon.environment.Response;
 import org.apache.cocoon.environment.SourceResolver;
 import org.apache.cocoon.reading.AbstractReader;
+import org.apache.commons.compress.archivers.zip.Zip64Mode;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream.UnicodeExtraFieldPolicy;
@@ -62,6 +64,9 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
      */
     protected static final int BUFFER_SIZE = 8192;
 
+    /** Limit of ZIP format **/
+    protected static final long ZIP_LIMIT_SIZE = 4294967295l;
+
     /** Redirection possibilities */
     protected static final int NO_REDIRECTION = 1;
     protected static final int REDIRECT_TO_RESTRICTION_INFO = 2;
@@ -91,11 +96,17 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
     /** The zip file size */
     protected long zipFileSize;
 
+
+    protected boolean needsZip64 = false;
+
+
     public void setup(SourceResolver resolver, Map objectModel, String src,
             Parameters par) throws ProcessingException, SAXException,
             IOException
     {
         super.setup(resolver, objectModel, src, par);
+
+        long downloadAllLimitMaxFileSize = ConfigurationManager.getLongProperty("lr","lr.download.all.limit.max.file.size",-1);
 
         redirect = NO_REDIRECTION;
 
@@ -135,6 +146,7 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
             }
 
             bitstreamIDs = new ArrayList<Integer>();
+            long totalSize = 0l;
 
             Bundle[] originals = item.getBundles("ORIGINAL");
             for (Bundle original : originals)
@@ -164,6 +176,15 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
                         log.info(LogManager.getHeader(context, "view_bitstream", "handle=" + item.getHandle() + ",withdrawn=true"));
                         BitstreamReader.redirectToRestrictionInfo(context, request, dso, item, bitstream, objectModel, false);
                         return;
+                    }
+
+                    totalSize += bitstream.getSize();
+                    if(totalSize > ZIP_LIMIT_SIZE) {
+                        needsZip64 = true;
+                    }
+
+                    if(downloadAllLimitMaxFileSize > -1 && totalSize >= downloadAllLimitMaxFileSize) {
+                        throw new ProcessingException(String.format("Download of zip archive of data larger than %dB is forbidden.", downloadAllLimitMaxFileSize));
                     }
 
                     bitstreamIDs.add(bitstream.getID());
@@ -223,9 +244,13 @@ public class AllBitstreamZipArchiveReader extends AbstractReader implements Recy
                 OutputStream outStream = new FileOutputStream(new File(fn));
                 ZipArchiveOutputStream zip = new ZipArchiveOutputStream(outStream);
                 zip.setCreateUnicodeExtraFields(UnicodeExtraFieldPolicy.ALWAYS);
+                zip.setLevel(Deflater.NO_COMPRESSION);
                 ConcurrentMap<String, AtomicInteger> usedFilenames = new ConcurrentHashMap<String, AtomicInteger>();
 
                 Bundle[] originals = item.getBundles("ORIGINAL");
+                if(needsZip64) {
+                    zip.setUseZip64(Zip64Mode.Always);
+                }
                 for (Bundle original : originals)
                 {
                     Bitstream[] bss = original.getBitstreams();
