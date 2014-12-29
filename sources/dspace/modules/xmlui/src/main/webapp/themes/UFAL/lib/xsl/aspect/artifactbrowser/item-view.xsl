@@ -890,15 +890,16 @@
                     <i18n:param><xsl:copy-of select="$formatted-file-size" /></i18n:param>
                 </i18n:translate>
             </a>
-        </xsl:if>
-        
-        <div id="download_all_alert" class="alert alert-warning" style="margin-top: 20px; display: none;">
+
+            <div id="download_all_alert" class="alert alert-warning" style="margin-top: 20px; display: none;">
 			<button type="button" class="close" onclick="$('#download_all_alert').hide();">&#215;</button>
 			<p>Large Size</p>
 			<p style="margin-bottom: 10px;"><small class="text-warning">The requested files are being packed into one large file. This process can take some time, please be patient.</small></p>			
           				<a href="{$download-all-url}" style="text-decoration: none;"><button class="btn btn-warning btn-sm">Continue</button></a>
           				<button type="button" class="btn btn-default btn-sm" onclick="javascript:$('#download_all_alert').hide();">Cancel</button>
-		</div>	
+            <div>
+
+        </xsl:if>
 
 	</xsl:template>
 
