@@ -122,5 +122,42 @@
         </xsl:choose>
     </xsl:template>
 
+    <!-- convert from metashare to local.size.info using '@@' as the separator -->
+    <xsl:template name="convert_metashare_size">
+        <xsl:param name="size" />
+        <xsl:param name="unit" />
+        <xsl:param name="multiplier" />
+        <xsl:variable name="final_size">
+                <xsl:choose>
+                <xsl:when test="$multiplier='kilo'">
+                    <xsl:copy>
+                        <xsl:value-of select="$size*1000"/>
+                    </xsl:copy>
+                </xsl:when>
+                <xsl:when test="$multiplier='hundred'">
+                    <xsl:copy>
+                        <xsl:value-of select="$size*100"/>
+                    </xsl:copy>
+                </xsl:when>
+                <xsl:when test="$multiplier='mega'">
+                    <xsl:copy>
+                        <xsl:value-of select="format-number($size*1000000,'0')"/>
+                    </xsl:copy>
+                </xsl:when>
+                <xsl:when test="$multiplier='tera'">
+                    <xsl:copy>
+                        <xsl:value-of select="format-number($size*1000000000000,'0')"/>
+                    </xsl:copy>
+                </xsl:when>
+		<xsl:otherwise>
+			<xsl:copy>
+				<xsl:value-of select="$size"/>
+			</xsl:copy>
+		</xsl:otherwise>
+                </xsl:choose>
+        </xsl:variable>
+        <xsl:value-of select="concat($final_size,'@@',$unit)"/>
+    </xsl:template>
+
 </xsl:stylesheet>
 
