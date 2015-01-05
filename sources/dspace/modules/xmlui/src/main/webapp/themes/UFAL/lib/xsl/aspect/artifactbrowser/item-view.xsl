@@ -362,27 +362,45 @@
 			</xsl:when>				
 
 			<!-- size row -->
-			<xsl:when
-				test="$clause = 8 and (dim:field[@mdschema='local' and @element='size' and @qualifier='info'])">
-					<dl id="item-type" class="dl-horizontal">
-					<dt style="text-align: left">
-						<i class="fa fa-arrows-alt">&#160;</i>
-												<i18n:text>xmlui.dri2xhtml.METS-1.0.item-size-info</i18n:text>
-					</dt>
-					<dd>
-						<xsl:variable name="sizeInfo" select="dim:field[@mdschema='local' and @element='size' and @qualifier='info'][1]/node()"/>
-						<xsl:value-of select="substring-before($sizeInfo,'@@')" />
-						<xsl:text> </xsl:text>
-						<xsl:call-template name="plural-to-singular-en">
-								<xsl:with-param name="value" select="substring-after($sizeInfo,'@@')" />
-                                <xsl:with-param name="number" select="substring-before($sizeInfo,'@@')" />
-                        </xsl:call-template>
-					</dd>
-				</dl>
-				<xsl:call-template name="itemSummaryView-DIM-fields">
-					<xsl:with-param name="clause" select="($clause + 1)" />
-					<xsl:with-param name="phase" select="$otherPhase" />
-				</xsl:call-template>
+			<xsl:when test="$clause = 8">
+					<xsl:variable name="sizeInfo">
+						<xsl:choose>
+							<xsl:when test="dim:field[@mdschema='local' and @element='size' and @qualifier='info'][1]/node()">
+								<xsl:copy-of select="dim:field[@mdschema='local' and @element='size' and @qualifier='info']"/>
+							</xsl:when>
+							<xsl:when test="dim:field[@mdschema='metashare' and @element='ResourceInfo#TextInfo#SizeInfo' and @qualifier='size']">
+								<xsl:call-template name="convert_metashare_size">
+									<xsl:with-param name="size" select="dim:field[@mdschema='metashare' and @element='ResourceInfo#TextInfo#SizeInfo' and @qualifier='size']" />
+									<xsl:with-param name="unit" select="dim:field[@mdschema='metashare' and @element='ResourceInfo#TextInfo#SizeInfo' and @qualifier='sizeUnit']" />
+									<xsl:with-param name="multiplier" select="dim:field[@mdschema='metashare' and @element='ResourceInfo#TextInfo#SizeInfo' and @qualifier='sizeUnitMultiplier']" />
+								</xsl:call-template>
+							</xsl:when>
+						</xsl:choose>
+					</xsl:variable>
+					<xsl:if test="not($sizeInfo='')">
+							
+						<dl id="item-type" class="dl-horizontal">
+						<dt style="text-align: left">
+							<i class="fa fa-arrows-alt">&#160;</i>
+													<i18n:text>xmlui.dri2xhtml.METS-1.0.item-size-info</i18n:text>
+						</dt>
+						<dd>
+							<xsl:for-each select="xalan:nodeset($sizeInfo)/node()">
+								<xsl:value-of select="substring-before(.,'@@')" />
+								<xsl:text> </xsl:text>
+								<xsl:call-template name="plural-to-singular-en">
+										<xsl:with-param name="value" select="substring-after(.,'@@')" />
+										<xsl:with-param name="number" select="substring-before(.,'@@')" />
+								</xsl:call-template>
+								<xsl:if test="position()!=last()"><xsl:text>, </xsl:text></xsl:if>
+							</xsl:for-each>
+						</dd>
+						</dl>
+					</xsl:if>
+					<xsl:call-template name="itemSummaryView-DIM-fields">
+						<xsl:with-param name="clause" select="($clause + 1)" />
+						<xsl:with-param name="phase" select="$otherPhase" />
+					</xsl:call-template>
 			</xsl:when>
 
 			<!-- type languages -->
