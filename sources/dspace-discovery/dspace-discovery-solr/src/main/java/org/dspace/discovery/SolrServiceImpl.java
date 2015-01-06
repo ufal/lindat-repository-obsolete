@@ -37,6 +37,8 @@ import org.dspace.handle.HandleManager;
 import org.dspace.utils.DSpace;
 import org.springframework.stereotype.Service;
 
+import cz.cuni.mff.ufal.IsoLangCodes;
+
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -747,99 +749,25 @@ public class SolrServiceImpl implements SearchService, IndexingService {
                 if (toIgnoreFields.contains(field) || toIgnoreFields.contains(unqualifiedField + "." + Item.ANY)) {
                     continue;
                 }
-
-                if ((searchFilters.get(field) != null || searchFilters.get(unqualifiedField + "." + Item.ANY) != null)) {
-                    List<DiscoverySearchFilter> searchFilterConfigs = searchFilters.get(field);
-                    if(searchFilterConfigs == null){
-                        searchFilterConfigs = searchFilters.get(unqualifiedField + "." + Item.ANY);
-                    }
-
-                    for (DiscoverySearchFilter searchFilter : searchFilterConfigs) {
-                        if(searchFilter.getType().equals(DiscoveryConfigurationParameters.TYPE_DATE)){
-                            //For our search filters that are dates we format them properly
-                            Date date = toDate(value);
-                            if(date != null){
-                                //TODO: make this date format configurable !
-                                value = DateFormatUtils.formatUTC(date, "yyyy-MM-dd");
-                            }
-                        }
-
-                        doc.addField(searchFilter.getIndexFieldName(), value);
-                        doc.addField(searchFilter.getIndexFieldName() + "_keyword", value);
-                        
-                        //Add a dynamic fields for auto complete in search
-                        if(searchFilter.isFullAutoComplete()){
-                            doc.addField(searchFilter.getIndexFieldName() + "_ac", value);
-                        }else{
-                            String[] values = value.split(" ");
-                            for (String val : values) {
-                            	val = val.replaceAll("[\\W]", "");
-                            	if(val.isEmpty()) continue;
-                                doc.addField(searchFilter.getIndexFieldName() + "_ac", val);
-                            }
-                        }
-                    }
+                
+                //Add human readable name with dc.language.iso
+                if(field.equals("dc.language.iso")){
+                	    String langName = IsoLangCodes.getLangForCode(value);
+                	    if(langName != null){
+                                doc.addField("dc.language.iso_name", langName.toLowerCase());
+                	    } else{
+                	    	log.error(String.format("No language found for iso code %s", value));
+                	    }
                 }
 
-                if (sidebarFacets.get(field) != null || sidebarFacets.get(unqualifiedField + "." + Item.ANY) != null) {
-                    //Retrieve the configurations
-                    List<SidebarFacetConfiguration> facetConfigurations = sidebarFacets.get(field);
-                    if(facetConfigurations == null){
-                        facetConfigurations = sidebarFacets.get(unqualifiedField + "." + Item.ANY);
-                    }
+                processSearchFilters(doc, searchFilters, field,
+						unqualifiedField, value);
 
-                    for (SidebarFacetConfiguration configuration : facetConfigurations) {
-                        if(configuration.getType().equals(DiscoveryConfigurationParameters.TYPE_TEXT)){
-                            //Add a special filter
-                            //We use a separator to split up the lowercase and regular case, this is needed to get our filters in regular case
-                            //Solr has issues with facet prefix and cases
-                            String separator = new DSpace().getConfigurationService().getProperty("discovery.solr.facets.split.char");
-                            if(separator == null){
-                                separator = FILTER_SEPARATOR;
-                            }
-                            doc.addField(configuration.getIndexFieldName() + "_filter", value.toLowerCase() + separator + value);
-                        }else
-                        if(configuration.getType().equals(DiscoveryConfigurationParameters.TYPE_DATE)){
-                            //For our sidebar filters that are dates we only add the year
-                            Date date = toDate(value);
-                            if(date != null){
-                                String indexField = configuration.getIndexFieldName() + ".year";
-                                doc.addField(indexField, DateFormatUtils.formatUTC(date, "yyyy"));
-                                //Also save a sort value of this year, this is required for determining the upper & lower bound year of our facet
-                                if(doc.getField(indexField + "_sort") == null){
-                                    //We can only add one year so take the first one
-                                    doc.addField(indexField + "_sort", DateFormatUtils.formatUTC(date, "yyyy"));
-                                }
-                            } else {
-                                log.warn("Error while indexing sidebar date field, item: " + item.getHandle() + " metadata field: " + field + " date value: " + date);
-                            }
-                        }else if(configuration.getType().equalsIgnoreCase(DiscoveryConfigurationParameters.TYPE_RAW)){
-                        	doc.addField(configuration.getIndexFieldName() + "_filter", value);
-                        }
-                    }
-                }
+                processSidebarFacets(item, doc, sidebarFacets, field,
+						unqualifiedField, value);
 
-                if ((sortFields.get(field) != null || recentSubmissionsConfigurationMap.get(field) != null) && !sortFieldsAdded.contains(field)) {
-                    //Only add sort value once
-                    String type;
-                    if(sortFields.get(field) != null){
-                        type = sortFields.get(field).getType();
-                    }else{
-                        type = recentSubmissionsConfigurationMap.get(field).getType();
-                    }
-
-                    if(type.equals(DiscoveryConfigurationParameters.TYPE_DATE)){
-                        Date date = toDate(value);
-                        if(date != null){
-                            doc.addField(field + "_dt", date);
-                        }else{
-                            log.warn("Error while indexing sort date field, item: " + item.getHandle() + " metadata field: " + field + " date value: " + date);
-                        }
-                    }else{
-                        doc.addField(field + "_sort", value);
-                    }
-                    sortFieldsAdded.add(field);
-                }
+                processSortFields(item, doc, sortFieldsAdded, sortFields,
+						recentSubmissionsConfigurationMap, field, value);
 
                 doc.addField(field, value.toLowerCase());
 
@@ -948,6 +876,130 @@ public class SolrServiceImpl implements SearchService, IndexingService {
             log.debug("closed " + readers.size() + " readers");
         }
     }
+
+	private void processSortFields(
+			Item item,
+			SolrInputDocument doc,
+			List<String> sortFieldsAdded,
+			Map<String, DiscoverySortFieldConfiguration> sortFields,
+			Map<String, DiscoveryRecentSubmissionsConfiguration> recentSubmissionsConfigurationMap,
+			String field, String value) {
+		if ((sortFields.get(field) != null || recentSubmissionsConfigurationMap.get(field) != null) && !sortFieldsAdded.contains(field)) {
+		    //Only add sort value once
+		    String type;
+		    if(sortFields.get(field) != null){
+		        type = sortFields.get(field).getType();
+		    }else{
+		        type = recentSubmissionsConfigurationMap.get(field).getType();
+		    }
+
+		    if(type.equals(DiscoveryConfigurationParameters.TYPE_DATE)){
+		        Date date = toDate(value);
+		        if(date != null){
+		            doc.addField(field + "_dt", date);
+		        }else{
+		            log.warn("Error while indexing sort date field, item: " + item.getHandle() + " metadata field: " + field + " date value: " + date);
+		        }
+		    }else{
+		        doc.addField(field + "_sort", value);
+		    }
+		    sortFieldsAdded.add(field);
+		}
+	}
+
+	private void processSidebarFacets(Item item, SolrInputDocument doc,
+			Map<String, List<SidebarFacetConfiguration>> sidebarFacets,
+			String field, String unqualifiedField, String value) {
+		if (sidebarFacets.get(field) != null || sidebarFacets.get(unqualifiedField + "." + Item.ANY) != null) {
+		    //Retrieve the configurations
+		    List<SidebarFacetConfiguration> facetConfigurations = sidebarFacets.get(field);
+		    if(facetConfigurations == null){
+		        facetConfigurations = sidebarFacets.get(unqualifiedField + "." + Item.ANY);
+		    }
+
+            //We use a separator to split up the lowercase and regular case, this is needed to get our filters in regular case
+            //Solr has issues with facet prefix and cases
+            String separator = new DSpace().getConfigurationService().getProperty("discovery.solr.facets.split.char");
+            if(separator == null){
+                separator = FILTER_SEPARATOR;
+            }
+		    for (SidebarFacetConfiguration configuration : facetConfigurations) {
+		        if(configuration.getType().equals(DiscoveryConfigurationParameters.TYPE_TEXT)){
+		            //Add a special filter
+		            doc.addField(configuration.getIndexFieldName() + "_filter", value.toLowerCase() + separator + value);
+		        }else
+		        if(configuration.getType().equals(DiscoveryConfigurationParameters.TYPE_DATE)){
+		            //For our sidebar filters that are dates we only add the year
+		            Date date = toDate(value);
+		            if(date != null){
+		                String indexField = configuration.getIndexFieldName() + ".year";
+		                doc.addField(indexField, DateFormatUtils.formatUTC(date, "yyyy"));
+		                //Also save a sort value of this year, this is required for determining the upper & lower bound year of our facet
+		                if(doc.getField(indexField + "_sort") == null){
+		                    //We can only add one year so take the first one
+		                    doc.addField(indexField + "_sort", DateFormatUtils.formatUTC(date, "yyyy"));
+		                }
+		            } else {
+		                log.warn("Error while indexing sidebar date field, item: " + item.getHandle() + " metadata field: " + field + " date value: " + date);
+		            }
+		        }else if(configuration.getType().equalsIgnoreCase(DiscoveryConfigurationParameters.TYPE_RAW)){
+		        	doc.addField(configuration.getIndexFieldName() + "_filter", value);
+		        }else if(configuration.getType().equals(DiscoveryConfigurationParameters.TYPE_ISO_LANG)){
+		                    String langName = IsoLangCodes.getLangForCode(value);
+		                    if(langName != null){
+		                    	doc.addField(configuration.getIndexFieldName() + "_filter", langName.toLowerCase() + separator + langName);
+		                    } else{
+		                            log.error(String.format("No language found for iso code %s", value));
+		                    }
+		        }
+		    }
+		}
+	}
+
+	private void processSearchFilters(SolrInputDocument doc,
+			Map<String, List<DiscoverySearchFilter>> searchFilters,
+			String field, String unqualifiedField, String value) {
+		if ((searchFilters.get(field) != null || searchFilters.get(unqualifiedField + "." + Item.ANY) != null)) {
+		    List<DiscoverySearchFilter> searchFilterConfigs = searchFilters.get(field);
+		    if(searchFilterConfigs == null){
+		        searchFilterConfigs = searchFilters.get(unqualifiedField + "." + Item.ANY);
+		    }
+
+		    String new_value = value;
+		    for (DiscoverySearchFilter searchFilter : searchFilterConfigs) {
+		        if(searchFilter.getType().equals(DiscoveryConfigurationParameters.TYPE_DATE)){
+		            //For our search filters that are dates we format them properly
+		            Date date = toDate(value);
+		            if(date != null){
+		                //TODO: make this date format configurable !
+		                new_value = DateFormatUtils.formatUTC(date, "yyyy-MM-dd");
+		            }
+		        }else if(searchFilter.getType().equals(DiscoveryConfigurationParameters.TYPE_ISO_LANG)){
+		                    String langName = IsoLangCodes.getLangForCode(value);
+		                    if(langName != null){
+		                    	new_value = langName;
+		                    } else{
+		                            log.error(String.format("No language found for iso code %s", value));
+		                    }
+		        }
+
+		        doc.addField(searchFilter.getIndexFieldName(), new_value);
+		        doc.addField(searchFilter.getIndexFieldName() + "_keyword", new_value);
+		        
+		        //Add a dynamic fields for auto complete in search
+		        if(searchFilter.isFullAutoComplete()){
+		            doc.addField(searchFilter.getIndexFieldName() + "_ac", new_value);
+		        }else{
+		            String[] values = new_value.split(" ");
+		            for (String val : values) {
+		            	val = val.replaceAll("[\\W]", "");
+		            	if(val.isEmpty()) continue;
+		                doc.addField(searchFilter.getIndexFieldName() + "_ac", val);
+		            }
+		        }
+		    }
+		}
+	}
 
     /**
      * Create Lucene document with all the shared fields initialized.

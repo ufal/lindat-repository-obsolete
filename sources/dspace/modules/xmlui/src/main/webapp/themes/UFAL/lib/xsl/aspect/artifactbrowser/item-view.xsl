@@ -15,7 +15,8 @@
 	xmlns:solrClientUtils="org.apache.solr.client.solrj.util.ClientUtils"
 	xmlns:confman="org.dspace.core.ConfigurationManager"
     xmlns:str="http://exslt.org/strings"
-	exclude-result-prefixes="xalan encoder solrClientUtils i18n dri mets dim xlink xsl confman util">
+    xmlns:isocodes="cz.cuni.mff.ufal.IsoLangCodes"
+	exclude-result-prefixes="xalan encoder solrClientUtils i18n dri mets dim xlink xsl confman util isocodes">
 
 	<xsl:output indent="yes" />
 
@@ -421,10 +422,10 @@
 									<xsl:attribute name="href">
 										<xsl:copy-of select="$contextPath"/>
 										/browse?value=
-										<xsl:copy-of select="node()" />
+										<xsl:copy-of select="isocodes:getLangForCode(node())" />
 										&amp;type=language
 									</xsl:attribute>
-									<span class="language-iso-code"><xsl:copy-of select="node()" /></span>									
+									<span class="language-iso-code"><xsl:copy-of select="isocodes:getLangForCode(node())" /></span>									
 								</a>
 								<xsl:if
 									test="count(following-sibling::dim:field[@element='language'][@qualifier='iso']) != 0">
