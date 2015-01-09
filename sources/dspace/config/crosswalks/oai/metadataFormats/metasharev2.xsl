@@ -216,10 +216,10 @@
 
     <xsl:template name="ResourceDocumentationInfo">
         <xsl:choose>
-            <xsl:when test="doc:metadata/doc:element[@name='metashare']/doc:element[@name='ResourceInfo#ResourceDocumentationInfo']/doc:element[@name='samplesLocation']/doc:element/doc:field[@name='value']">
+            <xsl:when test="doc:metadata/doc:element[@name='local']/doc:element[@name='demo']/doc:element[@name='uri']/doc:element/doc:field[@name='value']">
                 <ms:resourceDocumentationInfo>
                     <ms:samplesLocation>
-                        <xsl:value-of select="doc:metadata/doc:element[@name='metashare']/doc:element[@name='ResourceInfo#ResourceDocumentationInfo']/doc:element[@name='samplesLocation']/doc:element/doc:field[@name='value']" />
+                        <xsl:value-of select="doc:metadata/doc:element[@name='local']/doc:element[@name='demo']/doc:element[@name='uri']/doc:element/doc:field[@name='value']" />
                     </ms:samplesLocation>
                 </ms:resourceDocumentationInfo>
             </xsl:when>

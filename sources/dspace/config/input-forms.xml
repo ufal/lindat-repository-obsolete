@@ -91,7 +91,8 @@
           <repeatable>false</repeatable>
           <label>Demo URL</label>
           <input-type>onebox</input-type>
-          <hint>Enter the demo url.</hint>
+          <hint>A url with samples of the resource or, in the case of tools,
+            of samples of the output.</hint>
           <required></required>
         </field>
 
@@ -347,19 +348,6 @@
             language dependent or not</hint>
           <required>Please indicate whether the tool is language dependent</required>
         </field>        
-
-        <field>
-          <dc-schema>metashare</dc-schema>
-          <dc-element>ResourceInfo#ResourceDocumentationInfo</dc-element>
-          <dc-qualifier>samplesLocation</dc-qualifier>
-          <repeatable>true</repeatable>
-          <label>Demo/Sample url</label>
-          <input-type>onebox</input-type>
-          <hint>A url with samples of the resource or, in the case of tools,
-            of samples of the output.</hint>
-          <required></required>
-        </field>
-
       </page>
     </form>
 
