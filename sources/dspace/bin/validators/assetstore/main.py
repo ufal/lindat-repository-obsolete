@@ -166,18 +166,25 @@ def check_files(env):
                 ret, msg = verificator( f )
             else:
                 ret, msg = verify( verificator, f )
+                if ret != 0:
+                    print ret, mime_type, f,  msg
             _logger.info( "checked: [%s] [%d]...", msg[:min( len( msg ), 200 )], ret )
             #_logger.info( "checked: return code [%d]...", ret )
             if ret != _OK:
                 badbad.append( (f, msg) )
         else:
             _logger.info( "not checked..." )
-            unchecked.append( (f, mime_type) )
+            unchecked.append( (mime_type, f) )
 
-    msg_unchecked = "Unchecked files: [%d], [%s]" % (
-        len( unchecked ),
-        ", ".join( list( set( [y for x, y in unchecked] ) ) ))
-    msg_problematic = "Problematic files: [%d]" % len( badbad )
+    msg_unchecked = "Unchecked files: [%d]\n\t" % len(unchecked)
+    un_d = {}
+    for mime, f in unchecked:
+        if mime not in un_d:
+            un_d[mime] = 0
+        un_d[mime] += 1
+    msg_unchecked += "\n\t".join( [ "%s: %s" % (mime, cnt) for mime, cnt in un_d.iteritems() ] )
+    msg_problematic = "Problematic files: [%d]\n\t" % len( badbad )
+    msg_problematic += "\n\t".join( [ "%s: %s" % (f, msg) for f, msg in badbad ] )
 
     _logger.info( msg_unchecked )
     _logger.info( msg_problematic )

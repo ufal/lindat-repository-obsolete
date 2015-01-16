@@ -31,8 +31,12 @@ settings = {
 
     "mime_type": {
         "application/zip": "unzip -t %s",
+        "application/x-xz": "xz -t %s",
         "application/x-gzip": "gunzip -t %s",
         "application/x-bzip2": "bunzip2 -t %s",
+        "application/x-tar": "tar -tvf %s",
+        "image/png": "pngcheck %s",
+
         "text/plain": lambda x: (0, "<plain text>"),
     }
 
