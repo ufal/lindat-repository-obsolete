@@ -461,6 +461,15 @@
             <filter class="solr.TrimFilterFactory" />
         </analyzer>
     </fieldType>
+
+    <fieldType name="componentFilter" class="solr.TextField" sortMissingLast="true" omitNorms="true">
+        <analyzer>
+            <tokenizer class="solr.PatternTokenizerFactory" pattern="@@" />
+
+            <filter class="solr.LowerCaseFilterFactory" />
+            <filter class="solr.TrimFilterFactory" />
+        </analyzer>
+    </fieldType>
     
  </types>
 
@@ -536,6 +545,9 @@
      <!--Date matching-->
     <dynamicField name="*.year" type="sint" indexed="true" stored="true" multiValued="true" omitNorms="true" />
     <dynamicField name="*_dt" type="date" indexed="true" stored="true" multiValued="false" omitNorms="true" />
+    
+    <!-- split components -->
+    <dynamicField name="*_comp" type="componentFilter" indexed="true" stored="false" multiValued="true" omitNorms="true" />
 
 
     <!--Used for matching on all other fields-->
@@ -607,6 +619,7 @@
    <copyField source="dc.type" dest="text"/>
    <copyField source="dc.subject*" dest="text"/>
    <copyField source="dc.subject*" dest="text"/>
+   <copyField source="*_comp" dest="text"/>
 
    <!-- Above, multiple source fields are copied to the [text] field.
 	  Another way to map multiple source fields to the same

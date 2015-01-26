@@ -744,7 +744,6 @@ public class SolrServiceImpl implements SearchService, IndexingService {
                     field += "." + meta.qualifier;
                 }
 
-
                 //We are not indexing provenance, this is useless
                 if (toIgnoreFields.contains(field) || toIgnoreFields.contains(unqualifiedField + "." + Item.ANY)) {
                     continue;
@@ -770,6 +769,11 @@ public class SolrServiceImpl implements SearchService, IndexingService {
 						recentSubmissionsConfigurationMap, field, value);
 
                 doc.addField(field, value.toLowerCase());
+
+                if (meta.schema.equals("local")){
+                	doc.addField(field + "_comp", value);
+                }
+
 
                 if (meta.language != null && !meta.language.trim().equals("")) {
                     String langField = field + "." + meta.language;
