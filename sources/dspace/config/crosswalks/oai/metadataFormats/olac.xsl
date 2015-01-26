@@ -102,6 +102,15 @@
             <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='subject']/doc:element/doc:field[@name='value'])">
                 <dc:subject><xsl:value-of select="."/></dc:subject>
             </xsl:for-each>
+            <xsl:variable name="dc_type" select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='type']/doc:element/doc:field[@name='value'])[1]"/>
+            <!-- subject language, point auto awarded for primary_text, assuming this will be the same as content language -->
+            <xsl:if test="$dc_type = 'lexicalConceptualResource' or $dc_type = 'languageDescription'">
+                    <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='language']/doc:element[@name='iso']/doc:element/doc:field[@name='value'])">
+                        <dc:subject xsi:type="olac:language">
+                                <xsl:attribute name="olac:code"><xsl:value-of select="."/></xsl:attribute>
+                        </dc:subject>
+                    </xsl:for-each>
+            </xsl:if>
 
             <!-- type -->
             <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='type']/doc:element/doc:field[@name='value'])">
@@ -129,10 +138,20 @@
 
             </xsl:for-each>
 
-            <!-- language -->
-            <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='language']/doc:element[@name='iso']/doc:element/doc:field[@name='value'])">
-                <dc:language><xsl:value-of select="."/></dc:language>
-            </xsl:for-each>
+            <!-- Content language http://www.language-archives.org/NOTE/metrics.html -->
+            <xsl:choose>
+            	<xsl:when test="doc:metadata/doc:element[@name='dc']/doc:element[@name='language']/doc:element[@name='iso']/doc:element/doc:field[@name='value']">
+                    <xsl:for-each select="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='language']/doc:element[@name='iso']/doc:element/doc:field[@name='value'])">
+                        <dc:language xsi:type="olac:language">
+                                <xsl:attribute name="olac:code"><xsl:value-of select="."/></xsl:attribute>
+                        </dc:language>
+                    </xsl:for-each>
+                </xsl:when>
+                <xsl:when test="xalan:distinct(doc:metadata/doc:element[@name='dc']/doc:element[@name='type']/doc:element/doc:field[@name='value'])[1] = 'toolService'">
+                	<!-- software has no linguistic content -->
+                	<dc:language xsi:type="olac:language" olac:code="zxx"/>
+                </xsl:when>
+            </xsl:choose>
 
 
 		</olac:olac>

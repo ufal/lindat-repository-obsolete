@@ -11,11 +11,13 @@
 	xmlns:atom="http://www.w3.org/2005/Atom" xmlns:ore="http://www.openarchives.org/ore/terms/"
 	xmlns:oreatom="http://www.openarchives.org/ore/atom/" xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:xalan="http://xml.apache.org/xalan" xmlns:encoder="xalan://java.net.URLEncoder"
+	xmlns:java="http://xml.apache.org/xalan/java" 
 	xmlns:util="org.dspace.app.xmlui.utils.XSLUtils"
 	xmlns:solrClientUtils="org.apache.solr.client.solrj.util.ClientUtils"
 	xmlns:confman="org.dspace.core.ConfigurationManager"
     xmlns:str="http://exslt.org/strings"
-	exclude-result-prefixes="xalan encoder solrClientUtils i18n dri mets dim xlink xsl confman util">
+    xmlns:isocodes="cz.cuni.mff.ufal.IsoLangCodes"
+	exclude-result-prefixes="xalan java encoder solrClientUtils i18n dri mets dim xlink xsl confman util isocodes">
 
 	<xsl:output indent="yes" />
 
@@ -362,27 +364,45 @@
 			</xsl:when>				
 
 			<!-- size row -->
-			<xsl:when
-				test="$clause = 8 and (dim:field[@mdschema='local' and @element='size' and @qualifier='info'])">
-					<dl id="item-type" class="dl-horizontal">
-					<dt style="text-align: left">
-						<i class="fa fa-arrows-alt">&#160;</i>
-												<i18n:text>xmlui.dri2xhtml.METS-1.0.item-size-info</i18n:text>
-					</dt>
-					<dd>
-						<xsl:variable name="sizeInfo" select="dim:field[@mdschema='local' and @element='size' and @qualifier='info'][1]/node()"/>
-						<xsl:value-of select="substring-before($sizeInfo,'@@')" />
-						<xsl:text> </xsl:text>
-						<xsl:call-template name="plural-to-singular-en">
-								<xsl:with-param name="value" select="substring-after($sizeInfo,'@@')" />
-                                <xsl:with-param name="number" select="substring-before($sizeInfo,'@@')" />
-                        </xsl:call-template>
-					</dd>
-				</dl>
-				<xsl:call-template name="itemSummaryView-DIM-fields">
-					<xsl:with-param name="clause" select="($clause + 1)" />
-					<xsl:with-param name="phase" select="$otherPhase" />
-				</xsl:call-template>
+			<xsl:when test="$clause = 8">
+					<xsl:variable name="sizeInfo">
+						<xsl:choose>
+							<xsl:when test="dim:field[@mdschema='local' and @element='size' and @qualifier='info'][1]/node()">
+								<xsl:copy-of select="dim:field[@mdschema='local' and @element='size' and @qualifier='info']"/>
+							</xsl:when>
+							<xsl:when test="dim:field[@mdschema='metashare' and @element='ResourceInfo#TextInfo#SizeInfo' and @qualifier='size']">
+								<xsl:call-template name="convert_metashare_size">
+									<xsl:with-param name="size" select="dim:field[@mdschema='metashare' and @element='ResourceInfo#TextInfo#SizeInfo' and @qualifier='size']" />
+									<xsl:with-param name="unit" select="dim:field[@mdschema='metashare' and @element='ResourceInfo#TextInfo#SizeInfo' and @qualifier='sizeUnit']" />
+									<xsl:with-param name="multiplier" select="dim:field[@mdschema='metashare' and @element='ResourceInfo#TextInfo#SizeInfo' and @qualifier='sizeUnitMultiplier']" />
+								</xsl:call-template>
+							</xsl:when>
+						</xsl:choose>
+					</xsl:variable>
+					<xsl:if test="not($sizeInfo='')">
+							
+						<dl id="item-type" class="dl-horizontal">
+						<dt style="text-align: left">
+							<i class="fa fa-arrows-alt">&#160;</i>
+													<i18n:text>xmlui.dri2xhtml.METS-1.0.item-size-info</i18n:text>
+						</dt>
+						<dd>
+							<xsl:for-each select="xalan:nodeset($sizeInfo)/node()">
+								<xsl:value-of select="substring-before(.,'@@')" />
+								<xsl:text> </xsl:text>
+								<xsl:call-template name="plural-to-singular-en">
+										<xsl:with-param name="value" select="substring-after(.,'@@')" />
+										<xsl:with-param name="number" select="substring-before(.,'@@')" />
+								</xsl:call-template>
+								<xsl:if test="position()!=last()"><xsl:text>, </xsl:text></xsl:if>
+							</xsl:for-each>
+						</dd>
+						</dl>
+					</xsl:if>
+					<xsl:call-template name="itemSummaryView-DIM-fields">
+						<xsl:with-param name="clause" select="($clause + 1)" />
+						<xsl:with-param name="phase" select="$otherPhase" />
+					</xsl:call-template>
 			</xsl:when>
 
 			<!-- type languages -->
@@ -403,10 +423,10 @@
 									<xsl:attribute name="href">
 										<xsl:copy-of select="$contextPath"/>
 										/browse?value=
-										<xsl:copy-of select="node()" />
+										<xsl:copy-of select="isocodes:getLangForCode(node())" />
 										&amp;type=language
 									</xsl:attribute>
-									<span class="language-iso-code"><xsl:copy-of select="node()" /></span>									
+									<span class="language-iso-code"><xsl:copy-of select="isocodes:getLangForCode(node())" /></span>									
 								</a>
 								<xsl:if
 									test="count(following-sibling::dim:field[@element='language'][@qualifier='iso']) != 0">
@@ -537,10 +557,71 @@
 					<xsl:with-param name="phase" select="$otherPhase" />
 				</xsl:call-template>
 			</xsl:when>
+
+			<!-- Sponsors row -->
+			<xsl:when
+				test="$clause = 12 and ((dim:field[@element='sponsor' and not(@qualifier)]) or (dim:field[@element='ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo'] and dim:field[@qualifier='projectName']))">
+				<dl id="item-sponsor" class="dl-horizontal">
+					<dt style="text-align: left">
+						<i class="fa fa-money">&#160;</i>
+						<xsl:text>Acknowledgement</xsl:text>
+					</dt>
+					<dd>
+						<xsl:variable name="my_elem">
+							<xsl:choose>
+								<xsl:when test="dim:field[@element='sponsor' and not(@qualifier)]">
+									<xsl:copy-of select="dim:field[@element='sponsor' and not(@qualifier)]"/>
+								</xsl:when>
+								<xsl:when test="dim:field[@element='ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo' and @qualifier='projectName']">
+									<xsl:copy-of select="dim:field[@element='ResourceInfo#ResourceCreationInfo#FundingInfo#ProjectInfo' and @qualifier='projectName']"/>
+								</xsl:when>
+							</xsl:choose>	
+						</xsl:variable>
+						<xsl:if
+							test="count(xalan:nodeset($my_elem)/node()) = 0">
+							<div class="spacer">&#160;</div>
+						</xsl:if>						
+						<xsl:for-each
+							select="xalan:nodeset($my_elem)/node()">
+								<div class="funding">
+									<xsl:choose>
+										<xsl:when test="xalan:nodeset($my_elem)/dim:field[@element='sponsor']"> 
+											<xsl:for-each select="xalan:tokenize(./node(),'@@')">
+												<xsl:choose>
+													<xsl:when test="position()=1">
+														<p class="funding-org"><xsl:value-of select="."/></p>
+													</xsl:when>
+													<xsl:when test="position()=2">
+														<p class="funding-code"><xsl:value-of select="concat('Project code: ',.)"/></p>
+													</xsl:when>
+													<xsl:when test="position()=3">
+														<p class="funding-name"><xsl:value-of select="concat('Project name: ',.)"/></p>
+													</xsl:when>
+												</xsl:choose>
+											</xsl:for-each>
+										</xsl:when>
+										<xsl:otherwise>
+											<p class="funding-name"><xsl:value-of select="concat('Project name: ' , substring-after(.,'-'))"/></p>
+										</xsl:otherwise>
+									</xsl:choose>
+								</div>
+								
+							<xsl:if
+								test="count(xalan:nodeset($my_elem)/node()) != position()">
+								<div class="spacer">&#160;</div>
+							</xsl:if>
+						</xsl:for-each>						
+					</dd>
+				</dl>
+				<xsl:call-template name="itemSummaryView-DIM-fields">
+					<xsl:with-param name="clause" select="($clause + 1)" />
+					<xsl:with-param name="phase" select="$otherPhase" />
+				</xsl:call-template>
+			</xsl:when>
 			
 			<!-- Subject keywords -->
 			<xsl:when
-				test="$clause = 12 and (dim:field[@element='subject' and not(@qualifier)])">
+				test="$clause = 13 and (dim:field[@element='subject' and not(@qualifier)])">
 				<dl id="item-subject" class="dl-horizontal">
 					<dt style="text-align: left">
 						<i class="fa fa-tags">&#160;</i>
@@ -571,7 +652,7 @@
 			
 			<!-- Collections -->
   			<xsl:when
-				test="$clause = 13 and $ufal-collection-references">
+				test="$clause = 14 and $ufal-collection-references">
 				<dl id="item-subject" class="dl-horizontal">
 					<dt style="text-align: left">
 						<i class="fa fa-sitemap">&#160;</i>
@@ -598,7 +679,7 @@
 				</xsl:call-template>
 			</xsl:when>
 
-			<xsl:when test="$clause = 14 and $ds_item_view_toggle_url != ''">
+			<xsl:when test="$clause = 15 and $ds_item_view_toggle_url != ''">
 
 				<!-- replacedby info -->
 				<xsl:if test="count(dim:field[@element='relation' and @qualifier='isreplacedby' and @mdschema='dc']) = 1">
@@ -633,7 +714,7 @@
 			<!-- recurse without changing phase if we didn't output anything -->
 			<xsl:otherwise>
 				<!-- IMPORTANT: This test should be updated if clauses are added! -->
-				<xsl:if test="$clause &lt; 14">
+				<xsl:if test="$clause &lt; 15">
 					<xsl:call-template name="itemSummaryView-DIM-fields">
 						<xsl:with-param name="clause" select="($clause + 1)" />
 						<xsl:with-param name="phase" select="$phase" />
@@ -681,8 +762,10 @@
 	<xsl:template match="dim:field" mode="itemDetailView-DIM">
 		<tr>
 			<td class="label-cell">
-				<xsl:value-of select="./@mdschema" />
-				<xsl:text>.</xsl:text>
+				<xsl:if test="./@mdschema != 'local'">
+					<xsl:value-of select="./@mdschema" />
+					<xsl:text>.</xsl:text>
+				</xsl:if>
 				<xsl:value-of select="./@element" />
 				<xsl:if test="./@qualifier">
 					<xsl:text>.</xsl:text>
@@ -690,7 +773,14 @@
 				</xsl:if>
 			</td>
 			<td class="linkify">
-				<xsl:copy-of select="./node()" />
+				<xsl:choose>
+					<xsl:when test="./@mdschema = 'local'">
+						<xsl:value-of select="java:replaceAll(java:java.lang.String.new(.),'@@', ' ')"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:copy-of select="./node()" />
+					</xsl:otherwise>
+				</xsl:choose>
 				<xsl:if test="./@authority and ./@confidence">
 					<xsl:call-template name="authorityConfidenceIcon">
 						<xsl:with-param name="confidence" select="./@confidence" />

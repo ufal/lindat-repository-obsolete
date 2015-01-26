@@ -344,6 +344,7 @@ public class IndexBrowse
         {
             boolean reqCommunityMappings = false;
             Map<Integer, String> sortMap = getSortValues(item, itemMDMap);
+            //Update sort indexes in bi_item
             if (item.isArchived() && !item.isWithdrawn())
             {
                 // Try to update an existing record in the item index
@@ -424,6 +425,19 @@ public class IndexBrowse
                                     }
                                     else
                                     {
+                                    	if(bis[i].getDataType().equals("iso_lang")){
+                                    		//Normalize also the indexed value, using same normalization as for sort
+                                    		DCValue val = new DCValue();
+                                    		val.authority = value.authority;
+                                    		val.confidence = value.confidence;
+                                    		val.element = value.element;
+                                    		val.language = value.language;
+                                    		val.qualifier = value.qualifier;
+                                    		val.schema = value.schema;
+                                    		val.value = OrderFormat.makeSortString(value.value, value.language, bis[i].getDataType());
+                                    		value = val;
+                                    	}
+                                    	
                                         if (bis[i].isAuthorityIndex() &&
                                                 (value.authority == null || value.confidence < minConfidence))
                                         {

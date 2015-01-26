@@ -230,6 +230,7 @@
             </list>
         </property>
         <property name="fullAutoComplete" value="false"/>
+        <property name="type" value="iso_language"/>
     </bean>
     
     <bean id="searchFilterType" class="org.dspace.discovery.configuration.DiscoverySearchFilter">
@@ -321,6 +322,7 @@
         </property>
         <property name="facetLimit" value="5"/>
         <property name="sortOrder" value="COUNT"/>
+        <property name="type" value="iso_language"/>
     </bean>
 
     <bean id="sidebarFacetType" class="org.dspace.discovery.configuration.SidebarFacetConfiguration">
@@ -414,6 +416,7 @@
         </property>
         <property name="facetLimit" value="20"/>
         <property name="sortOrder" value="COUNT"/>
+        <property name="type" value="iso_language"/>
     </bean>
 
     <bean id="searchFacetType" class="org.dspace.discovery.configuration.SidebarFacetConfiguration">
