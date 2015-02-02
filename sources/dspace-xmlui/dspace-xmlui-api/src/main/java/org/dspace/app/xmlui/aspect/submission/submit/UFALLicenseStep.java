@@ -24,6 +24,7 @@ import org.dspace.app.xmlui.wing.WingException;
 import org.dspace.app.xmlui.wing.element.Body;
 import org.dspace.app.xmlui.wing.element.CheckBox;
 import org.dspace.app.xmlui.wing.element.Division;
+import org.dspace.app.xmlui.wing.element.Highlight;
 import org.dspace.app.xmlui.wing.element.Item;
 import org.dspace.app.xmlui.wing.element.List;
 import org.dspace.app.xmlui.wing.element.PageMeta;
@@ -372,6 +373,12 @@ public class UFALLicenseStep extends LicenseStep {
 	  	Select license_select = ls.addItem().addSelect("license", "input-xxlarge");
   		license_select.setLabel(T_license_select);
 	  	license_select.setHelp(T_license_select_help);
+	  	
+	  	Item detailLicenseLink = form.addItem(null, "alert");
+	  	detailLicenseLink.addHighlight("fa fa-lg fa-question-circle").addContent(" ");
+	  	detailLicenseLink.addHighlight("bold").addContent("To view more details about the licenses ");
+	  	detailLicenseLink.addHighlight("bold").addXref(contextPath + "/page/licenses", "Click here", "target_blank");
+	  	detailLicenseLink.addHighlight("bold").addContent(".");
 
   		// add not available
 	  	license_select.setMultiple(false);
