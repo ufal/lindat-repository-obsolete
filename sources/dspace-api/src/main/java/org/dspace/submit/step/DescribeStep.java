@@ -1218,7 +1218,8 @@ public class DescribeStep extends AbstractProcessingStep
 
         //add this field
         errorFields.add(fieldName);
-        errorFields.add(value);
+	//XXX this is obscure, but the list essentially gets converted to a comma separated string in submission.js::saveRegexError. Commas in user input would break that, but they can't be just .replaced as we need the entered value
+        errorFields.add(javax.xml.bind.DatatypeConverter.printBase64Binary(value.getBytes()));
         
         //save updated list
         setRegexError(request, errorFields);
