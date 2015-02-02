@@ -104,5 +104,24 @@
 		</ul>
 	</xsl:template>	
 
+    <xsl:template match="dri:div[@id='cz.cuni.mff.ufal.LicensePage.div.licenses']" priority="10">
+
+        <div class="well">
+                        <xsl:apply-templates select="dri:head" />
+                        <xsl:for-each select="dri:list">
+                                <div class="well well-sm well-white">
+                                        <h4>
+                                        <a>
+                                                <xsl:attribute name="href">
+                                                        <xsl:value-of select="dri:item[@n='definition']/node()" />
+                                                </xsl:attribute>
+                                                <xsl:value-of select="dri:item[@n='name']/node()" />
+                                        </a></h4>
+                                        <xsl:apply-templates select="dri:list[@n='license_details']" />
+                                </div>
+                        </xsl:for-each>
+        </div>
+
+    </xsl:template>
 </xsl:stylesheet>
 

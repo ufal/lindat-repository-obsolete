@@ -300,7 +300,7 @@
 						</xsl:choose>
 
 						<xsl:choose>
-							<xsl:when test="count(dri:div[@n='home']/dri:div[@n='stats']/dri:table[@n='list-table']/dri:row) > 1">
+							<xsl:when test="count(dri:div[@n='home']/dri:div[@n='stats']//dri:table[@n='list-table']/dri:row) > 1">
 								<xsl:call-template name="top-items" />
 							</xsl:when>
 						</xsl:choose>
@@ -435,7 +435,7 @@
                 </i18n:translate>
 			</div>
 			<xsl:if test="mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/license">
-                <div class="visible-xs" style="height: 20px;">&#160;</div>
+                <div style="height: 20px;">&#160;</div>
 				<div class="item-label {mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/license/@label}" >
 					<span title="{mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/license/@label_title}">
 						<xsl:value-of
@@ -584,10 +584,15 @@
 	<xsl:template name="top-items">
 
 		<xsl:for-each
-			select="/dri:document/dri:body/dri:div[@n='home']/dri:div[@n='stats']/dri:table[@n='list-table']">
-			<div class="well well-lg" id="top-items">
-				<h3 class="top-items-head">Most Viewed Items</h3>
-				<xsl:for-each select="dri:row">
+			select="/dri:document/dri:body/dri:div[@n='home']/dri:div[@n='stats']">
+			<div class="container well well-lg" id="top-items">
+				<h3 class="top-items-head"><xsl:copy-of select="dri:head/node()" /></h3>
+				<xsl:for-each select="dri:div/dri:table">
+					<div class="col-md-6 no-padding" style="padding: 2px;">
+					<div class="panel panel-default">
+					<div class="panel-heading bold"><xsl:copy-of select="dri:head/node()" /></div>
+					<div class="panel-body">
+					<xsl:for-each select="dri:row">
 					<xsl:if test="position() &gt; 1 and position() &lt;= 4">
 						<xsl:for-each select="dri:cell">
 							<xsl:if test="dri:xref/@target">
@@ -600,8 +605,12 @@
 								<xsl:apply-templates select="document($externalMetadataURL)"
 									mode="recentList" />
 							</xsl:if>
-						</xsl:for-each>
+						</xsl:for-each>						
 					</xsl:if>
+					</xsl:for-each>
+					</div>
+					</div>		
+					</div>			
 				</xsl:for-each>
 			</div>
 		</xsl:for-each>
