@@ -1294,10 +1294,11 @@ public class DescribeStep extends AbstractSubmissionStep
                                 if ("text".equals(type)) {
                                 		String autocomplete  = definition.getInput(name).get("autocomplete");
                                 		if(isAutocompletable(autocomplete)) {
-                                			rend += " autocomplete";
+                                            field = composite.addText(fullInputName, rend + " autocomplete"); 
                                 			addAutocompleteComponents(fullInputName, autocomplete, item);
+                                		} else {
+                                            field = composite.addText(fullInputName, rend); 
                                 		}
-                                		field = composite.addText(fullInputName, rend); 
                                 } else if ("dropdown".equals(type)){
                                         Select select = composite.addSelect(fullInputName, rend);
                                         // Setup the possible options

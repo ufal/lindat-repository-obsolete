@@ -546,8 +546,9 @@
     <dynamicField name="*.year" type="sint" indexed="true" stored="true" multiValued="true" omitNorms="true" />
     <dynamicField name="*_dt" type="date" indexed="true" stored="true" multiValued="false" omitNorms="true" />
     
-    <!-- split components -->
+    <!-- catch "components" especially to copy them; but also split them to fields with componentFilter -->
     <dynamicField name="*_comp" type="componentFilter" indexed="true" stored="false" multiValued="true" omitNorms="true" />
+    <copyField source="*_comp" dest="*_ac" />
 
 
     <!--Used for matching on all other fields-->

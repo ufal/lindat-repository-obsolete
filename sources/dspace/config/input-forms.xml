@@ -996,8 +996,8 @@
 
   	<definition name="funding">
   		<input name="1_orgname" type="text" label="Funding organization"/>
-  		<input name="2_code" type="text" label="Grant no. or funding project code"/>
-  		<input name="3_projname" type="text" label="Funding project name"/>
+  		<input name="2_code" type="text" label="Grant no. or funding project code" autocomplete="solr-local.sponsor_ac"/>
+  		<input name="3_projname" type="text" label="Funding project name" autocomplete="solr-local.sponsor_ac"/>
   		<input name="4_type" type="dropdown" label="Funding type" pairs="metashare_funding"/>
   	</definition>
   	
