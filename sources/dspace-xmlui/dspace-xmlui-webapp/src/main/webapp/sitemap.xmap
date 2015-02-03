@@ -20,7 +20,7 @@
                         <map:generator name="DSpaceOREGenerator" src="org.dspace.app.xmlui.cocoon.DSpaceOREGenerator"/>
                         <map:generator name="OpenSearchGenerator" src="org.dspace.app.xmlui.cocoon.OpenSearchGenerator"/>
                         <map:generator name="notifying" src="org.apache.cocoon.sitemap.NotifyingGenerator"/>
-                        <map:generator name="exception" src="org.apache.cocoon.generation.ExceptionGenerator"/>
+                        <map:generator name="exception" src="cz.cuni.mff.ufal.dspace.app.xmlui.cocoon.generation.ExceptionGenerator"/>
                         <map:generator name="AJAXMenuGenerator"
                              src="org.dspace.app.xmlui.cocoon.AJAXMenuGenerator"/>
                 </map:generators>
@@ -681,7 +681,9 @@
                                 </map:when>
 
                                 <map:otherwise>
-                                        <map:generate type="exception"/>
+                                        <map:generate type="exception">
+                                        	<map:parameter name="send_email" value="true"/>
+                                        </map:generate>
                                         <map:transform src="exception2html.xslt">
                                                 <map:parameter name="contextPath" value="{request:contextPath}"/>
                                         </map:transform>
