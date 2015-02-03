@@ -1689,7 +1689,8 @@ public class DescribeStep extends AbstractSubmissionStep
     			String[] fvs = errors.split(",");
     			for(int i=0; i<fvs.length; i+=2){
     				String field = fvs[i];
-    				String value = fvs[i+1];
+    				//XXX this is obscure, see org.dspace.submit.step.DescribeStep::addRegexError
+    				String value = new String(javax.xml.bind.DatatypeConverter.parseBase64Binary(fvs[i+1]));
     				fields.put(field, value);
     			}
     		}
