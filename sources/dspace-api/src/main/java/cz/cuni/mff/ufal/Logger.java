@@ -28,13 +28,12 @@ public class Logger {
     }
     
     
-} // class
 
 
 //
 //
 //
-class own_logger extends org.apache.log4j.Logger
+public static class own_logger extends org.apache.log4j.Logger
 {
     // variables
     org.apache.log4j.Logger impl_;
@@ -59,7 +58,7 @@ class own_logger extends org.apache.log4j.Logger
     }
     
     //
-    void send_error(Throwable t) {
+   public void send_error(Throwable t) {
         send_error(ExceptionUtils.getStackTrace(t));
     }
 
@@ -266,5 +265,4 @@ class own_logger extends org.apache.log4j.Logger
     }
     
 } // class 
-
-
+} // class
