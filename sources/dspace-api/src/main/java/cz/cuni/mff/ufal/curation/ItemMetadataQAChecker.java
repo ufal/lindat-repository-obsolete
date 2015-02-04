@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -491,22 +492,17 @@ public class ItemMetadataQAChecker extends AbstractCurationTask {
     
 	private void validate_complex_inputs(Item item, DCValue[] dcs,
 			StringBuilder results) throws CurateException {
-		String schema = dcs[0].schema;
-		String element = dcs[0].element;
-		String qualifier = dcs[0].qualifier;
-		String name = StringUtils.isBlank(qualifier) ? String.format("%s.%s",
-				schema, element) : String.format("%s.%s.%s", schema, element,
-				qualifier);
+		for (Entry<String, Integer> entry : _complex_inputs.entrySet()) {
 
-		Integer numFields = _complex_inputs.get(name);
-		if (numFields != null) {
-			for (DCValue dval : dcs) {
+			for (DCValue dval : item.getMetadata(entry.getKey())) {
 				String val = dval.value;
-				if (val.split(DCInput.ComplexDefinition.SEPARATOR).length != numFields) {
+				if (val.split(DCInput.ComplexDefinition.SEPARATOR).length != entry
+						.getValue()) {
 					throw new CurateException(
 							String.format(
-									"%s is a componet with %s values but is not stored as such.",
-									name, numFields), Curator.CURATE_FAIL);
+									"%s is a componet with %s values but is not stored as such. [%s]",
+									entry.getKey(), entry.getValue(), val),
+							Curator.CURATE_FAIL);
 				}
 			}
 		}
