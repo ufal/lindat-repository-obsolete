@@ -1,3 +1,4 @@
+v
 <!--
 	/* Created for LINDAT/CLARIN */
     Main structure of the UFAL-POINT home page
@@ -588,7 +589,7 @@
 			<div class="container well well-lg" id="top-items">
 				<h3 class="top-items-head"><xsl:copy-of select="dri:head/node()" /></h3>
 				<xsl:for-each select="dri:div/dri:table">
-					<div class="col-md-6 no-padding" style="padding: 2px;">
+					<div class="col-md-12 no-padding" style="padding: 2px;">
 					<div class="panel panel-default">
 					<div class="panel-heading bold"><xsl:copy-of select="dri:head/node()" /></div>
 					<div class="panel-body">
