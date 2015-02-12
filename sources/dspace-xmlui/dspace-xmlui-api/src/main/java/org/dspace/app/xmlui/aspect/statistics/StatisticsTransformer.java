@@ -125,7 +125,7 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
             //Render the list as a table
 			addDisplayListing(division.addDivision("top-week"), statListing);
 			
-            /** List of the top 10 items for the entire repository All Time **/
+            /** List of the top 10 items for the entire repository All Time 
 			
 			StatisticsListing statListing2 = new StatisticsListing(new StatisticsDataVisits());				
 			statListing2.setTitle("Top All Times");
@@ -136,7 +136,7 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
             statListing2.addDatasetGenerator(dsoAxis);            
 
             //Render the list as a table
-			addDisplayListing(division.addDivision("top-all"), statListing2);
+			addDisplayListing(division.addDivision("top-all"), statListing2);**/
 			
 			
 			
