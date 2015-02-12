@@ -1222,6 +1222,7 @@ public class SolrServiceImpl implements SearchService, IndexingService {
             }
 
             String q = solrQuery.getQuery() + " OR title:(" + query + ")^5";
+            q = q + " OR ((" + q + ") AND -dc.relation.isreplacedby:*)^5 OR ((" + q + ") AND dc.relation.replaces)^15";
             solrQuery.setQuery(q);
             QueryResponse queryResponse = getSolr().query(solrQuery);
             return retrieveResult(context, discoveryQuery, queryResponse);
