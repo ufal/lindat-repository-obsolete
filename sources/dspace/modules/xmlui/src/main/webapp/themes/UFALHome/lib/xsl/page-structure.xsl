@@ -1,4 +1,3 @@
-v
 <!--
 	/* Created for LINDAT/CLARIN */
     Main structure of the UFAL-POINT home page
