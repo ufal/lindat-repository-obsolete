@@ -24,7 +24,7 @@
                         <xsl:copy-of select="$authors"/>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:copy-of select="doc:metadata/doc:element[@name='dc']/doc:element[@name='publisher']/doc:element/doc:field[@name='value']"/>
+                        <xsl:value-of select="doc:metadata/doc:element[@name='dc']/doc:element[@name='publisher']/doc:element/doc:field[@name='value']"/>
                     </xsl:otherwise>
             </xsl:choose>
             <xsl:if test="$year != ''">
