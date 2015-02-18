@@ -19,9 +19,14 @@
             <xsl:variable name="pid"><xsl:call-template name="pid"/></xsl:variable>
             <xsl:variable name="repository"><xsl:call-template name="repository"/></xsl:variable>
             <xsl:variable name="year"><xsl:call-template name="year"/></xsl:variable>
-            <xsl:if test="$authors != ''">
-                <xsl:copy-of select="$authors"/>
-            </xsl:if>
+            <xsl:choose>
+                    <xsl:when test="$authors != ''">
+                        <xsl:copy-of select="$authors"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:copy-of select="doc:metadata/doc:element[@name='dc']/doc:element[@name='publisher']/doc:element/doc:field[@name='value']"/>
+                    </xsl:otherwise>
+            </xsl:choose>
             <xsl:if test="$year != ''">
                 <xsl:text>, </xsl:text>
                 <xsl:copy-of select="$year"/>
