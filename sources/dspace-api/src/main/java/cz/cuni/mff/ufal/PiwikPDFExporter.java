@@ -202,14 +202,19 @@ public class PiwikPDFExporter  {
 			Element result = (Element)results.item(i);
 			String date = result.getAttribute("date");
 			Date dateObj = inputDateFormat.parse(date);
-			String pageViews = result.getElementsByTagName("nb_pageviews").item(0).getTextContent();
-			String downloads = result.getElementsByTagName("nb_downloads").item(0).getTextContent();
-			int iPageViews = Integer.parseInt(pageViews);
-			int iDownloads = Integer.parseInt(downloads);
-			if(minPageViews >= iPageViews) minPageViews = iPageViews;
-			if(maxPageViews <= iPageViews) maxPageViews = iPageViews;
-			viewsSeries.add(new Day(dateObj), iPageViews);
-			downloadsSeries.add(new Day(dateObj), iDownloads);
+			try{							
+				String pageViews = result.getElementsByTagName("nb_pageviews").item(0).getTextContent();
+				String downloads = result.getElementsByTagName("nb_downloads").item(0).getTextContent();
+				int iPageViews = Integer.parseInt(pageViews);
+				int iDownloads = Integer.parseInt(downloads);
+				if(minPageViews >= iPageViews) minPageViews = iPageViews;
+				if(maxPageViews <= iPageViews) maxPageViews = iPageViews;
+				viewsSeries.add(new Day(dateObj), iPageViews);
+				downloadsSeries.add(new Day(dateObj), iDownloads);
+			}catch(Exception e) {
+				viewsSeries.add(new Day(dateObj), 0);
+				downloadsSeries.add(new Day(dateObj), 0);				
+			}
 		}
 		
 		TimeSeriesCollection dataset = new TimeSeriesCollection();
