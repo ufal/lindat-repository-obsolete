@@ -116,16 +116,18 @@ public class PiwikPDFExporter  {
 	public static void generateItemReport(Item item) throws Exception {
 		
 		Calendar cal = Calendar.getInstance();
-		//Date today = cal.getTime();
 		cal.add(Calendar.MONTH, -1);
-		Date monthBefore = cal.getTime();
+		cal.set(Calendar.DATE, 1);
+		Date firstDay = cal.getTime();
+		cal.set(Calendar.DATE, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+		Date lastDay = cal.getTime();
 		
 		String viewsReportURL = PIWIK_API_URL + "index.php"
 											+ "?module=API"
 											+ "&method=API.get"
 											+ "&idSite=" + PIWIK_SITE_ID
-											+ "&period=month"
-											+ "&date=" + inputDateFormat.format(monthBefore)
+											+ "&period=day"
+											+ "&date=" + inputDateFormat.format(firstDay) + "," + inputDateFormat.format(lastDay)
 											+ "&token_auth=" + PIWIK_AUTH_TOKEN
 											+ "&format=xml"
 											+ "&segment=pageUrl=@" + item.getHandle();
@@ -135,7 +137,7 @@ public class PiwikPDFExporter  {
 												+ "&method=UserCountry.getCountry"
 												+ "&idSite=" + PIWIK_SITE_ID
 												+ "&period=month"
-												+ "&date=" + inputDateFormat.format(monthBefore)												
+												+ "&date=" + inputDateFormat.format(firstDay)												
 												+ "&expanded=1"
 												+ "&token_auth=" + PIWIK_AUTH_TOKEN
 												+ "&filter_limit=5"
@@ -149,7 +151,7 @@ public class PiwikPDFExporter  {
 		JFreeChart viewsChart = createViewsChart(viewsXML);
 		List<String[]> countryData = getCountryData(countriesXML);
 		
-		geneartePDF(item, monthBefore, viewsChart, countryData);
+		geneartePDF(item, firstDay, viewsChart, countryData);
 	}
 	
 	public static List<String[]> getCountryData(String xml) throws Exception {
