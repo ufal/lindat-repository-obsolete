@@ -415,8 +415,8 @@ public class PiwikPDFExporter  {
 		}
 		try {
 			doc = builder.parse(new StringInputStream(xml));
-		} catch (SAXException | IOException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			log.error(e);
 		}
 		return doc;
 	}
