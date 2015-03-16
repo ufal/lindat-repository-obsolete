@@ -1,0 +1,435 @@
+package cz.cuni.mff.ufal;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
+
+import org.apache.log4j.Logger;
+import org.apache.tools.ant.filters.StringInputStream;
+import org.dspace.content.Item;
+import org.dspace.content.ItemIterator;
+import org.dspace.core.ConfigurationManager;
+import org.dspace.core.Context;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RectangleInsets;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import com.itextpdf.awt.PdfGraphics2D;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Chunk;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.Font.FontFamily;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfAction;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfTemplate;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.draw.LineSeparator;
+
+public class PiwikPDFExporter  {
+
+    /** Piwik configurations */
+    private static String PIWIK_API_URL;
+    private static String PIWIK_AUTH_TOKEN;
+    private static String PIWIK_SITE_ID;
+    private static String PIWIK_REPORTS_OUTPUT_PATH;
+
+    
+	private static SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	private static SimpleDateFormat outputDateFormat = new SimpleDateFormat("MMM-dd");
+	
+	
+	private static Logger log = Logger.getLogger(PiwikPDFExporter.class);
+	
+	public static void main(String args[]) throws Exception {		
+		initialize();
+		generateReports();				
+	}
+		
+	public static void initialize() {
+        DSpaceApi.load_dspace();        
+        PIWIK_API_URL = ConfigurationManager.getProperty("lr", "lr.statistics.api.url");
+        PIWIK_AUTH_TOKEN = ConfigurationManager.getProperty("lr", "lr.statistics.api.auth.token");
+        PIWIK_SITE_ID = ConfigurationManager.getProperty("lr", "lr.statistics.api.site_id");
+        PIWIK_REPORTS_OUTPUT_PATH = ConfigurationManager.getProperty("lr", "lr.statistics.report.path");
+	}
+	
+	public static void generateReports() throws SQLException {
+		Context context = new Context();
+		ItemIterator itr = Item.findAll(context);
+		while(itr.hasNext()) {
+			Item item = itr.next();
+			if(item!=null) {
+				if(item.getHandle()!=null && !item.getHandle().isEmpty()) {
+					try {
+						generateItemReport(item);
+					} catch(Exception e) {
+						log.error("Unable to generate report.", e);
+					}
+				} else {
+					log.info("Item handle not found : item_id=" + item.getID());
+				}				
+			}
+		}
+	}
+	
+	public static void generateItemReport(Item item) throws Exception {
+		
+		Calendar cal = Calendar.getInstance();
+		//Date today = cal.getTime();
+		cal.add(Calendar.MONTH, -1);
+		Date monthBefore = cal.getTime();
+		
+		String viewsReportURL = PIWIK_API_URL + "index.php"
+											+ "?module=API"
+											+ "&method=API.get"
+											+ "&idSite=" + PIWIK_SITE_ID
+											+ "&period=month"
+											+ "&date=" + inputDateFormat.format(monthBefore)
+											+ "&token_auth=" + PIWIK_AUTH_TOKEN
+											+ "&format=xml"
+											+ "&segment=pageUrl=@" + item.getHandle();
+		
+		String countryReportURL = PIWIK_API_URL + "index.php"
+												+ "?module=API"
+												+ "&method=UserCountry.getCountry"
+												+ "&idSite=" + PIWIK_SITE_ID
+												+ "&period=month"
+												+ "&date=" + inputDateFormat.format(monthBefore)												
+												+ "&expanded=1"
+												+ "&token_auth=" + PIWIK_AUTH_TOKEN
+												+ "&filter_limit=5"
+												+ "&format=xml"
+												+ "&segment=pageUrl=@" + item.getHandle();
+												
+		
+		String viewsXML = readFromURL(viewsReportURL);
+		String countriesXML = readFromURL(countryReportURL);
+		
+		JFreeChart viewsChart = createViewsChart(viewsXML);
+		List<String[]> countryData = getCountryData(countriesXML);
+		
+		geneartePDF(item, monthBefore, viewsChart, countryData);
+	}
+	
+	public static List<String[]> getCountryData(String xml) throws Exception {
+		
+		Document doc = parseXML(xml);
+		
+		if(doc==null) throw new Exception("Unable to parse XML");
+		
+		List<String[]> data = new ArrayList<String[]>();
+		
+		XPath xPath =  XPathFactory.newInstance().newXPath();
+		XPathExpression eachResultNode = xPath.compile("//result/row");
+		
+		NodeList results = (NodeList)eachResultNode.evaluate(doc, XPathConstants.NODESET);
+		
+		for(int i=0;i<results.getLength();i++) {
+			Element row = (Element)results.item(i);
+			String country = row.getElementsByTagName("label").item(0).getTextContent();
+			String count = row.getElementsByTagName("nb_visits").item(0).getTextContent();
+			data.add(new String[]{country, count});
+		}
+		
+		return data;
+		
+	}
+
+	public static JFreeChart createViewsChart(String xml) throws Exception {
+
+		Document doc = parseXML(xml);
+		
+		if(doc==null) throw new Exception("Unable to parse XML");
+		
+		JFreeChart lineChart = null;
+		
+		XPath xPath =  XPathFactory.newInstance().newXPath();
+		XPathExpression eachResultNode = xPath.compile("//results/result");
+		
+		NodeList results = (NodeList)eachResultNode.evaluate(doc, XPathConstants.NODESET);
+		
+		int maxPageViews = Integer.MIN_VALUE;
+		int minPageViews = Integer.MAX_VALUE;
+		
+		
+		TimeSeries viewsSeries = new TimeSeries("Views");
+		TimeSeries downloadsSeries = new TimeSeries("Downloads");
+		
+		for(int i=0;i<results.getLength();i++) {
+			Element result = (Element)results.item(i);
+			String date = result.getAttribute("date");
+			Date dateObj = inputDateFormat.parse(date);
+			String pageViews = result.getElementsByTagName("nb_pageviews").item(0).getTextContent();
+			String downloads = result.getElementsByTagName("nb_downloads").item(0).getTextContent();
+			int iPageViews = Integer.parseInt(pageViews);
+			int iDownloads = Integer.parseInt(downloads);
+			if(minPageViews >= iPageViews) minPageViews = iPageViews;
+			if(maxPageViews <= iPageViews) maxPageViews = iPageViews;
+			viewsSeries.add(new Day(dateObj), iPageViews);
+			downloadsSeries.add(new Day(dateObj), iDownloads);
+		}
+		
+		TimeSeriesCollection dataset = new TimeSeriesCollection();
+		dataset.addSeries(viewsSeries);
+		dataset.addSeries(downloadsSeries);
+		
+		int diff = (maxPageViews - minPageViews) / 3;
+		diff = ((diff+99)/100) * 100;
+
+		
+		lineChart = ChartFactory.createTimeSeriesChart("Views Over Time", "", "", dataset);
+		lineChart.setBackgroundPaint(Color.WHITE);
+		lineChart.getTitle().setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 10));
+		
+		XYPlot plot = (XYPlot) lineChart.getPlot();
+		
+		plot.setOutlineVisible(false);
+		
+		plot.setBackgroundPaint(Color.WHITE);
+		plot.setDomainGridlinePaint(Color.WHITE);
+		plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+		plot.setAxisOffset(new RectangleInsets(5.0, 5.0, 5.0, 5.0));
+		plot.setDomainCrosshairVisible(true);
+		plot.setRangeCrosshairVisible(true);
+
+        XYItemRenderer r = plot.getRenderer();
+        if (r instanceof XYLineAndShapeRenderer) {
+        	XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) r;
+        	renderer.setBaseShapesVisible(true);
+        	renderer.setBaseShapesFilled(true);
+        	Shape circle = new Ellipse2D.Double(-1f, -1f, 2, 2);
+        	renderer.setSeriesShape(0, circle);
+        	renderer.setSeriesShape(1, circle);
+        }
+        DateAxis xAxis = (DateAxis) plot.getDomainAxis();
+        xAxis.setDateFormatOverride(outputDateFormat);
+        xAxis.setTickLabelFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 8));
+
+        NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
+        yAxis.setTickUnit(new NumberTickUnit(diff));
+        yAxis.setTickLabelFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 8));
+
+        LegendTitle legend = lineChart.getLegend();
+        legend.setPosition(RectangleEdge.TOP);
+        legend.setBorder(0, 0, 0, 0);
+        legend.setItemFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 8));
+
+        return lineChart;
+	}
+	
+	public static void geneartePDF(Item item, Date date, JFreeChart viewsChart, List<String[]> countryData) throws Exception {
+		com.itextpdf.text.Document pdf = new com.itextpdf.text.Document(PageSize.A4, 36, 36, 54, 54);
+		PdfWriter writer = PdfWriter.getInstance(pdf, new FileOutputStream(PIWIK_REPORTS_OUTPUT_PATH + "/" + item.getID() + ".pdf"));
+		pdf.open();
+				
+	    Font[] FONT = new Font[7];
+	    FONT[0] = new Font(FontFamily.HELVETICA, 20, Font.BOLD);
+	    FONT[1] = new Font(FontFamily.HELVETICA, 14, Font.BOLD);
+	    FONT[1].setColor(85, 200, 250);
+	    FONT[2] = new Font(FontFamily.HELVETICA, 16, Font.BOLD);
+	    FONT[3] = new Font(FontFamily.HELVETICA, 12, Font.BOLD);
+	    FONT[4] = new Font(FontFamily.HELVETICA, 10, Font.BOLD);
+	    FONT[4].setColor(85, 200, 250);
+	    FONT[5] = new Font(FontFamily.HELVETICA, 8, Font.BOLD);	    
+	    FONT[6] = new Font(FontFamily.HELVETICA, 8);
+
+	    
+	    Image logo = Image.getInstance(new URL("https://lindat.mff.cuni.cz/images/lindat-common/public/img/lindat-logo-mono.png"));
+	    logo.scaleAbsolute(82, 48);
+	    logo.setAlignment(Image.RIGHT);
+
+	    Paragraph titleText = new Paragraph();
+	    titleText.setFont(FONT[0]);
+	    titleText.add("Monthly Item Statistics");
+	    
+	    Paragraph titleMonth = new Paragraph();
+	    titleMonth.setFont(FONT[1]);
+	    titleMonth.add(new SimpleDateFormat("MMM, yyyy").format(date));
+	    
+	    PdfPTable title = new PdfPTable(new float[]{80, 20});
+	    title.setWidthPercentage(100);
+
+	    PdfPCell titleC1 = new PdfPCell();
+	    titleC1.setVerticalAlignment(PdfPCell.ALIGN_BOTTOM);
+	    titleC1.setBorder(0);
+	    titleC1.addElement(titleText);
+	    	    
+	    PdfPCell titleC2 = new PdfPCell();
+	    titleC2.setVerticalAlignment(PdfPCell.ALIGN_TOP);
+	    titleC2.setBorder(0);
+	    titleC2.setRowspan(2);
+	    titleC2.addElement(logo);
+
+	    PdfPCell titleC3 = new PdfPCell();
+	    titleC3.setVerticalAlignment(PdfPCell.ALIGN_TOP);
+	    titleC3.setBorder(0);	    
+	    titleC3.addElement(titleMonth);	
+	    
+	    title.addCell(titleC1);
+	    title.addCell(titleC2);
+	    title.addCell(titleC3);
+
+	    pdf.add(title);
+	    
+	    LineSeparator line = new LineSeparator();
+	    line.setPercentage(100);
+	    line.setLineWidth(1);
+	    line.setOffset(5);
+	    line.setLineColor(BaseColor.LIGHT_GRAY);
+	    
+	    Chunk cl = new Chunk(line);
+	    cl.setLineHeight(10);
+	    
+	    pdf.add(cl);
+
+	    String itemTitle = item.getMetadata("dc", "title", null, Item.ANY)[0].value;
+	    String hdlURL = item.getMetadata("dc", "identifier", "uri", Item.ANY)[0].value;
+	    
+	    Paragraph itemName = new Paragraph();
+	    itemName.setFont(FONT[3]);
+	    itemName.add(itemTitle);
+	    
+	    pdf.add(itemName);
+	    
+	    Chunk hdl = new Chunk(hdlURL, FONT[4]);
+	    hdl.setAction(new PdfAction(new URL(hdlURL)));
+	    
+	    pdf.add(hdl);
+	    	    
+	    PdfPTable stats = new PdfPTable(new float[]{70, 30});
+	    stats.setWidthPercentage(100);
+
+	    Paragraph byCountry = new Paragraph();
+	    byCountry.setFont(FONT[5]);
+	    byCountry.add("By Country");
+	    
+	    Chunk placeholder = new Chunk(Chunk.NEWLINE);
+	    placeholder.setLineHeight(600);
+	    
+	    PdfPCell statsC1 = new PdfPCell();
+	    statsC1.setBorder(0);
+	    statsC1.addElement(placeholder);
+
+	    PdfPCell statsC2 = new PdfPCell();
+	    statsC2.setBackgroundColor(new BaseColor(240, 240, 240));
+	    statsC2.setBorder(0);
+	    statsC2.setPadding(5);
+	    statsC2.addElement(byCountry);
+	    
+	    PdfPTable countryStats = new PdfPTable(new float[]{80, 20});
+	    
+	    for(String[] cs : countryData) {
+		    
+	    	Paragraph label = new Paragraph();
+		    label.setFont(FONT[6]);
+		    label.add(cs[0]);
+		    
+		    Paragraph value = new Paragraph();
+		    value.setFont(FONT[5]);
+		    value.add(cs[1]);
+		    
+		    PdfPCell cs1 = new PdfPCell();
+		    cs1.setBorder(0);
+		    cs1.setPadding(2);
+		    cs1.addElement(label);
+
+		    PdfPCell cs2 = new PdfPCell();
+		    cs2.setBorder(0);
+		    cs2.setPadding(2);
+		    cs2.setHorizontalAlignment(PdfPCell.ALIGN_RIGHT);
+		    cs2.addElement(value);
+
+		    countryStats.addCell(cs1);
+		    countryStats.addCell(cs2);
+	    }
+	   
+	    statsC2.addElement(countryStats);
+	    
+	    stats.addCell(statsC1);
+	    stats.addCell(statsC2);
+	    
+	    pdf.add(stats);
+	    
+		float width  = 350;
+		float height = 200;
+		PdfContentByte cb = writer.getDirectContent();
+		PdfTemplate chart = cb.createTemplate(width, height);
+		Graphics2D g2d = new PdfGraphics2D(chart, width, height);
+		Rectangle2D r2d = new Rectangle2D.Double(0, 0, width, height);
+		viewsChart.draw(g2d, r2d);
+		g2d.dispose();
+		cb.addTemplate(chart, 40, 450);
+		
+		pdf.close();		
+	}
+	
+	public static Document parseXML(String xml) {
+		DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = null;
+		Document doc = null;
+		try {
+		    builder = builderFactory.newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+		    e.printStackTrace();  
+		}
+		try {
+			doc = builder.parse(new StringInputStream(xml));
+		} catch (SAXException | IOException e) {
+			e.printStackTrace();
+		}
+		return doc;
+	}
+
+	private static String readFromURL(String url) throws IOException {
+		StringBuilder output = new StringBuilder();		
+		URL widget = new URL(url);
+		BufferedReader in = new BufferedReader(new InputStreamReader(widget.openStream()));
+		String inputLine;
+		while ((inputLine = in.readLine()) != null) {
+			output.append(inputLine).append("\n");
+		}
+		in.close();
+		return output.toString();
+	}
+}
