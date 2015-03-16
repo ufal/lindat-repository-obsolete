@@ -219,11 +219,7 @@ public class PiwikPDFExporter  {
 		
 		TimeSeriesCollection dataset = new TimeSeriesCollection();
 		dataset.addSeries(viewsSeries);
-		dataset.addSeries(downloadsSeries);
-		
-		int diff = (maxPageViews - minPageViews) / 3;
-		diff = ((diff+99)/100) * 100;
-
+		dataset.addSeries(downloadsSeries);		
 		
 		lineChart = ChartFactory.createTimeSeriesChart("Views Over Time", "", "", dataset);
 		lineChart.setBackgroundPaint(Color.WHITE);
@@ -254,8 +250,14 @@ public class PiwikPDFExporter  {
         xAxis.setTickLabelFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 8));
 
         NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
-        yAxis.setTickUnit(new NumberTickUnit(diff));
         yAxis.setTickLabelFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 8));
+        
+		int diff = (maxPageViews - minPageViews) / 3;
+		diff = ((diff+99)/100) * 100;
+		if(diff>=20) {
+			yAxis.setTickUnit(new NumberTickUnit(diff));
+		}
+        
 
         LegendTitle legend = lineChart.getLegend();
         legend.setPosition(RectangleEdge.TOP);
