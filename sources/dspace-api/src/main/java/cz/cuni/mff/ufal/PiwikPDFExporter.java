@@ -15,7 +15,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -48,7 +50,6 @@ import org.jfree.ui.RectangleInsets;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import com.itextpdf.awt.PdfGraphics2D;
 import com.itextpdf.text.BaseColor;
@@ -81,9 +82,11 @@ public class PiwikPDFExporter  {
 	
 	private static Logger log = Logger.getLogger(PiwikPDFExporter.class);
 	
-	public static void main(String args[]) throws Exception {		
+	public static void main(String args[]) throws Exception {
+		log.info("Generating PIWIK pdf reports ....");
 		initialize();
-		generateReports();				
+		generateReports();
+		log.info("PIWIK pdf reports generation finished.");
 	}
 		
 	public static void initialize() {
@@ -102,6 +105,7 @@ public class PiwikPDFExporter  {
 			if(item!=null) {
 				if(item.getHandle()!=null && !item.getHandle().isEmpty()) {
 					try {
+						log.info("Processing Item : " + item.getHandle());
 						generateItemReport(item);
 					} catch(Exception e) {
 						log.error("Unable to generate report.", e);
@@ -110,7 +114,7 @@ public class PiwikPDFExporter  {
 					log.info("Item handle not found : item_id=" + item.getID());
 				}				
 			}
-		}
+		}		
 	}
 	
 	public static void generateItemReport(Item item) throws Exception {
@@ -140,7 +144,7 @@ public class PiwikPDFExporter  {
 												+ "&date=" + inputDateFormat.format(firstDay)												
 												+ "&expanded=1"
 												+ "&token_auth=" + PIWIK_AUTH_TOKEN
-												+ "&filter_limit=5"
+												+ "&filter_limit=10"
 												+ "&format=xml"
 												+ "&segment=pageUrl=@" + item.getHandle();
 												
@@ -148,10 +152,12 @@ public class PiwikPDFExporter  {
 		String viewsXML = readFromURL(viewsReportURL);
 		String countriesXML = readFromURL(countryReportURL);
 		
-		JFreeChart viewsChart = createViewsChart(viewsXML);
+		Map<String, Integer> summary = new HashMap<String, Integer>();
+		
+		JFreeChart viewsChart = createViewsChart(viewsXML, summary);
 		List<String[]> countryData = getCountryData(countriesXML);
 		
-		geneartePDF(item, firstDay, viewsChart, countryData);
+		geneartePDF(item, firstDay, viewsChart, summary, countryData);
 	}
 	
 	public static List<String[]> getCountryData(String xml) throws Exception {
@@ -178,7 +184,7 @@ public class PiwikPDFExporter  {
 		
 	}
 
-	public static JFreeChart createViewsChart(String xml) throws Exception {
+	public static JFreeChart createViewsChart(String xml, Map<String, Integer> summary) throws Exception {
 
 		Document doc = parseXML(xml);
 		
@@ -187,35 +193,55 @@ public class PiwikPDFExporter  {
 		JFreeChart lineChart = null;
 		
 		XPath xPath =  XPathFactory.newInstance().newXPath();
-		XPathExpression eachResultNode = xPath.compile("//results/result");
+		XPathExpression eachResultNode = xPath.compile("//result");
 		
 		NodeList results = (NodeList)eachResultNode.evaluate(doc, XPathConstants.NODESET);
 		
-		int maxPageViews = Integer.MIN_VALUE;
-		int minPageViews = Integer.MAX_VALUE;
-		
+		int maxPageViews = Integer.MIN_VALUE;		
 		
 		TimeSeries viewsSeries = new TimeSeries("Views");
 		TimeSeries downloadsSeries = new TimeSeries("Downloads");
+		
+		int totalViews = 0;
+		int totalUniqueViews = 0;
+		int totalVisitors = 0;
+		int totalUniqueVisitors = 0;
+		int totalDownloads = 0;
+		int totalUniqueDownloads = 0;
 		
 		for(int i=0;i<results.getLength();i++) {
 			Element result = (Element)results.item(i);
 			String date = result.getAttribute("date");
 			Date dateObj = inputDateFormat.parse(date);
+			int iPageViews = 0;
+			int iDownloads = 0;
 			try{							
 				String pageViews = result.getElementsByTagName("nb_pageviews").item(0).getTextContent();
 				String downloads = result.getElementsByTagName("nb_downloads").item(0).getTextContent();
-				int iPageViews = Integer.parseInt(pageViews);
-				int iDownloads = Integer.parseInt(downloads);
-				if(minPageViews >= iPageViews) minPageViews = iPageViews;
-				if(maxPageViews <= iPageViews) maxPageViews = iPageViews;
-				viewsSeries.add(new Day(dateObj), iPageViews);
-				downloadsSeries.add(new Day(dateObj), iDownloads);
+				iPageViews = Integer.parseInt(pageViews);
+				iDownloads = Integer.parseInt(downloads);
+				
+				totalViews += iPageViews;
+				totalDownloads += iDownloads;				
+				totalUniqueViews += Integer.parseInt(result.getElementsByTagName("nb_uniq_pageviews").item(0).getTextContent());
+				totalUniqueDownloads += Integer.parseInt(result.getElementsByTagName("nb_uniq_downloads").item(0).getTextContent());
+				totalVisitors += Integer.parseInt(result.getElementsByTagName("nb_visits").item(0).getTextContent());
+				totalUniqueVisitors += Integer.parseInt(result.getElementsByTagName("nb_uniq_visitors").item(0).getTextContent());				
+				
 			}catch(Exception e) {
-				viewsSeries.add(new Day(dateObj), 0);
-				downloadsSeries.add(new Day(dateObj), 0);				
 			}
+						
+			if(maxPageViews < iPageViews) maxPageViews = iPageViews;
+			viewsSeries.add(new Day(dateObj), iPageViews);
+			downloadsSeries.add(new Day(dateObj), iDownloads);			
 		}
+		
+		summary.put("pageviews", totalViews);
+		summary.put("unique pageviews", totalUniqueViews);
+		summary.put("visits", totalVisitors);
+		summary.put("unique visitors", totalUniqueVisitors);
+		summary.put("downloads", totalDownloads);
+		summary.put("unique downloads", totalUniqueDownloads);
 		
 		TimeSeriesCollection dataset = new TimeSeriesCollection();
 		dataset.addSeries(viewsSeries);
@@ -244,6 +270,8 @@ public class PiwikPDFExporter  {
         	Shape circle = new Ellipse2D.Double(-1f, -1f, 2, 2);
         	renderer.setSeriesShape(0, circle);
         	renderer.setSeriesShape(1, circle);
+        	renderer.setSeriesPaint(0, new Color(212, 40, 30));
+        	renderer.setSeriesPaint(1, new Color(30, 120, 180));
         }
         DateAxis xAxis = (DateAxis) plot.getDomainAxis();
         xAxis.setDateFormatOverride(outputDateFormat);
@@ -252,36 +280,37 @@ public class PiwikPDFExporter  {
         NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
         yAxis.setTickLabelFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 8));
         
-		int diff = (maxPageViews - minPageViews) / 3;
-		diff = ((diff+99)/100) * 100;
-		if(diff>=20) {
-			yAxis.setTickUnit(new NumberTickUnit(diff));
+		int diff = maxPageViews / 3;		
+		if(diff<=1) {
+			diff = 1;			
 		}
-        
+		yAxis.setTickUnit(new NumberTickUnit(diff));
 
         LegendTitle legend = lineChart.getLegend();
         legend.setPosition(RectangleEdge.TOP);
         legend.setBorder(0, 0, 0, 0);
         legend.setItemFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 8));
-
+                        
         return lineChart;
 	}
 	
-	public static void geneartePDF(Item item, Date date, JFreeChart viewsChart, List<String[]> countryData) throws Exception {
+	public static void geneartePDF(Item item, Date date, JFreeChart viewsChart, Map<String, Integer> summary, List<String[]> countryData) throws Exception {
 		com.itextpdf.text.Document pdf = new com.itextpdf.text.Document(PageSize.A4, 36, 36, 54, 54);
 		PdfWriter writer = PdfWriter.getInstance(pdf, new FileOutputStream(PIWIK_REPORTS_OUTPUT_PATH + "/" + item.getID() + ".pdf"));
+
 		pdf.open();
 				
-	    Font[] FONT = new Font[7];
+	    Font[] FONT = new Font[8];
 	    FONT[0] = new Font(FontFamily.HELVETICA, 20, Font.BOLD);
 	    FONT[1] = new Font(FontFamily.HELVETICA, 14, Font.BOLD);
 	    FONT[1].setColor(85, 200, 250);
 	    FONT[2] = new Font(FontFamily.HELVETICA, 16, Font.BOLD);
 	    FONT[3] = new Font(FontFamily.HELVETICA, 12, Font.BOLD);
 	    FONT[4] = new Font(FontFamily.HELVETICA, 10, Font.BOLD);
-	    FONT[4].setColor(85, 200, 250);
+	    FONT[4].setColor(85, 200, 250);	    
 	    FONT[5] = new Font(FontFamily.HELVETICA, 8, Font.BOLD);	    
 	    FONT[6] = new Font(FontFamily.HELVETICA, 8);
+	    FONT[7] = new Font(FontFamily.HELVETICA, 10, Font.BOLD);
 
 	    
 	    Image logo = Image.getInstance(new URL("https://lindat.mff.cuni.cz/images/lindat-common/public/img/lindat-logo-mono.png"));
@@ -345,20 +374,81 @@ public class PiwikPDFExporter  {
 	    hdl.setAction(new PdfAction(new URL(hdlURL)));
 	    
 	    pdf.add(hdl);
-	    	    
+	    
 	    PdfPTable stats = new PdfPTable(new float[]{70, 30});
 	    stats.setWidthPercentage(100);
-
+	    
 	    Paragraph byCountry = new Paragraph();
 	    byCountry.setFont(FONT[5]);
-	    byCountry.add("By Country");
-	    
-	    Chunk placeholder = new Chunk(Chunk.NEWLINE);
-	    placeholder.setLineHeight(600);
+	    byCountry.add("Visitors By Country");
 	    
 	    PdfPCell statsC1 = new PdfPCell();
 	    statsC1.setBorder(0);
-	    statsC1.addElement(placeholder);
+	    statsC1.setPaddingTop(220);
+	    statsC1.setPaddingBottom(200);
+	    
+	    PdfPTable summaryStats = new PdfPTable(1);	    
+
+	    Paragraph summaryHeadTxt = new Paragraph();
+	    summaryHeadTxt.setFont(FONT[5]);
+	    summaryHeadTxt.add("Summary");	    
+	    
+	    PdfPCell summaryHead = new PdfPCell();
+	    summaryHead.setBorder(0);
+	    summaryHead.addElement(summaryHeadTxt);
+	    
+	    summaryStats.addCell(summaryHead);
+	    
+	    Paragraph text = new Paragraph();
+	    text.setFont(FONT[7]);
+	    text.add("" + summary.get("pageviews"));
+	    text.setFont(FONT[6]);
+	    text.add(" pageviews, ");
+	    text.setFont(FONT[7]);
+	    text.add("" + summary.get("unique pageviews"));
+	    text.setFont(FONT[6]);
+	    text.add(" unique pageviews");
+	    
+	    PdfPCell srow = new PdfPCell();
+	    srow.setBorder(0);
+	    srow.addElement(text);
+	    
+	    summaryStats.addCell(srow);
+	    
+	    text = new Paragraph();
+	    text.setFont(FONT[7]);
+	    text.add("" + summary.get("visits"));
+	    text.setFont(FONT[6]);
+	    text.add(" visits, ");
+	    text.setFont(FONT[7]);
+	    text.add("" + summary.get("unique visitors"));
+	    text.setFont(FONT[6]);
+	    text.add(" unique visitors");
+	    
+	    srow = new PdfPCell();
+	    srow.setBorder(0);
+	    srow.addElement(text);
+	    
+	    summaryStats.addCell(srow);
+	    
+	    text = new Paragraph();
+	    text.setFont(FONT[7]);
+	    text.add("" + summary.get("downloads"));
+	    text.setFont(FONT[6]);
+	    text.add(" downloads, ");
+	    text.setFont(FONT[7]);
+	    text.add("" + summary.get("unique downloads"));
+	    text.setFont(FONT[6]);
+	    text.add(" unique downloads");
+	    
+	    srow = new PdfPCell();
+	    srow.setBorder(0);
+	    srow.addElement(text);
+	    
+	    summaryStats.addCell(srow);
+
+	    
+	    statsC1.addElement(summaryStats);
 
 	    PdfPCell statsC2 = new PdfPCell();
 	    statsC2.setBackgroundColor(new BaseColor(240, 240, 240));
@@ -400,6 +490,8 @@ public class PiwikPDFExporter  {
 	    
 	    pdf.add(stats);
 	    
+	    pdf.add(cl);
+	    
 		float width  = 350;
 		float height = 200;
 		PdfContentByte cb = writer.getDirectContent();
@@ -408,9 +500,10 @@ public class PiwikPDFExporter  {
 		Rectangle2D r2d = new Rectangle2D.Double(0, 0, width, height);
 		viewsChart.draw(g2d, r2d);
 		g2d.dispose();
-		cb.addTemplate(chart, 40, 450);
+		cb.addTemplate(chart, 40, 470);
 		
-		pdf.close();		
+		pdf.close();			
+		writer.close();
 	}
 	
 	public static Document parseXML(String xml) {
