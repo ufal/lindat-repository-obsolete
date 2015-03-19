@@ -2,6 +2,7 @@
 package cz.cuni.mff.ufal;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,9 +13,11 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 import org.apache.avalon.framework.parameters.Parameters;
@@ -29,10 +32,48 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.maxmind.geoip.Location;
+import com.maxmind.geoip.LookupService;
+
 public class DiscoJuiceFeeds extends AbstractAction {
     /** log4j logger. */
     private static Logger log = Logger.getLogger(DiscoJuiceFeeds.class);
     private static final String discojuiceURL = "https://static.discojuice.org/feeds/";
+    private static final LookupService locationService;
+    /** contains entityIDs of idps we wish to set the country to something different than discojuice feeds suggests **/
+    private static final Set<String> rewriteCountries;
+    static {
+        String dbfile = ConfigurationManager.getProperty("solr-statistics", "dbfile");
+        LookupService service = null;
+        if (dbfile != null)
+        {
+            try
+            {
+                service = new LookupService(dbfile,
+                        LookupService.GEOIP_STANDARD);
+            }
+            catch (FileNotFoundException fe)
+            {
+                log.error("The GeoLite Database file is missing (" + dbfile + ")! Solr Statistics cannot generate location based reports! Please see the DSpace installation instructions for instructions to install this file.", fe);
+            }
+            catch (IOException e)
+            {
+                log.error("Unable to load GeoLite Database file (" + dbfile + ")! You may need to reinstall it. See the DSpace installation instructions for more details.", e);
+            }
+        }
+        else
+        {
+            log.error("The required 'dbfile' configuration is missing in solr-statistics.cfg!");
+        }
+        locationService = service;
+        
+        rewriteCountries = new HashSet<String>();
+        String propRewriteCountries = ConfigurationManager.getProperty("discojuice", "rewriteCountries");
+        for(String country : propRewriteCountries.split(",")){
+        	country = country.trim();
+        	rewriteCountries.add(country);
+        }
+    }
 
     public Map act(Redirector redirector, SourceResolver resolver,
             Map objectModel, String source, Parameters parameters)
@@ -120,6 +161,12 @@ public class DiscoJuiceFeeds extends AbstractAction {
 					JSONObject entity = i.next();
 					String entityID = (String)entity.get("entityID");
 					if(shibDiscoEntities.containsKey(entityID)){
+						if(rewriteCountries.contains(entityID)){
+							String old_country = (String)entity.remove("country");
+							String new_country = guessCountry(shibDiscoEntities.get(entityID));
+							entity.put("country", new_country);
+							log.info(String.format("For %s changed country from %s to %s", entityID, old_country, new_country));
+						}
 						filteredEntities.add(entity);
 						seenIDs.add(entityID);
 					}
@@ -139,7 +186,7 @@ public class DiscoJuiceFeeds extends AbstractAction {
             if(!seenIDs.contains(entityID)){
                 JSONObject entity = shibDiscoEntities.get(entityID);
                 if(entity != null){
-                    String country = guessCountry(entityID);
+                    String country = guessCountry(entity);
                     entity.put("country", country);
                     filteredEntities.add(entity);
                     fromShib.append(entityID);
@@ -161,7 +208,26 @@ public class DiscoJuiceFeeds extends AbstractAction {
         //System.out.println(filteredEntities.toJSONString());
     }
 
-    private String guessCountry(String entityID){
+    private String guessCountry(JSONObject entity){
+    	if(locationService != null && entity.containsKey("InformationURLs")){
+    		JSONArray informationURLs = (JSONArray)entity.get("InformationURLs");
+    		if(informationURLs.size() > 0){
+    			String informationURL = (String)((JSONObject)informationURLs.get(0)).get("value");
+    			try{
+    				Location location = locationService.getLocation(java.net.InetAddress.getByName(new URL(informationURL).getHost()));
+    				if(location != null && location.countryCode != null){
+    					return location.countryCode;
+    				}else{
+    					log.info("Country or location is null for " + informationURL);
+    				}
+    			}catch(MalformedURLException e){
+    				
+    			}catch(java.net.UnknownHostException e){
+    				
+    			}
+    		}
+    	}
+    	String entityID = (String)entity.get("entityID");
         //entityID not necessarily an URL
         try{
             URL url = new URL(entityID);
