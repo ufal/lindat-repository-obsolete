@@ -1092,6 +1092,7 @@
                                         <xsl:value-of select="$reportURL" />
 					<xsl:text disable-output-escaping="yes">&amp;format=JSON</xsl:text>
                                 </xsl:attribute>
+                                <div id="piwik-loading" style="width: 100%; height: 100%; z-index=1; display: none;"><i class="fa fa-pulse fa-3x" >&#xf110;</i></div>
                         </div>
                         </div>
                         <div id="visits_summary_report" style="margin-top: 30px;">

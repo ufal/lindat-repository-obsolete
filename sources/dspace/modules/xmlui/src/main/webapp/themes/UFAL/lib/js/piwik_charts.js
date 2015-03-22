@@ -8,11 +8,17 @@ jQuery(document).ready(function (){
 		jQuery.ajax(
 				{
 					url : reportURL,
-					dataType : 'json'
+					dataType : 'json',
+					beforeSend: function() {
+        				jQuery("#piwik-loading").css("display", "block");
+    				}					
 				}
 			)
 			.done(
 					function(data) {
+					
+						jQuery("#piwik-loading").css("display", "none");
+					
 						var nb_views = [];
 						var nb_downloads = [];
 						var dates = Object.keys(data);
