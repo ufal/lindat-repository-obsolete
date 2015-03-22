@@ -8,7 +8,6 @@
 package org.dspace.app.xmlui.aspect.statistics;
 
 import org.dspace.app.xmlui.cocoon.AbstractDSpaceTransformer;
-
 import org.dspace.app.xmlui.wing.element.Options;
 import org.dspace.app.xmlui.wing.element.List;
 import org.dspace.app.xmlui.wing.WingException;
@@ -17,6 +16,7 @@ import org.dspace.app.xmlui.utils.UIException;
 import org.dspace.app.xmlui.utils.HandleUtil;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.content.DSpaceObject;
+import org.dspace.content.Item;
 import org.dspace.authorize.AuthorizeManager;
 import org.apache.cocoon.caching.CacheableProcessingComponent;
 import org.apache.excalibur.source.SourceValidity;
@@ -39,6 +39,7 @@ public class Navigation extends AbstractDSpaceTransformer implements CacheablePr
 
     private static final Message T_statistics_head = message("xmlui.statistics.Navigation.title");
     private static final Message T_statistics_ga_head = message("xmlui.statistics.Navigation.ga.title");
+    private static final Message T_statistics_piwik_head = message("xmlui.statistics.Navigation.piwik.title");
     private static final Message T_statistics_view = message("xmlui.statistics.Navigation.view");
 
     public Serializable getKey() {
@@ -75,7 +76,10 @@ public class Navigation extends AbstractDSpaceTransformer implements CacheablePr
         if(dso != null && dso.getHandle() != null){
             statistics.setHead(T_statistics_head);
             statistics.addItemXref(contextPath + "/handle/" + dso.getHandle() + "/statistics", T_statistics_view);
-
+            // piwik statistics only for items
+            if(dso instanceof Item) {
+            	statistics.addItemXref(contextPath + "/handle/" + dso.getHandle() + "/piwik-statistics", T_statistics_piwik_head);
+            }
         }else{
             // This Navigation is only called either on a DSO related page, or the homepage
             // If on the home page: add statistics link for the home page
