@@ -12,7 +12,7 @@
 	<map:components>
 		<map:transformers>
 			<map:transformer name="StatisticsTransformer" src="org.dspace.app.xmlui.aspect.statistics.StatisticsTransformer"/>
-			<map:transformer name="PiwikStatisticsTransformer" src="org.dspace.app.xmlui.aspect.statistics.PiwikStatisticsTransformer"/>
+			<map:transformer name="PiwikStatisticsTransformer" src="cz.cuni.mff.ufal.dspace.app.xmlui.aspect.statistics.PiwikStatisticsTransformer"/>
 			<map:transformer name="GAStatisticsTransformer" src="cz.cuni.mff.ufal.dspace.app.xmlui.aspect.statistics.GAStatisticsTransformer"/>
 			<map:transformer name="Navigation" src="org.dspace.app.xmlui.aspect.statistics.Navigation"/>
             <map:transformer name="RestrictedItem" src="org.dspace.app.xmlui.aspect.artifactbrowser.RestrictedItem"/>
