@@ -274,7 +274,7 @@
 				<xsl:call-template name="top-banner" />
 				
 				<!-- A line with lindat branding colors -->
-				<div class="row hidden-xs" style="background: url('{$theme-path}/images/lindat_color_line.png'); height: 8px;">&#160;</div>
+				<div class="row hidden-xs" style="background: url('{$theme-path}/images/lindat_color_line.png'); height: 3px;">&#160;</div>
 
 		       	<div class="visible-xs text-center" style="margin-top: 5px; ">
 					<button id="showhidemenu" type="button" class="btn btn-default btn-sm" style="border-radius: 30px; width: 100%;">
@@ -588,7 +588,7 @@
 			<div class="container well well-lg" id="top-items">
 				<h3 class="top-items-head"><xsl:copy-of select="dri:head/node()" /></h3>
 				<xsl:for-each select="dri:div/dri:table">
-					<div class="col-md-6 no-padding" style="padding: 2px;">
+					<div class="col-md-12 no-padding" style="padding: 2px;">
 					<div class="panel panel-default">
 					<div class="panel-heading bold"><xsl:copy-of select="dri:head/node()" /></div>
 					<div class="panel-body">

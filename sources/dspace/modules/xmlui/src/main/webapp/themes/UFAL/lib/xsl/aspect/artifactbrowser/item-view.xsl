@@ -1024,17 +1024,13 @@
       <i18n:text i18n:key="{$mimetype-key}"><xsl:value-of select="$mimetype"/></i18n:text>
     </xsl:template>
     
-    <xsl:template match="dri:div[@id='aspect.statistics.StatisticsTransformer.div.stats']" priority="10">
-    	<xsl:call-template name="visits_over_time" />
-	</xsl:template>
-	
-	<xsl:template match="dri:div[@id='aspect.statistics.StatisticsTransformer.div.stats']" priority="10">
+	<xsl:template match="dri:div[@id='cz.cuni.mff.ufal.dspace.app.xmlui.aspect.statistics.PiwikStatisticsTransformer.div.home']" priority="10">
         <xsl:call-template name="visits_over_time" />
 	</xsl:template>
 
     <xsl:template name="visits_over_time">
         <xsl:variable name="reportURL">
-            <xsl:value-of select="concat($context-path, '/', substring-before($request-uri, '/statistics'))"/>
+            <xsl:value-of select="concat($context-path, '/', substring-before($request-uri, '/piwik-statistics'))"/>
             <xsl:text disable-output-escaping="yes">/piwik?module=API&amp;method=API.get&amp;period=day</xsl:text>
         </xsl:variable>
 

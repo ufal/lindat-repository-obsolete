@@ -69,7 +69,6 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
         // Add the page title
         pageMeta.addMetadata("title").addContent(T_head_title);
         
-        pageMeta.addMetadata("include-library", "jqplot");
     }
 
     /**
