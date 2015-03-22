@@ -1024,7 +1024,7 @@
       <i18n:text i18n:key="{$mimetype-key}"><xsl:value-of select="$mimetype"/></i18n:text>
     </xsl:template>
     
-	<xsl:template match="dri:div[@id='cz.cuni.mff.ufal.dspace.app.xmlui.aspect.statistics.PiwikStatisticsTransformer.div.home']" priority="10">
+	<xsl:template match="dri:div[@id='cz.cuni.mff.ufal.dspace.app.xmlui.aspect.statistics.PiwikStatisticsTransformer.div.report']" priority="10">
         <xsl:call-template name="visits_over_time" />
 	</xsl:template>
 
