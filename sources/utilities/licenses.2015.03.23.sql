@@ -47,9 +47,7 @@ ALTER TABLE ONLY piwik_report
     ADD CONSTRAINT piwik_report_pkey PRIMARY KEY (report_id);
 
 --
--- Name: piwik_report_report_id_key; Type: INDEX; Schema: public; Owner: dspace; Tablespace: 
+-- Name: piwik_report_eperson_id_item_id_key; Type: INDEX; Schema: public; Owner: dspace; Tablespace: 
 --
-
-CREATE UNIQUE INDEX piwik_report_report_id_key ON piwik_report USING btree (name);
 
 CREATE UNIQUE INDEX piwik_report_eperson_id_item_id_key ON piwik_report(eperson_id, item_id);
