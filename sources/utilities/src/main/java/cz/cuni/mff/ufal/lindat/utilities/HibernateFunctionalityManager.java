@@ -742,7 +742,7 @@ public class HibernateFunctionalityManager implements IFunctionalities {
 	public List<PiwikReport> getAllUsersSubscribed(int itemId) {
 		List<PiwikReport> results = (List<PiwikReport>)hibernateUtil.findByCriterie(
 				PiwikReport.class,
-				Restrictions.eq("item_id", itemId));
+				Restrictions.eq("itemId", itemId));
 		return results;
 	}
 
@@ -750,8 +750,8 @@ public class HibernateFunctionalityManager implements IFunctionalities {
 	public boolean isSubscribe(int epersonId, int itemId) {
 		List<PiwikReport> results = (List<PiwikReport>)hibernateUtil.findByCriterie(
 				PiwikReport.class,
-				Restrictions.eq("eperson_id", epersonId),
-				Restrictions.eq("item_id", itemId));
+				Restrictions.eq("epersonId", epersonId),
+				Restrictions.eq("itemId", itemId));
 		if(results==null || results.isEmpty())
 			return false;
 		else
@@ -778,8 +778,8 @@ public class HibernateFunctionalityManager implements IFunctionalities {
 	public boolean unSubscribe(int epersonId, int itemId) {
 		List<PiwikReport> results = (List<PiwikReport>)hibernateUtil.findByCriterie(
 				PiwikReport.class,
-				Restrictions.eq("eperson_id", epersonId),
-				Restrictions.eq("item_id", itemId));
+				Restrictions.eq("epersonId", epersonId),
+				Restrictions.eq("itemId", itemId));
 		try {
 			for(PiwikReport r : results) {
 				delete(PiwikReport.class, r);
