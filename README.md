@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/ufal/lindat-repository.svg?branch=master)](https://travis-ci.org/ufal/lindat-repository)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ufal/lindat-repository?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 # LINDAT/CLARIN digital library based on DSpace
 
