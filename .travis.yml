@@ -41,3 +41,11 @@ script:
   - make test_utilities_database
   - cd ../sources/dspace-api && mvn -Dmaven.test.skip=false -Dtest=cz.cuni.mff.ufal.dspace.**.*Test,cz.cuni.mff.ufal.*Test -DfailIfNoTests=false test && cd ../../
   - #make selenium_tests || echo "Tests failed"
+
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/1bd22d5970b8c5eb1d08
+    on_success: change
+    on_failure: always
+    on_start: false
