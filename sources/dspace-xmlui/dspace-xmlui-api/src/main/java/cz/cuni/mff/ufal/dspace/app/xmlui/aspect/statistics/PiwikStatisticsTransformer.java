@@ -19,6 +19,8 @@ import org.dspace.authorize.AuthorizeException;
 import org.dspace.authorize.AuthorizeManager;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.Item;
+import org.dspace.core.Context;
+import org.dspace.eperson.EPerson;
 import org.xml.sax.SAXException;
 
 import cz.cuni.mff.ufal.DSpaceApi;
@@ -66,11 +68,9 @@ public class PiwikStatisticsTransformer extends AbstractDSpaceTransformer {
 		Division home = body.addDivision("home", "primary repository");
 		Division division = home.addDivision("stats", "secondary stats");
 		
-		if(isOwnerOrAdmin(item)) {
+		if(isOwnerOrAdmin(context, eperson, item)) {
 
 			String sub = request.getParameter("subscribe");
-
-			boolean isSubscribe = isSubscribe(eperson.getID(), item.getID());
 			
 			if(sub!=null && sub.equals("yes")) {				
 				subscribeAction(eperson.getID(), item.getID());
@@ -78,18 +78,20 @@ public class PiwikStatisticsTransformer extends AbstractDSpaceTransformer {
 			if(sub!=null && sub.equals("no")) {
 				unsubscribeAction(eperson.getID(), item.getID());
 			}
+
+			boolean isSubscribe = isSubscribe(eperson.getID(), item.getID());
 			
 			if(isSubscribe) {
 				Division subscribe = division.addDivision("subscribe", "alert alert-success");
 				Para para = subscribe.addPara(null, "bold");
 				para.addHighlight("fa fa-envelope").addContent(" ");			
-				para.addContent("  You are subscribed to recieve this report via email ");
+				para.addContent("  You are subscribed to recieve a monthly report of this item via email ");
 				para.addXref("?subscribe=no", "Unsubscribe", "btn btn-xs btn-success pull-right bold", "");				
 			} else {
 				Division subscribe = division.addDivision("subscribe", "alert alert-warning");
 				Para para = subscribe.addPara(null, "bold");
 				para.addHighlight("fa fa-envelope").addContent(" ");			
-				para.addContent("  Get this report periodically via email ");
+				para.addContent("  Get a monthly report for this item via email ");
 				para.addXref("?subscribe=yes", "Subscribe", "btn btn-xs btn-warning pull-right bold", "");
 			}
 		}
@@ -97,7 +99,7 @@ public class PiwikStatisticsTransformer extends AbstractDSpaceTransformer {
 		division.addDivision("report");
 	}
 	
-	private boolean isOwnerOrAdmin(Item item) throws SQLException {
+	public static boolean isOwnerOrAdmin(Context context, EPerson eperson, Item item) throws SQLException {
 		return eperson!=null && item.getSubmitter().getID()==eperson.getID() || AuthorizeManager.isAdmin(context);
 	}
     

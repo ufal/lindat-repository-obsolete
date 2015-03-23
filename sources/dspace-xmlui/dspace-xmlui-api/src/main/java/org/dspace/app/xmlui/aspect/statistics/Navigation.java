@@ -23,6 +23,8 @@ import org.apache.excalibur.source.SourceValidity;
 import org.apache.excalibur.source.impl.validity.NOPValidity;
 import org.xml.sax.SAXException;
 
+import cz.cuni.mff.ufal.dspace.app.xmlui.aspect.statistics.PiwikStatisticsTransformer;
+
 import java.io.Serializable;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -76,9 +78,12 @@ public class Navigation extends AbstractDSpaceTransformer implements CacheablePr
         if(dso != null && dso.getHandle() != null){
             statistics.setHead(T_statistics_head);
             statistics.addItemXref(contextPath + "/handle/" + dso.getHandle() + "/statistics", T_statistics_view);
-            // piwik statistics only for items
+            // piwik statistics only for items when admin or owner
             if(dso instanceof Item) {
-            	statistics.addItemXref(contextPath + "/handle/" + dso.getHandle() + "/piwik-statistics", T_statistics_piwik_head);
+            	Item item = (Item)dso;
+            	if(PiwikStatisticsTransformer.isOwnerOrAdmin(context, eperson, item)) {
+            		statistics.addItemXref(contextPath + "/handle/" + dso.getHandle() + "/piwik-statistics", T_statistics_piwik_head);
+            	}
             }
         }else{
             // This Navigation is only called either on a DSO related page, or the homepage
