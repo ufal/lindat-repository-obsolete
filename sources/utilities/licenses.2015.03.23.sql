@@ -6,7 +6,7 @@
 CREATE TABLE piwik_report (
 	report_id integer NOT NULL,
     eperson_id integer NOT NULL,
-    item_id integer NOT NULL,    
+    item_id integer NOT NULL  
 );
 
 
