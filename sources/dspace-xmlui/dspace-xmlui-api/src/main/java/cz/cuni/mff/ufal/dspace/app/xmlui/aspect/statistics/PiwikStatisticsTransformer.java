@@ -108,7 +108,7 @@ public class PiwikStatisticsTransformer extends AbstractDSpaceTransformer {
 		IFunctionalities functionalityManager = DSpaceApi.getFunctionalityManager();
 		functionalityManager.openSession();			
 		status = functionalityManager.subscribe(epersonId, itemId); 
-        functionalityManager.openSession();
+		functionalityManager.closeSession();
         return status;		
 	}
 	
@@ -117,7 +117,7 @@ public class PiwikStatisticsTransformer extends AbstractDSpaceTransformer {
 		IFunctionalities functionalityManager = DSpaceApi.getFunctionalityManager();
 		functionalityManager.openSession();			
 		status = functionalityManager.unSubscribe(epersonId, itemId); 
-        functionalityManager.openSession();
+        functionalityManager.closeSession();
         return status;		
 	}
 	
@@ -126,7 +126,7 @@ public class PiwikStatisticsTransformer extends AbstractDSpaceTransformer {
 		IFunctionalities functionalityManager = DSpaceApi.getFunctionalityManager();
 		functionalityManager.openSession();			
 		isSubscribe = functionalityManager.isSubscribe(epersonId, itemId); 
-        functionalityManager.openSession();
+		functionalityManager.closeSession();
         return isSubscribe;
 	}
 

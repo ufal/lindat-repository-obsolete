@@ -6,6 +6,7 @@ import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,9 +17,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 
+import javax.mail.MessagingException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -33,6 +38,9 @@ import org.dspace.content.Item;
 import org.dspace.content.ItemIterator;
 import org.dspace.core.ConfigurationManager;
 import org.dspace.core.Context;
+import org.dspace.core.Email;
+import org.dspace.core.I18nUtil;
+import org.dspace.eperson.EPerson;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
@@ -67,6 +75,9 @@ import com.itextpdf.text.pdf.PdfTemplate;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 
+import cz.cuni.mff.ufal.lindat.utilities.hibernate.PiwikReport;
+import cz.cuni.mff.ufal.lindat.utilities.interfaces.IFunctionalities;
+
 public class PiwikPDFExporter  {
 
     /** Piwik configurations */
@@ -98,23 +109,61 @@ public class PiwikPDFExporter  {
 	}
 	
 	public static void generateReports() throws SQLException {
+		
 		Context context = new Context();
-		ItemIterator itr = Item.findAll(context);
-		while(itr.hasNext()) {
-			Item item = itr.next();
+
+		IFunctionalities functionalityManager = DSpaceApi.getFunctionalityManager();
+		functionalityManager.openSession();			
+		List<PiwikReport> piwikReports = functionalityManager.getAllPiwikReports();
+		functionalityManager.closeSession();
+		
+		HashSet<Item> done = new HashSet<Item>();
+		
+		for(PiwikReport pr : piwikReports) {
+			Item item = null;
+			try {
+				item = Item.find(context, pr.getItemId());
+			} catch(SQLException e) {
+				log.info(e);
+			}
 			if(item!=null) {
-				if(item.getHandle()!=null && !item.getHandle().isEmpty()) {
-					try {
-						log.info("Processing Item : " + item.getHandle());
-						generateItemReport(item);
-					} catch(Exception e) {
-						log.error("Unable to generate report.", e);
-					}
-				} else {
-					log.info("Item handle not found : item_id=" + item.getID());
-				}				
+				if(!done.contains(item)) {
+					if(item.getHandle()!=null && !item.getHandle().isEmpty()) {
+						try {
+							log.info("Processing Item : " + item.getHandle());
+							generateItemReport(item);
+							done.add(item);
+						} catch(Exception e) {
+							log.error("Unable to generate report.", e);
+						}
+					} else {
+						log.info("Item handle not found : item_id=" + item.getID());
+					}				
+				}
+				EPerson to = EPerson.find(context, pr.getEpersonId());
+				try {
+					sendEmail(context, to, item);
+				} catch(Exception e) {
+					log.error(e);
+				}
 			}
 		}		
+	}
+	
+	public static void sendEmail(Context context, EPerson to, Item item) throws IOException, MessagingException {
+
+		// Get a resource bundle according to the eperson language preferences
+        Locale supportedLocale = I18nUtil.getEPersonLocale(to);
+        
+	    String itemTitle = item.getMetadata("dc", "title", null, Item.ANY)[0].value;
+	    String hdlURL = item.getMetadata("dc", "identifier", "uri", Item.ANY)[0].value;
+        
+		Email email = ConfigurationManager.getEmail(I18nUtil.getEmailFilename(supportedLocale, "piwik-report"));
+		email.addArgument(itemTitle);
+		email.addArgument(to.getName());
+		email.addRecipient(to.getEmail());
+		email.addAttachment(new File(PIWIK_REPORTS_OUTPUT_PATH + "/" + item.getID() + ".pdf"), "MonthlyStats.pdf");
+		email.send();
 	}
 	
 	public static void generateItemReport(Item item) throws Exception {
