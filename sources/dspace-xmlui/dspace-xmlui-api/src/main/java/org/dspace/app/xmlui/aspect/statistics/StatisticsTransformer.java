@@ -68,6 +68,7 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
         pageMeta.addTrail().addContent(T_statistics_trail);
         // Add the page title
         pageMeta.addMetadata("title").addContent(T_head_title);
+        
     }
 
     /**
@@ -472,5 +473,6 @@ public class StatisticsTransformer extends AbstractDSpaceTransformer {
 
 	}
 }
+
 
 

@@ -2123,6 +2123,9 @@
     <message key="xmlui.statistics.Navigation.ga.title">Google Analytics</message>
     <message key="xmlui.statistics.ga.trail">GA Statistics</message>
 
+    <message key="xmlui.statistics.piwik.title">Piwik Statistics</message>
+    <message key="xmlui.statistics.Navigation.piwik.title">Piwik Statistics</message>
+    <message key="xmlui.statistics.piwik.trail">Piwik Statistics</message>
 
 
 
