@@ -1,3 +1,6 @@
+# New version at https://github.com/ufal/lindat-dspace
+
+
 [![Build Status](https://travis-ci.org/ufal/lindat-repository.svg?branch=master)](https://travis-ci.org/ufal/lindat-repository)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ufal/lindat-repository?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
